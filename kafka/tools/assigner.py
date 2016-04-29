@@ -570,217 +570,223 @@ def module_balance_even(cluster, args):
 
   return cluster
 
-########################################################################################################################
-# MAIN
 
-aparser = argparse.ArgumentParser(description='Rejigger Kafka cluster partitions')
-aparser.add_argument('-z', '--zookeeper', help='Zookeeper path to the cluster (i.e. zoo1.example.com:2181/kafka-cluster)', required=True)
-aparser.add_argument('-l', '--leadership', help="Show cluster leadership balance", action='store_true')
-aparser.add_argument('-g', '--generate', help="Generate partition reassignment file", action='store_true')
-aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
-aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=10, type=int)
-aparser.add_argument('--ple-size', help="Max size in bytes for a preferred leader election string", required=False, default=900000, type=int)
-aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=300, type=int)
-aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
+def main():
+  ########################################################################################################################
+  # MAIN
 
-subparsers = aparser.add_subparsers(help='Select manipulation module to use')
-s_clone = subparsers.add_parser('clone', help='Copy partitions from some brokers to a new broker (increasing RF)')
-s_clone.add_argument('-b', '--brokers', help="List of source broker IDs", required=True, type=int, nargs='*')
-s_clone.add_argument('-t', '--to_broker', help="Broker ID to copy partitions to", required=True, type=int)
-s_clone.set_defaults(func=module_clone)
+  aparser = argparse.ArgumentParser(description='Rejigger Kafka cluster partitions')
+  aparser.add_argument('-z', '--zookeeper', help='Zookeeper path to the cluster (i.e. zoo1.example.com:2181/kafka-cluster)', required=True)
+  aparser.add_argument('-l', '--leadership', help="Show cluster leadership balance", action='store_true')
+  aparser.add_argument('-g', '--generate', help="Generate partition reassignment file", action='store_true')
+  aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
+  aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=10, type=int)
+  aparser.add_argument('--ple-size', help="Max size in bytes for a preferred leader election string", required=False, default=900000, type=int)
+  aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=300, type=int)
+  aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
 
-s_trim = subparsers.add_parser('trim', help='Remove partitions from some brokers (reducing RF)')
-s_trim.add_argument('-b', '--brokers', help="List of broker IDs to remove", required=True, type=int, nargs='*')
-s_trim.set_defaults(func=module_trim)
+  subparsers = aparser.add_subparsers(help='Select manipulation module to use')
+  s_clone = subparsers.add_parser('clone', help='Copy partitions from some brokers to a new broker (increasing RF)')
+  s_clone.add_argument('-b', '--brokers', help="List of source broker IDs", required=True, type=int, nargs='*')
+  s_clone.add_argument('-t', '--to_broker', help="Broker ID to copy partitions to", required=True, type=int)
+  s_clone.set_defaults(func=module_clone)
 
-s_remove = subparsers.add_parser('remove', help='Move partitions from one broker to one or more other brokers (maintaining RF)')
-s_remove.add_argument('-b', '--broker', help="Broker ID to remove", required=True, type=int)
-s_remove.add_argument('-t', '--to_brokers', help="List of Broker IDs to move partitions to (defaults to whole cluster)", required=False, type=int, nargs='*')
-s_remove.set_defaults(func=module_remove)
+  s_trim = subparsers.add_parser('trim', help='Remove partitions from some brokers (reducing RF)')
+  s_trim.add_argument('-b', '--brokers', help="List of broker IDs to remove", required=True, type=int, nargs='*')
+  s_trim.set_defaults(func=module_trim)
 
-s_elect = subparsers.add_parser('elect', help='Reelect partition leaders using preferred replica election')
-s_elect.set_defaults(func=module_elect)
+  s_remove = subparsers.add_parser('remove', help='Move partitions from one broker to one or more other brokers (maintaining RF)')
+  s_remove.add_argument('-b', '--broker', help="Broker ID to remove", required=True, type=int)
+  s_remove.add_argument('-t', '--to_brokers', help="List of Broker IDs to move partitions to (defaults to whole cluster)", required=False, type=int, nargs='*')
+  s_remove.set_defaults(func=module_remove)
 
-s_set_replication_factor = subparsers.add_parser('set-replication-factor', help='Increase the replication factor of the specified topic')
-s_set_replication_factor.add_argument('-t', '--topic', help='Topic to alter', required=True)
-s_set_replication_factor.add_argument('-r', '--replication-factor', help='Target replication factor', required=True, type=int)
-s_set_replication_factor.set_defaults(func=module_set_replication_factor)
+  s_elect = subparsers.add_parser('elect', help='Reelect partition leaders using preferred replica election')
+  s_elect.set_defaults(func=module_elect)
 
-s_reorder = subparsers.add_parser('reorder', help='Reelect partition leaders using replica reordering')
-s_reorder.set_defaults(func=module_reorder)
+  s_set_replication_factor = subparsers.add_parser('set-replication-factor', help='Increase the replication factor of the specified topic')
+  s_set_replication_factor.add_argument('-t', '--topic', help='Topic to alter', required=True)
+  s_set_replication_factor.add_argument('-r', '--replication-factor', help='Target replication factor', required=True, type=int)
+  s_set_replication_factor.set_defaults(func=module_set_replication_factor)
 
-s_balance = subparsers.add_parser('balance', help='Rebalance partitions across the cluster')
-s_balance.add_argument('-t', '--types', help="Balance types to perform. Multiple may be specified and they will be run in order", required=True, choices=['count', 'size', 'even', 'leader'], nargs='*')
-s_balance.add_argument('-s', '--size', help="Show partition sizes", action='store_true')
-s_balance.add_argument('-d', '--datadir', help="Path to the data directory on the broker", required=False, default="/tmp/kafka-logs")
-s_balance.set_defaults(func=module_balance)
+  s_reorder = subparsers.add_parser('reorder', help='Reelect partition leaders using replica reordering')
+  s_reorder.set_defaults(func=module_reorder)
 
-args = aparser.parse_args()
+  s_balance = subparsers.add_parser('balance', help='Rebalance partitions across the cluster')
+  s_balance.add_argument('-t', '--types', help="Balance types to perform. Multiple may be specified and they will be run in order", required=True, choices=['count', 'size', 'even', 'leader'], nargs='*')
+  s_balance.add_argument('-s', '--size', help="Show partition sizes", action='store_true')
+  s_balance.add_argument('-d', '--datadir', help="Path to the data directory on the broker", required=False, default="/tmp/kafka-logs")
+  s_balance.set_defaults(func=module_balance)
 
-# Find the kafka admin utilities
-if args.tools_path is None:
-  if 'PATH' in os.environ:
-    for path in os.environ['PATH'].split(os.pathsep):
-      path = path.strip('"')
-      script_file = os.path.join(path, 'kafka-reassign-partitions.sh')
-      if is_exec_file(script_file):
-        args.tools_path = path
-        break
+  args = aparser.parse_args()
+
+  # Find the kafka admin utilities
   if args.tools_path is None:
-    log.error("Cannot find the Kafka admin utilities using PATH. Try using the --tools-path option")
+    if 'PATH' in os.environ:
+      for path in os.environ['PATH'].split(os.pathsep):
+        path = path.strip('"')
+        script_file = os.path.join(path, 'kafka-reassign-partitions.sh')
+        if is_exec_file(script_file):
+          args.tools_path = path
+          break
+    if args.tools_path is None:
+      log.error("Cannot find the Kafka admin utilities using PATH. Try using the --tools-path option")
+      sys.exit(1)
+  else:
+    script_file = os.path.join(args.tools_path, 'kafka-reassign-partitions.sh')
+    if not is_exec_file(script_file):
+      log.error("--tools-path does not lead to the Kafka admin utilities ({0} is not an executable)".format(script_file))
+      sys.exit(1)
+
+  # Make sure that JAVA_HOME is specified and is valid
+  if 'JAVA_HOME' in os.environ:
+    java_bin = os.path.join(os.environ['JAVA_HOME'], 'bin', 'java')
+    if not is_exec_file(java_bin):
+      log.error("The JAVA_HOME environment variable doesn't seem to work ({0} is not an executable)".format(java_bin))
+      sys.exit(1)
+  else:
+    log.error("The JAVA_HOME environment variable must be set")
     sys.exit(1)
-else:
-  script_file = os.path.join(args.tools_path, 'kafka-reassign-partitions.sh')
-  if not is_exec_file(script_file):
-    log.error("--tools-path does not lead to the Kafka admin utilities ({0} is not an executable)".format(script_file))
+
+  # Validate we got a good ZK connect string
+  zkparts = args.zookeeper.split('/')
+  if (len(zkparts) != 2):
+    log.error('You must specify a full Zookeeper path (i.e. zoo1.example.com:2181/kafka-cluster)')
     sys.exit(1)
 
-# Make sure that JAVA_HOME is specified and is valid
-if 'JAVA_HOME' in os.environ:
-  java_bin = os.path.join(os.environ['JAVA_HOME'], 'bin', 'java')
-  if not is_exec_file(java_bin):
-    log.error("The JAVA_HOME environment variable doesn't seem to work ({0} is not an executable)".format(java_bin))
+  log.info("Connecting to zookeeper {0}".format(zkparts[0]))
+  try:
+    zk = KazooClient(zkparts[0])
+    zk.start()
+  except KazooException as e:
+    log.error("Cannot connect to Zookeeper: {0}".format(e))
     sys.exit(1)
-else:
-  log.error("The JAVA_HOME environment variable must be set")
-  sys.exit(1)
 
-# Validate we got a good ZK connect string
-zkparts = args.zookeeper.split('/')
-if (len(zkparts) != 2):
-  log.error('You must specify a full Zookeeper path (i.e. zoo1.example.com:2181/kafka-cluster)')
-  sys.exit(1)
+  # Get broker list
+  cluster = Cluster()
+  for b in zk.get_children("/{0}/brokers/ids".format(zkparts[1])):
+    bdata, bstat = zk.get("/{0}/brokers/ids/{1}".format(zkparts[1], b))
+    bj = json.loads(bdata)
+    cluster.brokers[int(b)] = Broker(int(b), bj['host'])
 
-log.info("Connecting to zookeeper {0}".format(zkparts[0]))
-try:
-  zk = KazooClient(zkparts[0])
-  zk.start()
-except KazooException as e:
-  log.error("Cannot connect to Zookeeper: {0}".format(e))
-  sys.exit(1)
+  # Get current partition state
+  log.info("Getting partition list from Zookeeper")
+  for topic in zk.get_children("/{0}/brokers/topics".format(zkparts[1])):
+    zdata, zstat = zk.get("/{0}/brokers/topics/{1}".format(zkparts[1], topic))
+    zj = json.loads(zdata)
 
-# Get broker list
-cluster = Cluster()
-for b in zk.get_children("/{0}/brokers/ids".format(zkparts[1])):
-  bdata, bstat = zk.get("/{0}/brokers/ids/{1}".format(zkparts[1], b))
-  bj = json.loads(bdata)
-  cluster.brokers[int(b)] = Broker(int(b), bj['host'])
+    t = Topic(topic, len(zj['partitions']))
+    for partition in zj['partitions']:
+      t.partitions[int(partition)].replicas = zj['partitions'][partition]
 
-# Get current partition state
-log.info("Getting partition list from Zookeeper")
-for topic in zk.get_children("/{0}/brokers/topics".format(zkparts[1])):
-  zdata, zstat = zk.get("/{0}/brokers/topics/{1}".format(zkparts[1], topic))
-  zj = json.loads(zdata)
+      # Also assign partitions to brokers
+      for i, replica in enumerate(zj['partitions'][partition]):
+        if replica not in cluster.brokers:
+          # Hit a replica that's not in the ID list (which means it's dead)
+          # We'll add it, but trying to get sizes will fail as we don't have a hostname
+          cluster.brokers[replica] = Broker(replica, None)
+        cluster.brokers[replica].add_partition(i, t.partitions[int(partition)])
 
-  t = Topic(topic, len(zj['partitions']))
-  for partition in zj['partitions']:
-    t.partitions[int(partition)].replicas = zj['partitions'][partition]
+    cluster.topics[topic] = t
 
-    # Also assign partitions to brokers
-    for i, replica in enumerate(zj['partitions'][partition]):
-      if replica not in cluster.brokers:
-        # Hit a replica that's not in the ID list (which means it's dead)
-        # We'll add it, but trying to get sizes will fail as we don't have a hostname
-        cluster.brokers[replica] = Broker(replica, None)
-      cluster.brokers[replica].add_partition(i, t.partitions[int(partition)])
+  log.info("Closing connection to zookeeper")
+  zk.stop()
+  zk.close()
 
-  cluster.topics[topic] = t
+  if args.leadership:
+    log.info("Cluster Leadership Balance (before):")
+    for broker in sorted(cluster.brokers.keys()):
+      log.info("Broker {0}: partitions={1}/{2} ({3:.2f}%), size={4}".format(broker, cluster.brokers[broker].num_leaders(),
+                                                                            cluster.brokers[broker].num_partitions(),
+                                                                            cluster.brokers[broker].percent_leaders(),
+                                                                            cluster.brokers[broker].total_size()))
 
-log.info("Closing connection to zookeeper")
-zk.stop()
-zk.close()
+  # Call the appropriate module to create ideal state
+  newcluster = cluster.clone()
+  idealstate = args.func(newcluster, args)
 
-if args.leadership:
-  log.info("Cluster Leadership Balance (before):")
-  for broker in sorted(cluster.brokers.keys()):
-    log.info("Broker {0}: partitions={1}/{2} ({3:.2f}%), size={4}".format(broker, cluster.brokers[broker].num_leaders(),
-                                                                          cluster.brokers[broker].num_partitions(),
-                                                                          cluster.brokers[broker].percent_leaders(),
-                                                                          cluster.brokers[broker].total_size()))
+  if args.leadership:
+    log.info("Cluster Leadership Balance (after):")
+    for broker in sorted(newcluster.brokers.keys()):
+      log.info("Broker {0}: partitions={1}/{2} ({3:.2f}%), size={4}".format(broker, newcluster.brokers[broker].num_leaders(),
+                                                                            newcluster.brokers[broker].num_partitions(),
+                                                                            newcluster.brokers[broker].percent_leaders(),
+                                                                            newcluster.brokers[broker].total_size()))
 
-# Call the appropriate module to create ideal state
-newcluster = cluster.clone()
-idealstate = args.func(newcluster, args)
+  # Generate a list of moves required to get from the current state to the ideal state
+  log.info("Generating moves to reach the ideal state")
+  moves = []
+  for topic in newcluster.topics:
+    for i, partition in enumerate(newcluster.topics[topic].partitions):
+      if partition.replicas != cluster.topics[topic].partitions[i].replicas:
+        moves.append({"topic": topic, "partition": i, "replicas": partition.replicas})
 
-if args.leadership:
-  log.info("Cluster Leadership Balance (after):")
-  for broker in sorted(newcluster.brokers.keys()):
-    log.info("Broker {0}: partitions={1}/{2} ({3:.2f}%), size={4}".format(broker, newcluster.brokers[broker].num_leaders(),
-                                                                          newcluster.brokers[broker].num_partitions(),
-                                                                          newcluster.brokers[broker].percent_leaders(),
-                                                                          newcluster.brokers[broker].total_size()))
+  log.info("Partition moves required: {0}".format(len(moves)))
+  if (len(moves) == 0) and (args.func != module_elect):
+    log.info("No partition reassignment needed")
+    sys.exit(0)
 
-# Generate a list of moves required to get from the current state to the ideal state
-log.info("Generating moves to reach the ideal state")
-moves = []
-for topic in newcluster.topics:
-  for i, partition in enumerate(newcluster.topics[topic].partitions):
-    if partition.replicas != cluster.topics[topic].partitions[i].replicas:
-      moves.append({"topic": topic, "partition": i, "replicas": partition.replicas})
-
-log.info("Partition moves required: {0}".format(len(moves)))
-if (len(moves) == 0) and (args.func != module_elect):
-  log.info("No partition reassignment needed")
-  sys.exit(0)
-
-if args.generate:
-  for i, move in enumerate(batch(moves, args.moves)):
-    reassignment = {'partitions': move, 'version': 1}
-    log.info("Partition Reassignment File {0}: {1}".format(i+1, json.dumps(reassignment)))
-  sys.exit(0)
-
-if (args.execute):
-  if len(moves) > 0:
-    total_batches = (len(moves) // args.moves) + 1
+  if args.generate:
     for i, move in enumerate(batch(moves, args.moves)):
       reassignment = {'partitions': move, 'version': 1}
-      log.info("Executing partition reassignment {0}/{1}: {2}".format(i+1, total_batches, json.dumps(reassignment)))
+      log.info("Partition Reassignment File {0}: {1}".format(i+1, json.dumps(reassignment)))
+    sys.exit(0)
+
+  if (args.execute):
+    if len(moves) > 0:
+      total_batches = (len(moves) // args.moves) + 1
+      for i, move in enumerate(batch(moves, args.moves)):
+        reassignment = {'partitions': move, 'version': 1}
+        log.info("Executing partition reassignment {0}/{1}: {2}".format(i+1, total_batches, json.dumps(reassignment)))
+        with NamedTemporaryFile() as assignfile:
+          assignfile.write(json.dumps(reassignment))
+          assignfile.flush()
+          commands.getoutput('{0}/kafka-reassign-partitions.sh --zookeeper {1} --execute --reassignment-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
+
+          failed_re = re.compile('.*Reassignment of partition.*?\s+failed', re.DOTALL)
+          progress_re = re.compile('.*Reassignment of partition.*?\s+still\s+in\s+progress', re.DOTALL)
+
+          # Loop waiting for reassignment to finish
+          finished = False
+          while (not finished):
+            verify_out = commands.getoutput('{0}/kafka-reassign-partitions.sh --zookeeper {1} --verify --reassignment-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
+            if (failed_re.match(verify_out)):
+              log.error('Failed reassignment file: {0}'.format(json.dumps(move)))
+              log.error('Reassignment tool status: {0}'.format(verify_out))
+              sys.exit(1)
+            elif (progress_re.match(verify_out)):
+              completed_partitions=verify_out.count('completed successfully')
+              total_partitions=verify_out.count('Reassignment of partition')
+              remaining_partitions=total_partitions - completed_partitions
+              log.info('Partition reassignment {0}/{1} in progress [ {2}/{3} partitions remain ]. Sleeping 10 seconds'.format(
+                i+1, total_batches, remaining_partitions, total_partitions))
+              time.sleep(10)
+            else:
+              finished = True
+
+    # Split PLE so a single request isn't longer than max ZK data size
+    log.info("Generating preferred replica election")
+    ples = []
+    for topic in newcluster.topics:
+      for i, partition in enumerate(newcluster.topics[topic].partitions):
+        ples.append({"topic": topic, "partition": i})
+
+    ple_str = json.dumps({"partitions": ples})
+    batch_size = int(math.ceil(len(ples) / int(math.ceil(len(ple_str) / args.ple_size))))
+    for i, ple in enumerate(batch(ples, batch_size)):
+      # Sleep between PLEs
+      if i > 0:
+        log.info("Waiting {0} seconds for replica election to complete".format(args.ple_wait))
+        time.sleep(args.ple_wait)
+
+      reassignment = {'partitions': ple}
+      log.info("Executing preferred replica election {0}".format(i))
       with NamedTemporaryFile() as assignfile:
         assignfile.write(json.dumps(reassignment))
         assignfile.flush()
-        commands.getoutput('{0}/kafka-reassign-partitions.sh --zookeeper {1} --execute --reassignment-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
+        commands.getoutput('{0}/kafka-preferred-replica-election.sh --zookeeper {1} --path-to-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
 
-        failed_re = re.compile('.*Reassignment of partition.*?\s+failed', re.DOTALL)
-        progress_re = re.compile('.*Reassignment of partition.*?\s+still\s+in\s+progress', re.DOTALL)
+  sys.exit(0)
 
-        # Loop waiting for reassignment to finish
-        finished = False
-        while (not finished):
-          verify_out = commands.getoutput('{0}/kafka-reassign-partitions.sh --zookeeper {1} --verify --reassignment-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
-          if (failed_re.match(verify_out)):
-            log.error('Failed reassignment file: {0}'.format(json.dumps(move)))
-            log.error('Reassignment tool status: {0}'.format(verify_out))
-            sys.exit(1)
-          elif (progress_re.match(verify_out)):
-            completed_partitions=verify_out.count('completed successfully')
-            total_partitions=verify_out.count('Reassignment of partition')
-            remaining_partitions=total_partitions - completed_partitions
-            log.info('Partition reassignment {0}/{1} in progress [ {2}/{3} partitions remain ]. Sleeping 10 seconds'.format(
-              i+1, total_batches, remaining_partitions, total_partitions))
-            time.sleep(10)
-          else:
-            finished = True
 
-  # Split PLE so a single request isn't longer than max ZK data size
-  log.info("Generating preferred replica election")
-  ples = []
-  for topic in newcluster.topics:
-    for i, partition in enumerate(newcluster.topics[topic].partitions):
-      ples.append({"topic": topic, "partition": i})
-
-  ple_str = json.dumps({"partitions": ples})
-  batch_size = int(math.ceil(len(ples) / int(math.ceil(len(ple_str) / args.ple_size))))
-  for i, ple in enumerate(batch(ples, batch_size)):
-    # Sleep between PLEs
-    if i > 0:
-      log.info("Waiting {0} seconds for replica election to complete".format(args.ple_wait))
-      time.sleep(args.ple_wait)
-
-    reassignment = {'partitions': ple}
-    log.info("Executing preferred replica election {0}".format(i))
-    with NamedTemporaryFile() as assignfile:
-      assignfile.write(json.dumps(reassignment))
-      assignfile.flush()
-      commands.getoutput('{0}/kafka-preferred-replica-election.sh --zookeeper {1} --path-to-json-file {2}'.format(args.tools_path, args.zookeeper, assignfile.name))
-
-sys.exit(0)
+if __name__ == '__main__':
+  main()
