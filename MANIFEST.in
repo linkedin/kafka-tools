@@ -1,0 +1,3 @@
+include LICENSE NOTICE README.md
+recursive-include kafka *.md
+recursive-include kafka *.py
