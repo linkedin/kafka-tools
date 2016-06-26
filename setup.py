@@ -1,12 +1,51 @@
-from setuptools import setup, find_packages
-
+import os
+import subprocess
 from codecs import open
-from os import path
+from setuptools import setup, find_packages, Command
 
-here = path.abspath(path.dirname(__file__))
+
+entry_points={
+    'console_scripts': [
+        'kafka-assigner = kafka.tools.assigner.__main__:main',
+    ],
+}
+
+class Pex(Command):
+  user_options = []
+
+  def initialize_options(self):
+    """Abstract method that is required to be overwritten"""
+
+  def finalize_options(self):
+    """Abstract method that is required to be overwritten"""
+
+  def run(self):
+    if not os.path.exists('dist/wheel-cache'):
+      print('Creating dist/wheel-cache')
+      os.makedirs('dist/wheel-cache')
+
+    print('Building wheels')
+    subprocess.check_call(['pip', 'wheel', '-w', 'dist/wheel-cache', '.'])
+
+    for entry in entry_points['console_scripts']:
+      name, call = tuple([_.strip() for _ in entry.split('=')])
+      print('Creating {0} as {1}'.format(name, call))
+      pex_cmd = [
+        'pex',
+        '--no-pypi',
+        '--repo=dist/wheel-cache',
+        '-o', 'build/bin/{0}'.format(name),
+        '-e', call,
+        '.',
+      ]
+      print('Running {0}'.format(' '.join(pex_cmd)))
+      subprocess.check_call(pex_cmd)
+
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -43,16 +82,17 @@ setup(
 
     keywords='kafka tools admin',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=['paramiko', 'kazoo'],
-
+    install_requires=[
+        'paramiko',
+        'kazoo'
+    ],
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
     },
-
-    entry_points={
-        'console_scripts': [
-            'kafka-assigner=kafka.tools.assigner:main',
-        ],
+    entry_points=entry_points,
+    cmdclass={
+        'pexify': Pex
     },
+
 )
