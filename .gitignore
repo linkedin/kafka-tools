@@ -1,5 +1,6 @@
 build/
 dist/
+venv/
 *.egg-info/
 *.egg
 .eggs
@@ -10,3 +11,5 @@ __pycache__/
 
 .tox
 .cache
+
+activate
