@@ -32,21 +32,6 @@ from .helpers import Cluster, Topic, Broker, batch, get_partition_sizes, is_exec
 
 # Set up logging before anything else
 log = logging.getLogger('kafka-assigner')
-log.setLevel(logging.INFO)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.INFO)
-formatter = logging.Formatter('[%(levelname)s] %(message)s')
-ch.setFormatter(formatter)
-log.addHandler(ch)
-
-
-########################################################################################################################
-# MODULE CODE BELOW
-=======
-from .helpers import Cluster, Topic, Broker, batch, get_partition_sizes, is_exec_file
-
-log = logging.getLogger('kafka-assigner')
->>>>>>> Add `Virtualenv` and `Pexify` cmdclasses, 4 space conversion, break helpers into submodule.
 
 
 # The elect module is a dummy module that does no partition moves, just triggers the PLE
