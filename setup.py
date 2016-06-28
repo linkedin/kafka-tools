@@ -42,8 +42,6 @@ class VirtualEnv(Command):
             '-p', self.python_interpreter,
             venv_path
         ]
-            venv_path
-        ]
         print('Creating virtual environment in ', venv_path)
         subprocess.check_call(venv_cmd)
         print(
