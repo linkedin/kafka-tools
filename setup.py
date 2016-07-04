@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from codecs import open
 from setuptools import setup, find_packages, Command
 
@@ -9,6 +10,15 @@ entry_points = {
         'kafka-assigner = kafka.tools.assigner.__main__:main',
     ],
 }
+
+install_requires = [
+    'paramiko',
+    'kazoo'
+]
+
+# Python 2.6 doesn't have a native importlib
+if sys.version_info[0] == 2 and sys.version_info[1] == 6:
+    install_requires.append('importlib')
 
 
 class Pex(Command):
@@ -123,10 +133,7 @@ setup(
 
     keywords='kafka tools admin',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=[
-        'paramiko',
-        'kazoo'
-    ],
+    install_requires=install_requires,
     tests_require=[
         'coverage',
         'mock',

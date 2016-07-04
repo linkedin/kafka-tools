@@ -32,13 +32,12 @@ class ArgumentTests(unittest.TestCase):
         self.null_plugin = PluginModule()
 
     def create_action_map(self):
-        self.action_map = {cls.name: cls for cls in get_modules(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule)}
+        self.action_map = dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule))
 
     def test_get_arguments_none(self):
         sys.argv = ['kafka-assigner']
-        with self.assertRaises(SystemExit):
-            with capture_sys_output() as (stdout, stderr):
-                set_up_arguments({}, {}, [self.null_plugin])
+        with capture_sys_output() as (stdout, stderr):
+            self.assertRaises(SystemExit, set_up_arguments, {}, {}, [self.null_plugin])
 
     def test_get_modules(self):
         self.create_action_map()

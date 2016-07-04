@@ -70,10 +70,7 @@ class MainTests(unittest.TestCase):
                                                          ple_wait=120,
                                                          sizer='ssh',
                                                          leadership=True)
-        with self.assertRaises(SystemExit) as cm:
-            main()
-
-        assert cm.exception.code == 0
+        assert main() == 0
 
     def test_get_plugins(self):
         plugin_list = get_plugins_list()

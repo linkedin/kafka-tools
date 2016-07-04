@@ -25,6 +25,13 @@ class ReassignmentTests(unittest.TestCase):
     def test_reassignment_create(self):
         assert self.reassignment is not None
 
+    def test_reassignment_dict(self):
+        t_repr = self.reassignment.dict_for_reassignment()
+        expect_repr = {'version': 1, 'partitions': []}
+        for i in range(10):
+            expect_repr['partitions'].append({'topic': 'testTopic', 'partition': i, 'replicas': [1]})
+        assert t_repr == expect_repr
+
     def test_reassignment_repr(self):
         t_repr = json.loads(repr(self.reassignment))
         expect_repr = {'version': 1, 'partitions': []}

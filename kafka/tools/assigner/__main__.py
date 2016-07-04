@@ -15,11 +15,11 @@ from kafka.tools.assigner.models.replica_election import ReplicaElection
 
 
 def get_action_map():
-    return {cls.name: cls for cls in get_modules(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule)}
+    return dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule))
 
 
 def get_sizer_map():
-    return {cls.name: cls for cls in get_modules(kafka.tools.assigner.sizers, kafka.tools.assigner.sizers.SizerModule)}
+    return dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.sizers, kafka.tools.assigner.sizers.SizerModule))
 
 
 def get_plugins_list():
@@ -121,7 +121,7 @@ def main():
     for plugin in plugins:
         plugin.finished()
 
-    sys.exit(0)
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

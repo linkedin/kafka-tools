@@ -11,7 +11,7 @@ class ActionBalance(ActionModule):
     def __init__(self, args, cluster):
         super(ActionBalance, self).__init__(args, cluster)
 
-        self.balance_types = {cls.name: cls for cls in get_modules(kafka.tools.assigner.actions.balancemodules, ActionBalanceModule)}
+        self.balance_types = dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.actions.balancemodules, ActionBalanceModule))
 
         # Initialize all the modules to use
         self.modules = []

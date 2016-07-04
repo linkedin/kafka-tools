@@ -14,19 +14,21 @@ class Reassignment:
         self.pause_time = pause_time
 
     def __repr__(self):
+        return json.dumps(self.dict_for_reassignment())
+
+    def dict_for_reassignment(self):
         reassignment = {'partitions': [], 'version': 1}
         for partition in self.partitions:
             reassignment['partitions'].append(partition.dict_for_reassignment())
-        return json.dumps(reassignment)
+        return reassignment
 
     def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
         for plugin in plugins:
             plugin.before_execute_batch(num)
 
         if not dry_run:
-            with NamedTemporaryFile() as assignfile:
-                assignment_json = repr(self)
-                assignfile.write(assignment_json.encode(encoding="utf-8"))
+            with NamedTemporaryFile(mode='w') as assignfile:
+                json.dump(self.dict_for_reassignment(), assignfile)
                 assignfile.flush()
                 proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                          '--zookeeper', zookeeper,

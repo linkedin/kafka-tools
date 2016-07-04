@@ -26,6 +26,13 @@ class ReplicaElectionTests(unittest.TestCase):
             expect_repr['partitions'].append({'topic': 'testTopic', 'partition': i})
         assert t_repr == expect_repr
 
+    def test_replica_election_dict(self):
+        t_repr = self.replica_election.dict_for_replica_election()
+        expect_repr = {'partitions': []}
+        for i in range(10):
+            expect_repr['partitions'].append({'topic': 'testTopic', 'partition': i})
+        assert t_repr == expect_repr
+
     @patch('kafka.tools.assigner.models.replica_election.subprocess.call')
     def test_replica_election_execute(self, mock_call):
         self.replica_election.execute(1, 1, 'zk_connect_string', '/path/to/tools', plugins=[], dry_run=False)
