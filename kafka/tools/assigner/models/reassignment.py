@@ -26,7 +26,7 @@ class Reassignment:
         if not dry_run:
             with NamedTemporaryFile() as assignfile:
                 assignment_json = repr(self)
-                assignfile.write(assignment_json.decode())
+                assignfile.write(bytes(assignment_json))
                 assignfile.flush()
                 proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                          '--zookeeper', zookeeper,

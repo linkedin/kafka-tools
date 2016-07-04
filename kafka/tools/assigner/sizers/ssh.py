@@ -23,7 +23,7 @@ class SizerSSH(SizerModule):
     def get_partition_sizes(self):
         # Get broker partition sizes
         size_re = re.compile("^([0-9]+)\s+.*?\/([a-z0-9_-]+)-([0-9]+)\s*$", re.I)
-        for broker_id, broker in self.cluster.brokers.iteritems():
+        for broker_id, broker in self.cluster.brokers.items():
             if broker.hostname is None:
                 raise UnknownBrokerException("Cannot get sizes for broker ID {0} which has no hostname. "
                                              "Remove the broker from the cluster before balance".format(broker_id))

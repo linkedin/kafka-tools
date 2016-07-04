@@ -18,7 +18,7 @@ class ReplicaElection:
         if not dry_run:
             with NamedTemporaryFile() as assignfile:
                 assignment_json = repr(self)
-                assignfile.write(assignment_json)
+                assignfile.write(bytes(assignment_json))
                 assignfile.flush()
                 subprocess.call(['{0}/kafka-preferred-replica-election.sh'.format(tools_path),
                                  '--zookeeper', zookeeper,
