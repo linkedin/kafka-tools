@@ -12,6 +12,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
     aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=10, type=int)
     aparser.add_argument('-s', '--sizer', help="Select module to use to get partition sizes", required=False, default='ssh', choices=sizer_map.keys())
+    aparser.add_argument('-d', '--datadir', help="Path to the data directory on the broker", required=False, default="/mnt/u001/kafka/i001_caches")
     aparser.add_argument('--skip-ple', help="Skip preferred replica election after finishing moves", action='store_true')
     aparser.add_argument('--ple-size', help="Max number of partitions in a single preferred leader election", required=False, default=2000, type=int)
     aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=120, type=int)
