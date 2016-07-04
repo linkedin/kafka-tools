@@ -1,6 +1,10 @@
 Kafka Tools
 ===========
 
+.. image:: https://badges.gitter.im/linkedin/kafka-tools.svg
+   :alt: Join the chat at https://gitter.im/linkedin/kafka-tools
+   :target: https://gitter.im/linkedin/kafka-tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 This repository is a collection of tools and scripts for working with
 `Apache Kafka <http://kafka.apache.org>`. The Site Reliability team
 for Kafka at LinkedIn has built these over time in order to make
