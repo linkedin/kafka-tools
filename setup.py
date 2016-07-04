@@ -13,12 +13,14 @@ entry_points = {
 
 install_requires = [
     'paramiko',
-    'kazoo'
+    'kazoo',
+    'pex',
 ]
 
 # Python 2.6 doesn't have a native importlib
 if sys.version_info[0] == 2 and sys.version_info[1] == 6:
     install_requires.append('importlib')
+    install_requires.append('argparse')
 
 
 class Pex(Command):
@@ -49,6 +51,7 @@ class Pex(Command):
               '-e', call,
               '.',
             ]
+            pex_cmd.extend(install_requires)
             print('Running {0}'.format(' '.join(pex_cmd)))
             subprocess.check_call(pex_cmd)
 
