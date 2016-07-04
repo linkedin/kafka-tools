@@ -30,7 +30,7 @@ class ArgumentTests(unittest.TestCase):
 
     def test_get_arguments_none(self):
         sys.argv = ['kafka-assigner']
-        with capture_sys_output() as (stdout, stderr):
+        with redirect_err_output():
             self.assertRaises(SystemExit, set_up_arguments, {}, {}, [self.null_plugin])
 
     def test_get_modules(self):
