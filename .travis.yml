@@ -15,6 +15,7 @@ matrix:
       - TOXENV=py35
 install:
   - pip install tox
+  - pip install codeclimate-test-reporter
 script: tox
 after_success:
   - codeclimate-test-reporter
