@@ -3,7 +3,6 @@ env:
   matrix:
   - TOXENV=py27
   - TOXENV=py34
-  - TOXENV=py35
 install:
   - pip install tox
   - pip install coverage
