@@ -1,0 +1,1 @@
+ModubleAbstract = object
