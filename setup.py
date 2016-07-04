@@ -125,8 +125,7 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     install_requires=[
         'paramiko',
-        'kazoo',
-        'codeclimate-test-reporter'
+        'kazoo'
     ],
     tests_require=[
         'coverage',
