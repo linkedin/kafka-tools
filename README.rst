@@ -8,6 +8,19 @@ managing Kafka a little bit easier. Our intention is to add to this
 repository as more tools are developed, and we welcome additions and
 modifications that make things better for all!
 
+.. image:: https://travis-ci.org/linkedin/kafka-tools.svg
+   :target: https://travis-ci.org/linkedin/kafka-tools.svg
+   :alt: Build Status
+.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/gpa.svg
+   :target: https://codeclimate.com/github/linkedin/kafka-tools
+   :alt: Code Climate
+.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/coverage.svg
+   :target: https://codeclimate.com/github/linkedin/kafka-tools/coverage
+   :alt: Test Coverage
+.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
+   :target: https://codeclimate.com/github/linkedin/kafka-tools
+   :alt: Issue Count
+
 Current Scripts
 ---------------
 
