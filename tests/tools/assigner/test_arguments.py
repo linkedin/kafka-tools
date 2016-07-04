@@ -4,11 +4,6 @@ import unittest
 
 from contextlib import contextmanager
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 import kafka.tools.assigner.actions
 
 from kafka.tools.assigner.arguments import set_up_arguments
@@ -17,14 +12,13 @@ from kafka.tools.assigner.plugins import PluginModule
 
 
 @contextmanager
-def capture_sys_output():
-    capture_out, capture_err = StringIO(), StringIO()
-    current_out, current_err = sys.stdout, sys.stderr
+def redirect_err_output():
+    current_err = sys.stderr
     try:
-        sys.stdout, sys.stderr = capture_out, capture_err
-        yield capture_out, capture_err
+        sys.stderr = sys.stdout
+        yield
     finally:
-        sys.stdout, sys.stderr = current_out, current_err
+        sys.stderr = current_err
 
 
 class ArgumentTests(unittest.TestCase):
@@ -36,8 +30,14 @@ class ArgumentTests(unittest.TestCase):
 
     def test_get_arguments_none(self):
         sys.argv = ['kafka-assigner']
+<<<<<<< HEAD
         with capture_sys_output() as (stdout, stderr):
             self.assertRaises(SystemExit, set_up_arguments, {}, {}, [self.null_plugin])
+=======
+        with self.assertRaises(SystemExit):
+            with redirect_err_output():
+                set_up_arguments({}, {}, [self.null_plugin])
+>>>>>>> c2c5c7c27057298d61d5cad927321aea132b7eae
 
     def test_get_modules(self):
         self.create_action_map()
