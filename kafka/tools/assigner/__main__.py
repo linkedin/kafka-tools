@@ -114,7 +114,8 @@ def main():
         plugin.before_ple()
 
     if not args.skip_ple:
-        batches = split_partitions_into_batches(move_partitions, batch_size=args.moves, use_class=ReplicaElection)
+        all_cluster_partitions = [p for p in action_to_run.cluster.partitions()]
+        batches = split_partitions_into_batches(all_cluster_partitions, batch_size=args.ple_size, use_class=ReplicaElection)
         log.info("Number of replica elections: {0}".format(len(batches)))
         run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
 
