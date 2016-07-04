@@ -8,5 +8,5 @@ def split_partitions_into_batches(partitions, batch_size=10, use_class=None):
     if use_class is None:
         raise ProgrammingException("split_partitions_into_batches called with no use_class")
 
-    batches = [use_class(partitions[i:i + batch_size]) for i in xrange(0, len(partitions), batch_size)]
+    batches = [use_class(partitions[i:i + batch_size]) for i in range(0, len(partitions), batch_size)]
     return batches
