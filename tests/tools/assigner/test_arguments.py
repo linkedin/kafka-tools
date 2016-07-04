@@ -1,10 +1,16 @@
 import inspect
 import sys
 import unittest
+
 from contextlib import contextmanager
-from StringIO import StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import kafka.tools.assigner.actions
+
 from kafka.tools.assigner.arguments import set_up_arguments
 from kafka.tools.assigner.modules import get_modules
 from kafka.tools.assigner.plugins import PluginModule

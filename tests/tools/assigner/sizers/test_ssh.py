@@ -2,7 +2,11 @@ import unittest
 
 from argparse import Namespace
 from mock import call, patch, ANY
-from io import StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from kafka.tools.assigner.exceptions import UnknownBrokerException
 from kafka.tools.assigner.models.broker import Broker
