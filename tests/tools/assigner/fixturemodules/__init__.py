@@ -1,0 +1,2 @@
+class ModuleTesterBaseClass(object):
+    pass
