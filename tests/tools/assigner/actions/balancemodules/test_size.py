@@ -50,16 +50,15 @@ class ActionBalanceSizeTests(unittest.TestCase):
         action = ActionBalanceSize(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[0]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[1]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[0]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0) == 3000
 
     def test_process_cluster_empty_broker(self):
         self.cluster.add_broker(Broker(3, 'brokerhost3.example.com'))
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = self.cluster.brokers[3]
         self.cluster.add_topic(Topic("testTopic3", 2))
         partition = self.cluster.topics['testTopic3'].partitions[0]
         partition.size = 1000
@@ -73,12 +72,12 @@ class ActionBalanceSizeTests(unittest.TestCase):
         action = ActionBalanceSize(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b3, b2]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b3]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic3'].partitions[0].replicas == [b1, b3]
-        assert self.cluster.topics['testTopic3'].partitions[1].replicas == [b3, b1]
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[0]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[1]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[0]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[3].partitions[0]], 0) == 3000
+        assert sum([p.size for p in self.cluster.brokers[3].partitions[1]], 0) == 3000
 
     def test_process_cluster_odd_partitions(self):
         b1 = self.cluster.brokers[1]
@@ -100,13 +99,10 @@ class ActionBalanceSizeTests(unittest.TestCase):
         action = ActionBalanceSize(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic3'].partitions[0].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic3'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[2].replicas == [b2, b1]
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[0]], 0) == 5000
+        assert sum([p.size for p in self.cluster.brokers[1].partitions[1]], 0) == 5000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[0]], 0) == 5000
+        assert sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0) == 5000
 
     def test_process_cluster_large_partition(self):
         b1 = self.cluster.brokers[1]
@@ -128,13 +124,14 @@ class ActionBalanceSizeTests(unittest.TestCase):
         action = ActionBalanceSize(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[0].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic3'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[2].replicas == [b1, b2]
+        b1_0 = sum([p.size for p in self.cluster.brokers[1].partitions[0]], 0)
+        b1_1 = sum([p.size for p in self.cluster.brokers[1].partitions[1]], 0)
+        b2_0 = sum([p.size for p in self.cluster.brokers[2].partitions[0]], 0)
+        b2_1 = sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0)
+        assert b1_0 >= 8000 and b1_0 <= 9000
+        assert b1_1 >= 8000 and b1_1 <= 9000
+        assert b2_0 >= 8000 and b2_0 <= 9000
+        assert b2_1 >= 8000 and b2_1 <= 9000
 
     def test_process_cluster_large_partition_early(self):
         b1 = self.cluster.brokers[1]
@@ -157,10 +154,11 @@ class ActionBalanceSizeTests(unittest.TestCase):
         action = ActionBalanceSize(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic3'].partitions[2].replicas == [b1, b2]
+        b1_0 = sum([p.size for p in self.cluster.brokers[1].partitions[0]], 0)
+        b1_1 = sum([p.size for p in self.cluster.brokers[1].partitions[1]], 0)
+        b2_0 = sum([p.size for p in self.cluster.brokers[2].partitions[0]], 0)
+        b2_1 = sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0)
+        assert b1_0 >= 8000 and b1_0 <= 9000
+        assert b1_1 >= 8000 and b1_1 <= 9000
+        assert b2_0 >= 8000 and b2_0 <= 9000
+        assert b2_1 >= 8000 and b2_1 <= 9000
