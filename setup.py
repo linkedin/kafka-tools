@@ -126,6 +126,7 @@ setup(
     install_requires=[
         'paramiko',
         'kazoo',
+        'codeclimate-test-reporter'
     ],
     tests_require=[
         'coverage',
