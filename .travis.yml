@@ -3,8 +3,6 @@ env:
   matrix:
   - TOXENV=py27
   - TOXENV=py34
-  global:
-    secure: yh+iyrLn9DQyzZG+JglIQNQQjGJs2bm6bttsSFafQROn4ADQEUiXvYrggrl53iNn6nO+Hoq+KhBEx0zr/58W0BMdYsM4HklMEKWMVWUCt8YPn+mgVHHW2/b9eeN0c4oHhQXzxuoO8b7mJEiOpkZcqVjF2GxCkbCcsLTE55hK3HqEX7vLbc+AJrwOC1vuNmkMrgtkxeN+F70E1c/ekwA38/P0jVgL6JdK5OdHA5BcWa/kxHG/+9i0rrNIGgeOWOk6CJs36cF/55ci1Chz8fAZ0opynaY2S6WTTKE8lKjIedoy52dPwvnW4IgsyADO+5HbTCKbMYXbJEwOXs4pqpT/CVNYvrG76JsLv3fM0BtAPGtgiqytx1bIR6v0PUHkQuRe0USTjgKHH3b0vcbjqXhzCfX/oFCP+AALS+Xh2jAdgYIgglOY1GboQl/vYuxvkyfuUIQQeP7+6NYlmT5EfGK5/1SzlQzXtVh/5E7MA6mmxk+npEl7EHn4ubuDvwRp5BegSkCD28zW362iXm1FWBR9q3w6OSIeTNCKyEz99tkVn9SM2cyJs/3kUv6BhV1V0vBE6cedeeL0gLnFuucNscSkkJ83ms6boCzgsXGojWEOWzBB/4czskcYC/gBIkF+KREUJLPXUnOrQedZxCiXDEpUxZLb5/yQD53YB0VnhmIcUyc=
 install:
   - pip install tox
   - pip install coverage
