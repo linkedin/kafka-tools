@@ -15,10 +15,13 @@ matrix:
       - TOXENV=py35
 install:
   - pip install tox
+  - pip install coveralls
   - pip install codeclimate-test-reporter
 script: tox
 after_success:
+  - bash <(curl -s https://codecov.io/bash)
   - codeclimate-test-reporter
+  - coveralls
 notifications:
   email:
   - jon@linkedin.com
