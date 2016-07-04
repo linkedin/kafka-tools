@@ -16,7 +16,10 @@ modifications that make things better for all!
    :alt: Code Climate
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/coverage.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools/coverage
-   :alt: Test Coverage
+   :alt: Code Climate Test Coverage
+.. image:: https://coveralls.io/repos/github/linkedin/kafka-tools/badge.svg?branch=master
+   :target: https://coveralls.io/github/linkedin/kafka-tools?branch=master
+   :alt: Coveralls Test Coverage
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
