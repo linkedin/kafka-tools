@@ -2,7 +2,7 @@ import unittest
 
 from argparse import Namespace
 from mock import call, patch, ANY
-from StringIO import StringIO
+from io import StringIO
 
 from kafka.tools.assigner.exceptions import UnknownBrokerException
 from kafka.tools.assigner.models.broker import Broker
@@ -75,7 +75,7 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_badinput(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO("foo\nbar\nbaz\n")
+        m_stdout = StringIO(u'foo\nbar\nbaz\n')
         m_stderr = StringIO()
         m_stdin = StringIO()
         self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
@@ -92,7 +92,7 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_singlehost(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO("1001\t/path/to/data/testTopic1-0\n"
+        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
                             "1002\t/path/to/data/testTopic1-1\n"
                             "2001\t/path/to/data/testTopic2-0\n"
                             "2002\t/path/to/data/testTopic2-1\n")
@@ -112,14 +112,14 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_twohost(self):
         self.create_cluster_twohost()
-        m_stdout_1 = StringIO("1001\t/path/to/data/testTopic1-0\n"
-                              "1002\t/path/to/data/testTopic1-1\n"
-                              "2001\t/path/to/data/testTopic2-0\n"
-                              "2002\t/path/to/data/testTopic2-1\n")
-        m_stdout_2 = StringIO("1001\t/path/to/data/testTopic1-0\n"
-                              "4002\t/path/to/data/testTopic1-1\n"
-                              "1011\t/path/to/data/testTopic2-0\n"
-                              "2002\t/path/to/data/testTopic2-1\n")
+        m_stdout_1 = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
+                              u'1002\t/path/to/data/testTopic1-1\n'
+                              u'2001\t/path/to/data/testTopic2-0\n'
+                              u'2002\t/path/to/data/testTopic2-1\n')
+        m_stdout_2 = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
+                              u'4002\t/path/to/data/testTopic1-1\n'
+                              u'1011\t/path/to/data/testTopic2-0\n'
+                              u'2002\t/path/to/data/testTopic2-1\n')
         m_stderr = StringIO()
         m_stdin = StringIO()
         self.mock_exec_command.side_effect = [(m_stdin, m_stdout_1, m_stderr), (m_stdin, m_stdout_2, m_stderr)]
@@ -136,11 +136,11 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_badtopic(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO("1001\t/path/to/data/testTopic1-0\n"
-                            "1002\t/path/to/data/testTopic1-1\n"
-                            "5002\t/path/to/data/badTopic1-1\n"
-                            "2001\t/path/to/data/testTopic2-0\n"
-                            "2002\t/path/to/data/testTopic2-1\n")
+        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
+                            u'1002\t/path/to/data/testTopic1-1\n'
+                            u'5002\t/path/to/data/badTopic1-1\n'
+                            u'2001\t/path/to/data/testTopic2-0\n'
+                            u'2002\t/path/to/data/testTopic2-1\n')
         m_stderr = StringIO()
         m_stdin = StringIO()
         self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
@@ -157,11 +157,11 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_badpartition(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO("1001\t/path/to/data/testTopic1-0\n"
-                            "1002\t/path/to/data/testTopic1-1\n"
-                            "5002\t/path/to/data/testTopic1-2\n"
-                            "2001\t/path/to/data/testTopic2-0\n"
-                            "2002\t/path/to/data/testTopic2-1\n")
+        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
+                            u'1002\t/path/to/data/testTopic1-1\n'
+                            u'5002\t/path/to/data/testTopic1-2\n'
+                            u'2001\t/path/to/data/testTopic2-0\n'
+                            u'2002\t/path/to/data/testTopic2-1\n')
         m_stderr = StringIO()
         m_stdin = StringIO()
         self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)

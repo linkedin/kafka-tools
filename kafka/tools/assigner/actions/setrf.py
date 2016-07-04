@@ -23,7 +23,7 @@ class ActionSetRF(ActionModule):
 
     def process_cluster(self):
         # Randomize a broker list to use for new replicas once. We'll round robin it from here
-        idlist = self.cluster.brokers.keys()
+        idlist = list(self.cluster.brokers.keys())
         random.shuffle(idlist)
         brokers = deque(idlist)
 

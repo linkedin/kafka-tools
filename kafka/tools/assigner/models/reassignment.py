@@ -26,7 +26,7 @@ class Reassignment:
         if not dry_run:
             with NamedTemporaryFile() as assignfile:
                 assignment_json = repr(self)
-                assignfile.write(assignment_json)
+                assignfile.write(assignment_json.decode())
                 assignfile.flush()
                 proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                          '--zookeeper', zookeeper,
@@ -60,7 +60,7 @@ def check_reassignment_completion(zookeeper, tools_path, assign_filename):
 
     remaining_count = 0
     for line in lines:
-        m = status_re.match(line)
+        m = status_re.match(line.decode())
         if m and m.group(1) == 'failed':
             raise ReassignmentFailedException("The reassignment in progress failed with the following verification output:\n{0}".format(lines))
         elif m and m.group(1) == 'still in progress':

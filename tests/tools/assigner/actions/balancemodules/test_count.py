@@ -145,8 +145,9 @@ class ActionBalanceCountTests(unittest.TestCase):
         action = ActionBalanceCount(self.args, self.cluster)
         action.process_cluster()
 
-        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b1]
-        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
-        assert self.cluster.topics['testTopic3'].partitions[0].replicas == [b1, b2]
+        b1_0 = len(b1.partitions[0])
+        b1_1 = len(b1.partitions[1])
+        assert b1_0 == len(b2.partitions[1])
+        assert b1_1 == len(b2.partitions[0])
+        assert b1_0 >= 2 and b1_0 <= 3
+        assert b1_1 >= 2 and b1_1 <= 3

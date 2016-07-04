@@ -38,12 +38,12 @@ class ActionBalanceSize(ActionBalanceModule):
 
             # Calculate the median size of partitions (margin is median/2) and the average size per broker to target
             # Yes, I know the median calculation is slightly broken (it keeps integers). This is OK
-            targets[pos] = sum([p.size for p in partitions[pos]], 0) / len(self.cluster.brokers)
+            targets[pos] = sum([p.size for p in partitions[pos]], 0) // len(self.cluster.brokers)
             sizelen = len(partitions[pos])
             if not sizelen % 2:
-                margins[pos] = (partitions[pos][sizelen / 2].size + partitions[pos][sizelen / 2 - 1].size) / 4
+                margins[pos] = (partitions[pos][sizelen // 2].size + partitions[pos][sizelen // 2 - 1].size) // 4
             else:
-                margins[pos] = partitions[pos][sizelen / 2].size / 2
+                margins[pos] = partitions[pos][sizelen // 2].size // 2
 
         # Balance partitions for each replica position separately
         for pos in range(max_rf):
