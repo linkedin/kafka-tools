@@ -9,7 +9,7 @@ install:
   - pip install codeclimate-test-reporter
 script: tox
 after_script:
-  - codeclimate-test-reporter < lcov.info
+  - codeclimate-test-reporter
 notifications:
   email:
   - jon@linkedin.com
