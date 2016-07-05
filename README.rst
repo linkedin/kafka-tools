@@ -36,42 +36,12 @@ Quick Start
 1) First, download and install the Kafka admin utilities from: http://kafka.apache.org/downloads.html
 2) Then, install kafka-tools using the following command: :code:`pip install kafka-tools`
 
-Documentation
--------------
-
-Additional documentation may be found on `https://kafka-tools.readthedocs.io <https://kafka-tools.readthedocs.io/en/latest/>`_.
-
-Current Commands
-----------------
-
-kafka-assigner
-  This script is used for performing partition
-  reassignments and preferred replica elections. It uses the admin CLI
-  utilities provided with Kafka and layers on additional logic to
-  perform tasks like removing a broker, rebalancing partitions, fixing
-  partition replcation factors, and performing preferred replica elections.
-
-Prerequisites
--------------
-
-These tools are generally written in Python, and besides a basic
-installation, you will need the following additional modules:
-
-- Kazoo
-
-In addition, you will need to run it on a host that has the following:
-
-- A copy of the Kafka admin tools (including kafka-reassign-partitions.sh).
-- Access to the Zookeeper ensemble for the cluster.
-- SSH access to the Kafka brokers (with credentials preferably loaded into
-  ssh-agent).
+Additional documentation may be found at `https://kafka-tools.readthedocs.io <https://kafka-tools.readthedocs.io/en/latest/>`_.
 
 Contributing
 ------------
 
-We're always open to fixes and new features! Please open a PR for any changes
-that you have and someone will review and merge it. If you're not up for
-writing the code, open an issue for any problems or requests.
+Please see the `contribution guidelines https://kafka-tools.readthedocs.io/en/latest/contributing.html`_.
 
 Other Projects
 --------------
