@@ -1,3 +1,5 @@
 include LICENSE NOTICE README.rst
 recursive-include kafka *.md
 recursive-include kafka *.py
+recursive-include docs *.py
+recursive-include docs *.rst
