@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 # Base class that all kafka-assigner actions inherit from
 class ActionModule(object):
     ##########################################################################################################

@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 # Base class that all sizers inherit from
 class SizerModule(object):
     name = ""
