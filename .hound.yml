@@ -1,0 +1,3 @@
+python:
+  enabled: true
+fail_on_violations: true
