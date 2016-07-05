@@ -43,7 +43,7 @@ Additional documentation may be found at `https://kafka-tools.readthedocs.io <ht
 Contributing
 ------------
 
-Please see the `contribution guidelines https://kafka-tools.readthedocs.io/en/latest/contributing.html`_.
+Please see the `contribution guidelines <https://kafka-tools.readthedocs.io/en/latest/contributing.html>`_.
 
 Other Projects
 --------------
