@@ -2,7 +2,7 @@ import sys
 import unittest
 
 from argparse import Namespace
-from ..fixtures import set_up_cluster, set_up_subparser
+from ..fixtures import set_up_cluster, set_up_subparser, set_up_cluster_4broker
 
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
@@ -125,7 +125,6 @@ class ActionBalanceCountTests(unittest.TestCase):
 
         action = ActionBalanceCount(self.args, self.cluster)
         action.process_cluster()
-
         assert len(b1.partitions[0]) == 2
         assert len(b1.partitions[1]) == 2
         assert len(b2.partitions[0]) == 2
@@ -151,3 +150,26 @@ class ActionBalanceCountTests(unittest.TestCase):
         assert b1_1 == len(b2.partitions[0])
         assert b1_0 >= 2 and b1_0 <= 3
         assert b1_1 >= 2 and b1_1 <= 3
+
+    def test_process_cluster_unbalanced(self):
+        b1 = self.cluster.brokers[1]
+        b2 = self.cluster.brokers[2]
+        self.cluster.topics['testTopic1'].partitions[1].swap_replica_positions(b1, b2)
+        self.cluster.topics['testTopic2'].partitions[0].swap_replica_positions(b1, b2)
+
+        action = ActionBalanceCount(self.args, self.cluster)
+        action.process_cluster()
+
+        b1_0 = len(b1.partitions[0])
+        b1_1 = len(b1.partitions[1])
+        assert b1_0 == 2
+        assert b1_1 == 2
+
+    def test_process_cluster_4broker(self):
+        self.cluster = set_up_cluster_4broker()
+        action = ActionBalanceCount(self.args, self.cluster)
+        action.process_cluster()
+
+        for broker_id in self.cluster.brokers:
+            for pos in range(2):
+                assert len(self.cluster.brokers[broker_id].partitions[pos]) == 3

@@ -1,7 +1,7 @@
 import argparse
 import unittest
 
-from mock import patch
+from mock import call, patch
 
 from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections
 from kafka.tools.assigner.actions.balance import ActionBalance
@@ -20,17 +20,21 @@ def set_up_cluster():
     cluster.add_topic(Topic("testTopic1", 2))
     cluster.add_topic(Topic("testTopic2", 2))
     partition = cluster.topics['testTopic1'].partitions[0]
+    partition.add_replica(cluster.brokers[2], 0)
+    partition.add_replica(cluster.brokers[1], 1)
+    partition.size = 1001
+    partition = cluster.topics['testTopic1'].partitions[1]
     partition.add_replica(cluster.brokers[1], 0)
     partition.add_replica(cluster.brokers[2], 1)
-    partition = cluster.topics['testTopic1'].partitions[1]
-    partition.add_replica(cluster.brokers[2], 0)
-    partition.add_replica(cluster.brokers[1], 1)
+    partition.size = 1002
     partition = cluster.topics['testTopic2'].partitions[0]
-    partition.add_replica(cluster.brokers[2], 0)
-    partition.add_replica(cluster.brokers[1], 1)
+    partition.add_replica(cluster.brokers[1], 0)
+    partition.add_replica(cluster.brokers[2], 1)
+    partition.size = 2001
     partition = cluster.topics['testTopic2'].partitions[1]
     partition.add_replica(cluster.brokers[1], 0)
     partition.add_replica(cluster.brokers[2], 1)
+    partition.size = 2002
     return cluster
 
 
@@ -55,18 +59,21 @@ class MainTests(unittest.TestCase):
         self.patcher_java_home.stop()
         self.patcher_cluster.stop()
 
+    @patch.object(SizerSSH, 'get_partition_sizes')
     @patch('kafka.tools.assigner.__main__.get_plugins_list')
-    def test_main(self, mock_plugins):
+    def test_main(self, mock_plugins, mock_sizes):
         mock_plugins.return_value = [PluginModule]
         self.mock_args.return_value = argparse.Namespace(zookeeper='zkconnect',
-                                                         action='elect',
+                                                         action='balance',
+                                                         types=['count'],
                                                          tools_path='/path/to/tools',
+                                                         datadir='/path/to/data',
                                                          moves=10,
                                                          execute=False,
                                                          generate=False,
                                                          size=False,
                                                          skip_ple=False,
-                                                         ple_size=2000,
+                                                         ple_size=2,
                                                          ple_wait=120,
                                                          sizer='ssh',
                                                          leadership=True)
@@ -81,9 +88,15 @@ class MainTests(unittest.TestCase):
         args = argparse.Namespace(sizer='ssh', size=True)
         check_and_get_sizes(ActionBalance, args, set_up_cluster(), {'ssh': SizerSSH})
 
-    def test_ple(self):
+    @patch('time.sleep')
+    @patch.object(ReplicaElection, 'execute')
+    def test_ple(self, mock_execute, mock_sleep):
         cluster = set_up_cluster()
         args = argparse.Namespace(ple_wait=0, zookeeper='zkconnect', tools_path='/path/to/tools')
         batches = [ReplicaElection(cluster.brokers[1].partitions, args.ple_wait),
                    ReplicaElection(cluster.brokers[2].partitions, args.ple_wait)]
-        run_preferred_replica_elections(batches, args, args.tools_path, [], True)
+        run_preferred_replica_elections(batches, args, args.tools_path, [], False)
+
+        mock_sleep.assert_called_once_with(0)
+        mock_execute.assert_has_calls([call(1, 2, 'zkconnect', '/path/to/tools', [], False),
+                                       call(2, 2, 'zkconnect', '/path/to/tools', [], False)])

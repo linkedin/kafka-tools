@@ -37,7 +37,8 @@ class ActionBalanceCount(ActionBalanceModule):
         # Calculate partition counts for each position first
         max_count = {}
         for pos in range(max_pos):
-            # Calculate the maximum number of partitions each broker should have (floor(average) + 1)
+            # Calculate the maximum number of partitions each broker should have (floor(average))
+            # We'll also track a remainder and make sure they only go 1 per broker
             pcount = 0
             for broker in self.cluster.brokers:
                 if pos in self.cluster.brokers[broker].partitions:
