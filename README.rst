@@ -36,6 +36,11 @@ Quick Start
 1) First, download and install the Kafka admin utilities from: http://kafka.apache.org/downloads.html
 2) Then, install kafka-tools using the following command: :code:`pip install kafka-tools`
 
+Documentation
+-------------
+
+Additional documentation may be found on `https://kafka-tools.readthedocs.io <https://kafka-tools.readthedocs.io/en/latest/>`_.
+
 Current Commands
 ----------------
 
