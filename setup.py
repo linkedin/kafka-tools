@@ -12,7 +12,6 @@ entry_points = {
 }
 
 install_requires = [
-    'paramiko',
     'kazoo',
     'pex',
 ]
@@ -108,7 +107,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.2',
+    version='0.0.1',
 
     author='Todd Palino',
     author_email='tpalino@linkedin.com',
@@ -124,7 +123,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: System Administrators',
         'Topic :: Utilities',
         'License :: OSI Approved :: Apache Software License',

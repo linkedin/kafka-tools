@@ -76,9 +76,8 @@ class MainTests(unittest.TestCase):
         plugin_list = get_plugins_list()
         assert plugin_list == []
 
-    @patch('kafka.tools.assigner.sizers.ssh.paramiko.SSHClient.load_system_host_keys')
     @patch.object(SizerSSH, 'get_partition_sizes')
-    def test_get_sizes(self, mock_sizes, mock_load_keys):
+    def test_get_sizes(self, mock_sizes):
         args = argparse.Namespace(sizer='ssh', size=True)
         check_and_get_sizes(ActionBalance, args, set_up_cluster(), {'ssh': SizerSSH})
 

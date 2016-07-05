@@ -2,11 +2,9 @@ import unittest
 
 from argparse import Namespace
 from mock import call, patch, ANY
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from subprocess import PIPE
+from testfixtures import compare
+from testfixtures.popen import MockPopen
 
 from kafka.tools.assigner.exceptions import UnknownBrokerException
 from kafka.tools.assigner.models.broker import Broker
@@ -20,17 +18,11 @@ class SizerSSHTests(unittest.TestCase):
         self.args = Namespace()
         self.args.datadir = "/path/to/data"
 
-        self.patcher_load_keys = patch('kafka.tools.assigner.sizers.ssh.paramiko.SSHClient.load_system_host_keys', autospec=True)
-        self.patcher_connect = patch('kafka.tools.assigner.sizers.ssh.paramiko.SSHClient.connect', autospec=True)
-        self.patcher_exec_command = patch('kafka.tools.assigner.sizers.ssh.paramiko.SSHClient.exec_command', autospec=True)
-        self.mock_load_keys = self.patcher_load_keys.start()
-        self.mock_connect = self.patcher_connect.start()
-        self.mock_exec_command = self.patcher_exec_command.start()
+        self.patcher_ssh = patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
+        self.mock_ssh = self.patcher_ssh.start()
 
     def tearDown(self):
-        self.patcher_load_keys.stop()
-        self.patcher_connect.stop()
-        self.patcher_exec_command.stop()
+        self.patcher_ssh.stop()
 
     def create_cluster_onehost(self):
         self.cluster = Cluster()
@@ -68,7 +60,6 @@ class SizerSSHTests(unittest.TestCase):
     def test_sizer_create(self):
         self.create_cluster_onehost()
         sizer = SizerSSH(self.args, self.cluster)
-        self.mock_load_keys.assert_called_with(ANY)
         assert isinstance(sizer, SizerSSH)
 
     def test_sizer_run_missing_host(self):
@@ -79,16 +70,13 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_badinput(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO(u'foo\nbar\nbaz\n')
-        m_stderr = StringIO()
-        m_stdin = StringIO()
-        self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
+        m_stdout = "foo\nbar\nbaz\n"
+        self.mock_ssh.set_default(stdout=m_stdout.encode('utf-8'))
 
         sizer = SizerSSH(self.args, self.cluster)
         sizer.get_partition_sizes()
 
-        self.mock_connect.assert_called_once_with(ANY, "brokerhost1.example.com", allow_agent=True)
-        self.mock_exec_command.assert_called_once_with(ANY, "du -sk /path/to/data/*")
+        compare([call.Popen(['ssh', 'brokerhost1.example.com', 'du -sk /path/to/data/*'], stdout=PIPE, stderr=ANY)], self.mock_ssh.mock.method_calls)
         assert self.cluster.topics['testTopic1'].partitions[0].size == 0
         assert self.cluster.topics['testTopic1'].partitions[1].size == 0
         assert self.cluster.topics['testTopic2'].partitions[0].size == 0
@@ -96,64 +84,34 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_singlehost(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
-                            "1002\t/path/to/data/testTopic1-1\n"
-                            "2001\t/path/to/data/testTopic2-0\n"
-                            "2002\t/path/to/data/testTopic2-1\n")
-        m_stderr = StringIO()
-        m_stdin = StringIO()
-        self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
+        m_stdout = ("1001\t/path/to/data/testTopic1-0\n"
+                    "1002\t/path/to/data/testTopic1-1\n"
+                    "2001\t/path/to/data/testTopic2-0\n"
+                    "2002\t/path/to/data/testTopic2-1\n")
+        self.mock_ssh.set_default(stdout=m_stdout.encode('utf-8'))
 
         sizer = SizerSSH(self.args, self.cluster)
         sizer.get_partition_sizes()
 
-        self.mock_connect.assert_called_once_with(ANY, "brokerhost1.example.com", allow_agent=True)
-        self.mock_exec_command.assert_called_once_with(ANY, "du -sk /path/to/data/*")
+        compare([call.Popen(['ssh', 'brokerhost1.example.com', 'du -sk /path/to/data/*'], stdout=PIPE, stderr=ANY)], self.mock_ssh.mock.method_calls)
         assert self.cluster.topics['testTopic1'].partitions[0].size == 1001
         assert self.cluster.topics['testTopic1'].partitions[1].size == 1002
         assert self.cluster.topics['testTopic2'].partitions[0].size == 2001
         assert self.cluster.topics['testTopic2'].partitions[1].size == 2002
 
-    def test_sizer_run_setsizes_twohost(self):
-        self.create_cluster_twohost()
-        m_stdout_1 = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
-                              u'1002\t/path/to/data/testTopic1-1\n'
-                              u'2001\t/path/to/data/testTopic2-0\n'
-                              u'2002\t/path/to/data/testTopic2-1\n')
-        m_stdout_2 = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
-                              u'4002\t/path/to/data/testTopic1-1\n'
-                              u'1011\t/path/to/data/testTopic2-0\n'
-                              u'2002\t/path/to/data/testTopic2-1\n')
-        m_stderr = StringIO()
-        m_stdin = StringIO()
-        self.mock_exec_command.side_effect = [(m_stdin, m_stdout_1, m_stderr), (m_stdin, m_stdout_2, m_stderr)]
-
-        sizer = SizerSSH(self.args, self.cluster)
-        sizer.get_partition_sizes()
-
-        self.mock_connect.assert_has_calls([call(ANY, "brokerhost1.example.com", allow_agent=True), call(ANY, "brokerhost2.example.com", allow_agent=True)])
-        self.mock_exec_command.assert_has_calls([call(ANY, "du -sk /path/to/data/*"), call(ANY, "du -sk /path/to/data/*")])
-        assert self.cluster.topics['testTopic1'].partitions[0].size == 1001
-        assert self.cluster.topics['testTopic1'].partitions[1].size == 4002
-        assert self.cluster.topics['testTopic2'].partitions[0].size == 2001
-        assert self.cluster.topics['testTopic2'].partitions[1].size == 2002
-
     def test_sizer_run_setsizes_badtopic(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
-                            u'1002\t/path/to/data/testTopic1-1\n'
-                            u'5002\t/path/to/data/badTopic1-1\n'
-                            u'2001\t/path/to/data/testTopic2-0\n'
-                            u'2002\t/path/to/data/testTopic2-1\n')
-        m_stderr = StringIO()
-        m_stdin = StringIO()
-        self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
+        m_stdout = ("1001\t/path/to/data/testTopic1-0\n"
+                    "1002\t/path/to/data/testTopic1-1\n"
+                    "5002\t/path/to/data/badTopic1-1\n"
+                    "2001\t/path/to/data/testTopic2-0\n"
+                    "2002\t/path/to/data/testTopic2-1\n")
+        self.mock_ssh.set_default(stdout=m_stdout.encode('utf-8'))
 
         sizer = SizerSSH(self.args, self.cluster)
         sizer.get_partition_sizes()
 
-        self.mock_connect.assert_called_once_with(ANY, "brokerhost1.example.com", allow_agent=True)
-        self.mock_exec_command.assert_called_once_with(ANY, "du -sk /path/to/data/*")
+        compare([call.Popen(['ssh', 'brokerhost1.example.com', 'du -sk /path/to/data/*'], stdout=PIPE, stderr=ANY)], self.mock_ssh.mock.method_calls)
         assert self.cluster.topics['testTopic1'].partitions[0].size == 1001
         assert self.cluster.topics['testTopic1'].partitions[1].size == 1002
         assert self.cluster.topics['testTopic2'].partitions[0].size == 2001
@@ -161,20 +119,17 @@ class SizerSSHTests(unittest.TestCase):
 
     def test_sizer_run_setsizes_badpartition(self):
         self.create_cluster_onehost()
-        m_stdout = StringIO(u'1001\t/path/to/data/testTopic1-0\n'
-                            u'1002\t/path/to/data/testTopic1-1\n'
-                            u'5002\t/path/to/data/testTopic1-2\n'
-                            u'2001\t/path/to/data/testTopic2-0\n'
-                            u'2002\t/path/to/data/testTopic2-1\n')
-        m_stderr = StringIO()
-        m_stdin = StringIO()
-        self.mock_exec_command.return_value = (m_stdin, m_stdout, m_stderr)
+        m_stdout = ("1001\t/path/to/data/testTopic1-0\n"
+                    "1002\t/path/to/data/testTopic1-1\n"
+                    "5002\t/path/to/data/testTopic1-2\n"
+                    "2001\t/path/to/data/testTopic2-0\n"
+                    "2002\t/path/to/data/testTopic2-1\n")
+        self.mock_ssh.set_default(stdout=m_stdout.encode('utf-8'))
 
         sizer = SizerSSH(self.args, self.cluster)
         sizer.get_partition_sizes()
 
-        self.mock_connect.assert_called_once_with(ANY, "brokerhost1.example.com", allow_agent=True)
-        self.mock_exec_command.assert_called_once_with(ANY, "du -sk /path/to/data/*")
+        compare([call.Popen(['ssh', 'brokerhost1.example.com', 'du -sk /path/to/data/*'], stdout=PIPE, stderr=ANY)], self.mock_ssh.mock.method_calls)
         assert self.cluster.topics['testTopic1'].partitions[0].size == 1001
         assert self.cluster.topics['testTopic1'].partitions[1].size == 1002
         assert self.cluster.topics['testTopic2'].partitions[0].size == 2001
