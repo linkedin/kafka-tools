@@ -2,11 +2,13 @@ Kafka Tools
 ===========
 
 This repository is a collection of tools and scripts for working with
-`Apache Kafka <http://kafka.apache.org>`. The Site Reliability team
-for Kafka at LinkedIn has built these over time in order to make
-managing Kafka a little bit easier. Our intention is to add to this
-repository as more tools are developed, and we welcome additions and
-modifications that make things better for all!
+`Apache Kafka <http://kafka.apache.org>`.
+
+The Site Reliability team for Kafka at LinkedIn has built these over time in
+order to make managing Kafka a little bit easier. Our intention is to add to
+this repository as more tools are developed.
+
+We welcome additions and modifications that make managing Kafka better for all!
 
 .. image:: https://readthedocs.org/projects/kafka-tools/badge/?version=latest
    :target: http://kafka-tools.readthedocs.io/en/latest/?badge=latest
@@ -41,7 +43,7 @@ Additional documentation may be found at `https://kafka-tools.readthedocs.io <ht
 Contributing
 ------------
 
-Please see the `contribution guidelines https://kafka-tools.readthedocs.io/en/latest/contributing.html`_.
+Please see the `contribution guidelines <https://kafka-tools.readthedocs.io/en/latest/contributing.html>`_.
 
 Other Projects
 --------------
