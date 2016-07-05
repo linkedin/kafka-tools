@@ -15,10 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from kafka.tools.assigner.models import BaseModel
 from kafka.tools.assigner.models.partition import Partition
 
 
-class Topic:
+class Topic(BaseModel):
+    equality_attrs = ['name']
+
     def __init__(self, name, partitions):
         self.name = name
         self.partitions = []
@@ -26,11 +29,6 @@ class Topic:
 
         for i in range(partitions):
             self.add_partition(Partition(self, i))
-
-    def __eq__(self, other):
-        if not isinstance(other, Topic):
-            raise TypeError
-        return self.name == other.name
 
     # Shallow copy - do not copy partitions (zero partitions)
     def copy(self):

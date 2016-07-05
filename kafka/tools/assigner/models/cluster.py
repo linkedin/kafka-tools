@@ -20,11 +20,14 @@ from kazoo.client import KazooClient
 
 from kafka.tools.assigner import log
 from kafka.tools.assigner.exceptions import ZookeeperException, ClusterConsistencyException
+from kafka.tools.assigner.models import BaseModel
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
 
 
-class Cluster:
+class Cluster(BaseModel):
+    equality_attrs = ['brokers', 'topics']
+
     def __init__(self):
         self.brokers = {}
         self.topics = {}

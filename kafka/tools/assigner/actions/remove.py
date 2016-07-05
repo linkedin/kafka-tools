@@ -27,11 +27,9 @@ class ActionRemove(ActionModule):
     def __init__(self, args, cluster):
         super(ActionRemove, self).__init__(args, cluster)
 
-        for broker in args.brokers:
-            if broker not in self.cluster.brokers:
-                raise ConfigurationException("Broker to remove (ID {0}) is not in the brokers list for this cluster".format(broker))
-            if (args.to_brokers is not None) and (broker in args.to_brokers):
-                raise ConfigurationException("Broker to remove (ID {0}) was specified in the target broker list as well".format(broker))
+        self.check_brokers(type_str="Brokers to remove")
+        if (args.to_brokers is not None) and (len(set(self.args.to_brokers) & set(self.args.brokers)) != 0):
+            raise ConfigurationException("Brokers to remove were specified in the target broker list as well")
 
         self.brokers = args.brokers
         self.to_brokers = args.to_brokers

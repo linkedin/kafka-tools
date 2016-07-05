@@ -19,8 +19,12 @@ import json
 import subprocess
 from tempfile import NamedTemporaryFile
 
+from kafka.tools.assigner.models import BaseModel
 
-class ReplicaElection:
+
+class ReplicaElection(BaseModel):
+    equality_attrs = ['partitions']
+
     def __init__(self, partitions, pause_time=300):
         self.partitions = partitions
         self.pause_time = pause_time

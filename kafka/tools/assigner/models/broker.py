@@ -20,9 +20,12 @@ from __future__ import division
 import json
 
 from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.assigner.models import BaseModel
 
 
-class Broker:
+class Broker(BaseModel):
+    equality_attrs = ['hostname', 'id']
+
     def __init__(self, id, hostname):
         self.id = id
         self.hostname = hostname
@@ -55,11 +58,6 @@ class Broker:
             pass
 
         return newbroker
-
-    def __eq__(self, other):
-        if not isinstance(other, Broker):
-            raise TypeError
-        return (self.hostname == other.hostname) and (self.id == other.id)
 
     # Shallow copy - do not copy partitions map over
     def copy(self):

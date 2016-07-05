@@ -16,7 +16,7 @@
 # under the License.
 
 from kafka.tools.assigner.actions import ActionModule
-from kafka.tools.assigner.exceptions import ConfigurationException, NotEnoughReplicasException
+from kafka.tools.assigner.exceptions import NotEnoughReplicasException
 
 
 class ActionTrim(ActionModule):
@@ -26,10 +26,7 @@ class ActionTrim(ActionModule):
     def __init__(self, args, cluster):
         super(ActionTrim, self).__init__(args, cluster)
 
-        for b in args.brokers:
-            if b not in self.cluster.brokers:
-                raise ConfigurationException("Broker (ID {0}) is not in the brokers list for this cluster".format(b))
-
+        self.check_brokers(type_str="Brokers to remove")
         self.brokers = args.brokers
 
     @classmethod

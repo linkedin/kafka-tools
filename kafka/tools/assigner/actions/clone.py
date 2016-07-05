@@ -27,11 +27,9 @@ class ActionClone(ActionModule):
     def __init__(self, args, cluster):
         super(ActionClone, self).__init__(args, cluster)
 
-        for b in args.brokers:
-            if b not in self.cluster.brokers:
-                raise ConfigurationException("Source broker (ID {0}) is not in the brokers list for this cluster".format(b))
+        self.check_brokers()
         if args.to_broker not in self.cluster.brokers:
-            raise ConfigurationException("Target broker (ID {0}) is not in the brokers list for this cluster".format(args.to_broker))
+            raise ConfigurationException("Target broker is not in the brokers list for this cluster")
 
         self.sources = args.brokers
         self.to_broker = self.cluster.brokers[args.to_broker]

@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from kafka.tools.assigner.exceptions import ConfigurationException
+
 
 # Base class that all kafka-assigner actions inherit from
 class ActionModule(object):
@@ -46,6 +48,10 @@ class ActionModule(object):
         parser = subparser.add_parser(cls.name, help=cls.helpstr)
         cls._add_args(parser)
         parser.set_defaults(action=cls.name)
+
+    def check_brokers(self, type_str="Source brokers"):
+        if len(set(self.args.brokers) & set(self.cluster.brokers)) != len(self.args.brokers):
+            raise ConfigurationException("{0} are not in the brokers list for this cluster".format(type_str))
 
 
 # Special class for balance modules to inherit from that skips configs

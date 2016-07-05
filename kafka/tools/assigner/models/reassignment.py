@@ -23,9 +23,12 @@ from tempfile import NamedTemporaryFile
 
 from kafka.tools.assigner import log
 from kafka.tools.assigner.exceptions import ReassignmentFailedException
+from kafka.tools.assigner.models import BaseModel
 
 
-class Reassignment:
+class Reassignment(BaseModel):
+    equality_attrs = ['partitions']
+
     def __init__(self, partitions, pause_time=10):
         self.partitions = partitions
         self.pause_time = pause_time

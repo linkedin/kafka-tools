@@ -31,12 +31,8 @@ from kafka.tools.assigner.models.reassignment import Reassignment
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 
 
-def get_action_map():
-    return dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule))
-
-
-def get_sizer_map():
-    return dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.sizers, kafka.tools.assigner.sizers.SizerModule))
+def get_module_map(base_module_name, base_module_class):
+    return dict((cls.name, cls) for cls in get_modules(base_module_name, base_module_class))
 
 
 def get_plugins_list():
@@ -68,8 +64,8 @@ def run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
 
 def main():
     # Start by loading all the modules
-    action_map = get_action_map()
-    sizer_map = get_sizer_map()
+    action_map = get_module_map(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule)
+    sizer_map = get_module_map(kafka.tools.assigner.sizers, kafka.tools.assigner.sizers.SizerModule)
     plugins_list = get_plugins_list()
 
     # Instantiate all plugins
