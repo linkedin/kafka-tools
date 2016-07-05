@@ -30,6 +30,12 @@ modifications that make things better for all!
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
 
+Quick Start
+-----------
+
+1) First, download and install the Kafka admin utilities from: http://kafka.apache.org/downloads.html
+2) Then, install kafka-tools using the following command: :code:`pip install kafka-tools`
+
 Current Commands
 ----------------
 
