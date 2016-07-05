@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import sys, os, datetime
+import sys, os
+
+# Include source modules.
+sys.path.insert(0, os.path.abspath("../"))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -15,7 +18,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-copyright = u'{year}, LinkedIn'.format(year=datetime.datetime.today().year)
+copyright = u'2016, LinkedIn'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
