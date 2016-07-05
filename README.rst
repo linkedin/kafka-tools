@@ -9,8 +9,8 @@ repository as more tools are developed, and we welcome additions and
 modifications that make things better for all!
 
 .. image:: https://readthedocs.org/projects/kafka-tools/badge/?version=latest
-   :target: http://kafka-tools.readthedocs.org/
-   :alt: Docs
+   :target: http://kafka-tools.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
 .. image:: https://travis-ci.org/linkedin/kafka-tools.svg
    :target: https://travis-ci.org/linkedin/kafka-tools
    :alt: Build Status
