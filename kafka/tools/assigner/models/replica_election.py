@@ -16,6 +16,7 @@
 # under the License.
 
 import json
+import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
@@ -43,6 +44,8 @@ class ReplicaElection(BaseModel):
             with NamedTemporaryFile(mode='w') as assignfile:
                 json.dump(self.dict_for_replica_election(), assignfile)
                 assignfile.flush()
+                FNULL = open(os.devnull, 'w')
                 subprocess.call(['{0}/kafka-preferred-replica-election.sh'.format(tools_path),
                                  '--zookeeper', zookeeper,
-                                 '--path-to-json-file', assignfile.name])
+                                 '--path-to-json-file', assignfile.name],
+                                stdout=FNULL, stderr=FNULL)

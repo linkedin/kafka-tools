@@ -47,7 +47,8 @@ class ReassignmentTests(unittest.TestCase):
 
         self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False)
 
-        compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--execute', '--zookeeper', 'zkconnect', '--reassignment-json-file', ANY]),
+        compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--execute', '--zookeeper', 'zkconnect', '--reassignment-json-file', ANY],
+                            stderr=ANY, stdout=ANY),
                  call.Popen_instance.wait()], mock_popen.mock.method_calls)
         assert len(mock_check.mock_calls) == 3
 
@@ -61,7 +62,7 @@ class ReassignmentTests(unittest.TestCase):
         mock_popen.set_default(stdout=cmd_stdout.encode('utf-8'))
         check_reassignment_completion('zkconnect', '/path/to/tools', 'assignfilename')
         compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--verify', '--zookeeper', 'zkconnect', '--reassignment-json-file',
-                             'assignfilename'], stdout=PIPE)],
+                             'assignfilename'], stderr=ANY, stdout=PIPE)],
                 mock_popen.mock.method_calls)
 
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
