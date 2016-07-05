@@ -16,19 +16,17 @@
 # under the License.
 
 from kafka.tools.assigner.exceptions import ReplicaNotFoundException
+from kafka.tools.assigner.models import BaseModel
 
 
-class Partition:
+class Partition(BaseModel):
+    equality_attrs = ['topic', 'num']
+
     def __init__(self, topic, num):
         self.topic = topic
         self.num = num
         self.replicas = []
         self.size = 0
-
-    def __eq__(self, other):
-        if not isinstance(other, Partition):
-            raise TypeError
-        return (self.topic == other.topic) and (self.num == other.num)
 
     # Shallow copy - do not copy replica list (zero length)
     def copy(self):

@@ -16,11 +16,16 @@
 # under the License.
 
 import json
+import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
+from kafka.tools.assigner.models import BaseModel
 
-class ReplicaElection:
+
+class ReplicaElection(BaseModel):
+    equality_attrs = ['partitions']
+
     def __init__(self, partitions, pause_time=300):
         self.partitions = partitions
         self.pause_time = pause_time
@@ -39,6 +44,8 @@ class ReplicaElection:
             with NamedTemporaryFile(mode='w') as assignfile:
                 json.dump(self.dict_for_replica_election(), assignfile)
                 assignfile.flush()
+                FNULL = open(os.devnull, 'w')
                 subprocess.call(['{0}/kafka-preferred-replica-election.sh'.format(tools_path),
                                  '--zookeeper', zookeeper,
-                                 '--path-to-json-file', assignfile.name])
+                                 '--path-to-json-file', assignfile.name],
+                                stdout=FNULL, stderr=FNULL)

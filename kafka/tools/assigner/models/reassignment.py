@@ -16,6 +16,7 @@
 # under the License.
 
 import json
+import os
 import re
 import subprocess
 import time
@@ -23,9 +24,12 @@ from tempfile import NamedTemporaryFile
 
 from kafka.tools.assigner import log
 from kafka.tools.assigner.exceptions import ReassignmentFailedException
+from kafka.tools.assigner.models import BaseModel
 
 
-class Reassignment:
+class Reassignment(BaseModel):
+    equality_attrs = ['partitions']
+
     def __init__(self, partitions, pause_time=10):
         self.partitions = partitions
         self.pause_time = pause_time
@@ -47,9 +51,11 @@ class Reassignment:
             with NamedTemporaryFile(mode='w') as assignfile:
                 json.dump(self.dict_for_reassignment(), assignfile)
                 assignfile.flush()
+                FNULL = open(os.devnull, 'w')
                 proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                          '--zookeeper', zookeeper,
-                                         '--reassignment-json-file', assignfile.name])
+                                         '--reassignment-json-file', assignfile.name],
+                                        stdout=FNULL, stderr=FNULL)
                 proc.wait()
 
                 # Wait until finished
@@ -72,9 +78,11 @@ class Reassignment:
 def check_reassignment_completion(zookeeper, tools_path, assign_filename):
     status_re = re.compile('.*Reassignment of partition.*?\s+(failed|still in progress|completed successfully)')
 
+    FNULL = open(os.devnull, 'w')
     proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--verify',
                              '--zookeeper', zookeeper,
-                             '--reassignment-json-file', assign_filename], stdout=subprocess.PIPE)
+                             '--reassignment-json-file', assign_filename],
+                            stdout=subprocess.PIPE, stderr=FNULL)
     lines = proc.stdout.readlines()
 
     remaining_count = 0

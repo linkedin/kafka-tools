@@ -38,4 +38,5 @@ class ReplicaElectionTests(unittest.TestCase):
         self.replica_election.execute(1, 1, 'zk_connect_string', '/path/to/tools', plugins=[], dry_run=False)
         mock_call.assert_called_once_with(['/path/to/tools/kafka-preferred-replica-election.sh',
                                            '--zookeeper', 'zk_connect_string',
-                                           '--path-to-json-file', ANY])
+                                           '--path-to-json-file', ANY],
+                                          stderr=ANY, stdout=ANY)
