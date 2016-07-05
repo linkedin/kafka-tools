@@ -48,9 +48,8 @@ Please see the `contribution guidelines <https://kafka-tools.readthedocs.io/en/l
 Other Projects
 --------------
 
-In addition to these tools, LinkedIn has also open-sourced
-`Burrow <https://github.com/linkedin/Burrow>`, a robust system for
-monitoring Kafka consumer clients.
+In addition to these tools, LinkedIn has also open-sourced `Burrow <https://github.com/linkedin/Burrow>`_,
+a robust system for monitoring Kafka consumer clients.
 
 License
 -------
