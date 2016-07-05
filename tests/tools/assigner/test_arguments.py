@@ -43,3 +43,14 @@ class ArgumentTests(unittest.TestCase):
         sys.argv = ['kafka-assigner', '--zookeeper', 'zkhost1.example.com:2181', 'elect']
         args = set_up_arguments(self.action_map, {}, [self.null_plugin])
         assert args.action == 'elect'
+        assert args.zookeeper == 'zkhost1.example.com:2181'
+        assert args.leadership is False
+        assert args.generate is False
+        assert args.execute is False
+        assert args.size is False
+        assert args.skip_ple is False
+        assert args.sizer == 'ssh'
+        assert args.datadir == '/mnt/u001/kafka/i001_caches'
+        assert args.moves == 10
+        assert args.ple_size == 2000
+        assert args.ple_wait == 120

@@ -13,10 +13,6 @@ This product uses Python (https://www.python.org/)
 Copyright (C) 2001 Python Software Foundation
 License: PSF LICENSE AGREEMENT
 
-This product uses paramiko (http://www.paramiko.org/)
-Copyright (c) 2003-2015 Robey Pointer <robeypointer@gmail.com> and Jeff Forcier <jeff@bitprophet.org>
-License: GPL 2.1
-
 This product uses kazoo (https://github.com/python-zk/kazoo)
 Copyright (c) 2011-2014 Kazoo team
 License: Apache 2.0
