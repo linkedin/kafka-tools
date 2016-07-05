@@ -13,12 +13,14 @@ entry_points = {
 
 install_requires = [
     'paramiko',
-    'kazoo'
+    'kazoo',
+    'pex',
 ]
 
 # Python 2.6 doesn't have a native importlib
 if sys.version_info[0] == 2 and sys.version_info[1] == 6:
     install_requires.append('importlib')
+    install_requires.append('argparse')
 
 
 class Pex(Command):
@@ -49,6 +51,7 @@ class Pex(Command):
               '-e', call,
               '.',
             ]
+            pex_cmd.extend(install_requires)
             print('Running {0}'.format(' '.join(pex_cmd)))
             subprocess.check_call(pex_cmd)
 
@@ -105,7 +108,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.1',
+    version='0.0.2',
 
     author='Todd Palino',
     author_email='tpalino@linkedin.com',
@@ -121,7 +124,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: System Administrators',
         'Topic :: Utilities',
         'License :: OSI Approved :: Apache Software License',
