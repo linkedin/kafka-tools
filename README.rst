@@ -27,20 +27,17 @@ modifications that make things better for all!
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
 
-Current Scripts
----------------
+Current Commands
+----------------
 
 -  kafka-assigner - This script is used for performing partition
    reassignments and preferred replica elections. It uses the admin CLI
    utilities provided with Kafka and layers on additional logic to
-   perform tasks like removing a broker from a cluster, and rebalancing
-   partitions in a cluster according to several criteria.
-
-Getting Started
----------------
+   perform tasks like removing a broker, rebalancing partitions, fixing
+   partition replcation factors, and performing preferred replica elections.
 
 Prerequisites
-~~~~~~~~~~~~~
+-------------
 
 These tools are generally written in Python, and besides a basic
 installation, you will need the following additional modules:
@@ -48,11 +45,19 @@ installation, you will need the following additional modules:
 - Paramiko
 - Kazoo
 
-Usage
------
+In addition, you will need to run it on a host that has the following:
 
-For details about how to use these scripts effectively, please refer to
-the linked wiki pages for each one
+- A copy of the Kafka admin tools (including kafka-reassign-partitions.sh)
+- Access to the Zookeeper ensemble for the cluster
+- SSH access to the Kafka brokers (with credentials preferably loaded into
+  ssh-agent)
+
+Contributing
+------------
+
+We're always open to fixes and new features! Please open a PR for any changes
+that you have and someone will review and merge it. If you're not up for
+writing the code, open an issue for any problems or requests.
 
 Other Projects
 --------------
