@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys, os
+import sys, os, datetime
 
 # Include source modules.
 sys.path.insert(0, os.path.abspath("../"))
@@ -18,7 +18,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-copyright = u'2016, LinkedIn'
+copyright = u'{year}, LinkedIn'.format(year=datetime.datetime.today().year)
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
