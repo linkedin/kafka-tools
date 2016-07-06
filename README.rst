@@ -16,18 +16,9 @@ We welcome additions and modifications that make managing Kafka better for all!
 .. image:: https://travis-ci.org/linkedin/kafka-tools.svg
    :target: https://travis-ci.org/linkedin/kafka-tools
    :alt: Build Status
-.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/gpa.svg
-   :target: https://codeclimate.com/github/linkedin/kafka-tools
-   :alt: Code Climate
-.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/coverage.svg
-   :target: https://codeclimate.com/github/linkedin/kafka-tools/coverage
-   :alt: Code Climate Test Coverage
 .. image:: https://coveralls.io/repos/github/linkedin/kafka-tools/badge.svg?branch=master
    :target: https://coveralls.io/github/linkedin/kafka-tools?branch=master
    :alt: Coveralls Test Coverage
-.. image:: https://codecov.io/gh/linkedin/kafka-tools/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/linkedin/kafka-tools
-   :alt: Codecov
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
