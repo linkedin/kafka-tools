@@ -17,10 +17,11 @@ install_requires = [
 ]
 
 # Python 2.6 doesn't have a native importlib
-if sys.version_info[0] == 2 and sys.version_info[1] == 6:
+try:
+    import importlib
+except ImportError:
     install_requires.append('importlib')
     install_requires.append('argparse')
-
 
 class Pex(Command):
     user_options = []
