@@ -1,12 +1,14 @@
 Kafka Tools
 ===========
 
-This repository is a collection of tools and scripts for working with
-`Apache Kafka <http://kafka.apache.org>`. The Site Reliability team
-for Kafka at LinkedIn has built these over time in order to make
-managing Kafka a little bit easier. Our intention is to add to this
-repository as more tools are developed, and we welcome additions and
-modifications that make things better for all!
+This repository is a collection of tools for working with
+`Apache Kafka <http://kafka.apache.org>`_.
+
+The Site Reliability team for Kafka at LinkedIn has built these over time in
+order to make managing Kafka a little bit easier. Our intention is to add to
+this repository as more tools are developed.
+
+We welcome additions and modifications that make managing Kafka better for all!
 
 .. image:: https://readthedocs.org/projects/kafka-tools/badge/?version=latest
    :target: http://kafka-tools.readthedocs.io/en/latest/?badge=latest
@@ -14,18 +16,9 @@ modifications that make things better for all!
 .. image:: https://travis-ci.org/linkedin/kafka-tools.svg
    :target: https://travis-ci.org/linkedin/kafka-tools
    :alt: Build Status
-.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/gpa.svg
-   :target: https://codeclimate.com/github/linkedin/kafka-tools
-   :alt: Code Climate
-.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/coverage.svg
-   :target: https://codeclimate.com/github/linkedin/kafka-tools/coverage
-   :alt: Code Climate Test Coverage
 .. image:: https://coveralls.io/repos/github/linkedin/kafka-tools/badge.svg?branch=master
    :target: https://coveralls.io/github/linkedin/kafka-tools?branch=master
    :alt: Coveralls Test Coverage
-.. image:: https://codecov.io/gh/linkedin/kafka-tools/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/linkedin/kafka-tools
-   :alt: Codecov
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
@@ -36,49 +29,19 @@ Quick Start
 1) First, download and install the Kafka admin utilities from: http://kafka.apache.org/downloads.html
 2) Then, install kafka-tools using the following command: :code:`pip install kafka-tools`
 
-Documentation
--------------
-
-Additional documentation may be found on `https://kafka-tools.readthedocs.io <https://kafka-tools.readthedocs.io/en/latest/>`_.
-
-Current Commands
-----------------
-
-kafka-assigner
-  This script is used for performing partition
-  reassignments and preferred replica elections. It uses the admin CLI
-  utilities provided with Kafka and layers on additional logic to
-  perform tasks like removing a broker, rebalancing partitions, fixing
-  partition replcation factors, and performing preferred replica elections.
-
-Prerequisites
--------------
-
-These tools are generally written in Python, and besides a basic
-installation, you will need the following additional modules:
-
-- Kazoo
-
-In addition, you will need to run it on a host that has the following:
-
-- A copy of the Kafka admin tools (including kafka-reassign-partitions.sh).
-- Access to the Zookeeper ensemble for the cluster.
-- SSH access to the Kafka brokers (with credentials preferably loaded into
-  ssh-agent).
+Additional documentation may be found at `https://kafka-tools.readthedocs.io <https://kafka-tools.readthedocs.io/en/latest/>`_.
 
 Contributing
 ------------
 
-We're always open to fixes and new features! Please open a PR for any changes
-that you have and someone will review and merge it. If you're not up for
-writing the code, open an issue for any problems or requests.
+Please see the `contribution guidelines <https://kafka-tools.readthedocs.io/en/latest/contributing.html>`_.
 
 Other Projects
 --------------
 
 In addition to these tools, LinkedIn has also open-sourced
-`Burrow <https://github.com/linkedin/Burrow>`, a robust system for
-monitoring Kafka consumer clients.
+`Burrow <https://github.com/linkedin/Burrow>`_, a robust system for monitoring
+Kafka consumer clients.
 
 License
 -------
