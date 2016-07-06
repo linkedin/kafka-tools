@@ -1,5 +1,5 @@
-kafka.tools.assigner.tools.models.cluster
-=========================================
+kafka.tools.assigner.models.cluster
+===================================
 
-.. automodule:: kafka.tools.assigner.tools.models.cluster
+.. automodule:: kafka.tools.assigner.models.cluster
    :members:

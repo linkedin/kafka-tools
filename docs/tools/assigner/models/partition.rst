@@ -1,5 +1,5 @@
-kafka.tools.assigner.tools.models.partition
-===========================================
+kafka.tools.assigner.models.partition
+=====================================
 
-.. automodule:: kafka.tools.assigner.tools.models.partition
+.. automodule:: kafka.tools.assigner.models.partition
    :members:

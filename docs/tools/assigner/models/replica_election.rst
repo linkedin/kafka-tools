@@ -1,5 +1,5 @@
-kafka.tools.assigner.tools.models.replica_election
-==================================================
+kafka.tools.assigner.models.replica_election
+============================================
 
-.. automodule:: kafka.tools.assigner.tools.models.replica_election
+.. automodule:: kafka.tools.assigner.models.replica_election
    :members:

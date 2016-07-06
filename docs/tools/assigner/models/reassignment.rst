@@ -1,5 +1,5 @@
-kafka.tools.assigner.tools.models.reassignment
-==============================================
+kafka.tools.assigner.models.reassignment
+========================================
 
-.. automodule:: kafka.tools.assigner.tools.models.reassignment
+.. automodule:: kafka.tools.assigner.models.reassignment
    :members:

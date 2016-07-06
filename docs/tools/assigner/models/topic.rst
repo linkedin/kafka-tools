@@ -1,5 +1,5 @@
-kafka.tools.assigner.tools.models.topic
-=======================================
+kafka.tools.assigner.models.topic
+=================================
 
-.. automodule:: kafka.tools.assigner.tools.models.topic
+.. automodule:: kafka.tools.assigner.models.topic
    :members:
