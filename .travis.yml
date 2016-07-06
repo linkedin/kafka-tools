@@ -22,7 +22,6 @@ script:
   - tox
   - sphinx-build -nW -b html -d ./docs/_build/doctrees ./docs ./docs/_build/html
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
   - codeclimate-test-reporter
   - coveralls
 notifications:
