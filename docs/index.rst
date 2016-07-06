@@ -1,8 +1,8 @@
-=======================================
-Welcome to kafka-tools's documentation!
-=======================================
+======================================
+Welcome to kafka-tools' Documentation!
+======================================
 
-Kafka tools.
+kafka-tools is a collection of various tools for managing Apache Kafka.
 
 .. toctree::
    :maxdepth: 2
