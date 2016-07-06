@@ -18,10 +18,10 @@ install:
   - pip install coveralls
   - pip install codeclimate-test-reporter
   - pip install sphinx
-  - pip install kazoo
 script:
   - tox
-  - '[ "${TRAVIS_PYTHON_VERSION}" = "2.6" ] && pip install importlib || true'
+  - pip install kazoo # Only for building docs
+  - '[ "${TRAVIS_PYTHON_VERSION}" = "2.6" ] && pip install importlib || true' # Only for building docs
   - sphinx-build -nW -b html -d ./docs/_build/doctrees ./docs ./docs/_build/html
 after_success:
   - codeclimate-test-reporter
