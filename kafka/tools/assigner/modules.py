@@ -21,9 +21,32 @@ import inspect
 import os
 
 
+def is_class(klass):
+    return inspect.isclass(klass) and (not inspect.isabstract(klass))
+
+
+def check_class(klass, base_class):
+    if not is_class(klass):
+        return None
+    base_classes = inspect.getmro(klass)
+    if len(base_classes) == 1:
+        return None
+    if base_classes[1] == base_class:
+        return klass
+
+
+def check_classes_in_module(module, base_class):
+    module_list = []
+    for item in dir(module):
+        value = getattr(module, item)
+        if check_class(value, base_class) is not None:
+            module_list.append(value)
+
+    return module_list
+
+
 def get_modules(base_package, base_class):
     module_list = []
-
     module_file_paths = glob.glob(os.path.join(base_package.__path__[0], "*.py"))
     for module_file_path in module_file_paths:
         module_filename = os.path.basename(module_file_path)
@@ -34,17 +57,7 @@ def get_modules(base_package, base_class):
         # Import the module
         module = importlib.import_module("." + module_name, package=base_package.__name__)
 
-        # Iterate the classes in the imported module
-        for item in dir(module):
-            value = getattr(module, item)
-            if not value or not inspect.isclass(value) or inspect.isabstract(value):
-                continue
-
-            base_classes = inspect.getmro(value)
-            if len(base_classes) == 1:
-                continue
-            if base_classes[1] == base_class:
-                module_list.append(value)
-                continue
+        # Add all children of the base_class in the module
+        module_list.extend(check_classes_in_module(module, base_class))
 
     return list(set(module_list))

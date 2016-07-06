@@ -25,6 +25,26 @@ from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
 
 
+def add_brokers_from_zk(cluster, zk):
+    for b in zk.get_children("/brokers/ids"):
+        broker_data, bstat = zk.get("/brokers/ids/{0}".format(b))
+        cluster.add_broker(Broker.create_from_json(int(b), broker_data))
+    if cluster.num_brokers() == 0:
+        raise ZookeeperException("The cluster specified does not have any brokers")
+
+
+def add_topic_with_replicas(cluster, topic, topic_data):
+    newtopic = Topic(topic, len(topic_data['partitions']))
+    for partition in topic_data['partitions']:
+        for i, replica in enumerate(topic_data['partitions'][partition]):
+            if replica not in cluster.brokers:
+                # Hit a replica that's not in the ID list (which means it's dead)
+                # We'll add it, but trying to get sizes will fail as we don't have a hostname
+                cluster.add_broker(Broker(replica, None))
+            newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
+    cluster.add_topic(newtopic)
+
+
 class Cluster(BaseModel):
     equality_attrs = ['brokers', 'topics']
 
@@ -43,27 +63,14 @@ class Cluster(BaseModel):
 
         # Get broker list
         cluster = cls()
-        for b in zk.get_children("/brokers/ids"):
-            broker_data, bstat = zk.get("/brokers/ids/{0}".format(b))
-            cluster.add_broker(Broker.create_from_json(int(b), broker_data))
-        if cluster.num_brokers() == 0:
-            raise ZookeeperException("The cluster specified does not have any brokers")
+        add_brokers_from_zk(cluster, zk)
 
         # Get current partition state
         log.info("Getting partition list from Zookeeper")
         for topic in zk.get_children("/brokers/topics"):
             zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
-            zj = json.loads(zdata)
+            add_topic_with_replicas(cluster, topic, json.loads(zdata))
 
-            newtopic = Topic(topic, len(zj['partitions']))
-            for partition in zj['partitions']:
-                for i, replica in enumerate(zj['partitions'][partition]):
-                    if replica not in cluster.brokers:
-                        # Hit a replica that's not in the ID list (which means it's dead)
-                        # We'll add it, but trying to get sizes will fail as we don't have a hostname
-                        cluster.add_broker(Broker(replica, None))
-                    newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
-            cluster.add_topic(newtopic)
         if cluster.num_topics() == 0:
             raise ZookeeperException("The cluster specified does not have any topics")
 

@@ -3,7 +3,7 @@ import unittest
 
 from mock import patch
 
-from kafka.tools.assigner.tools import is_exec_file, get_tools_path, check_java_home
+from kafka.tools.assigner.tools import is_exec_file, get_tools_path, check_java_home, find_path_containing
 from kafka.tools.assigner.exceptions import ConfigurationException
 
 
@@ -35,16 +35,22 @@ class ToolsTests(unittest.TestCase):
         res = is_exec_file(fname)
         assert res is False
 
-    @patch('kafka.tools.assigner.tools.is_exec_file')
-    def test_get_tools_path_default_found(self, mock_is_exec_file):
-        mock_is_exec_file.return_value = True
+    @patch('kafka.tools.assigner.tools.find_path_containing')
+    def test_get_tools_path_default(self, mock_find):
+        mock_find.return_value = '/path/to/tools'
         tools_path = get_tools_path()
+        assert tools_path == '/path/to/tools'
+
+    @patch('kafka.tools.assigner.tools.is_exec_file')
+    def test_find_path_containing_found(self, mock_is_exec_file):
+        mock_is_exec_file.return_value = True
+        tools_path = find_path_containing('some_filename')
         assert tools_path is not None
 
     @patch('kafka.tools.assigner.tools.is_exec_file')
-    def test_get_tools_path_default_notfound(self, mock_is_exec_file):
+    def test_find_path_containing_notfound(self, mock_is_exec_file):
         mock_is_exec_file.return_value = False
-        self.assertRaises(ConfigurationException, get_tools_path)
+        self.assertRaises(ConfigurationException, find_path_containing, 'some_filename')
 
     @patch('kafka.tools.assigner.tools.is_exec_file')
     def test_get_tools_path_explicit_found(self, mock_is_exec_file):

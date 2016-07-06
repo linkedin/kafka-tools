@@ -13,9 +13,23 @@ class SizerSSH(SizerModule):
     def __init__(self, args, cluster):
         super(SizerSSH, self).__init__(args, cluster)
 
+        self.size_re = re.compile("^([0-9]+)\s+.*?\/([a-z0-9_-]+)-([0-9]+)\s*$", re.I)
+
+    def process_df_match(self, match_obj, broker_id):
+        if match_obj:
+            size = int(match_obj.group(1))
+            topic = match_obj.group(2)
+            pnum = int(match_obj.group(3))
+
+            if topic not in self.cluster.topics:
+                log.warn("Unknown topic found on disk on broker {0}: {1}".format(broker_id, topic))
+            elif pnum >= len(self.cluster.topics[topic].partitions):
+                log.warn("Unknown partition found on disk on broker {0}: {1}:{2}".format(broker_id, topic, pnum))
+            else:
+                self.cluster.topics[topic].partitions[pnum].set_size(size)
+
     def get_partition_sizes(self):
         # Get broker partition sizes
-        size_re = re.compile("^([0-9]+)\s+.*?\/([a-z0-9_-]+)-([0-9]+)\s*$", re.I)
         FNULL = open(os.devnull, 'w')
 
         for broker_id, broker in self.cluster.brokers.items():
@@ -27,15 +41,4 @@ class SizerSSH(SizerModule):
             proc = subprocess.Popen(['ssh', broker.hostname, 'du -sk {0}/*'.format(self.args.datadir)],
                                     stdout=subprocess.PIPE, stderr=FNULL)
             for line in proc.stdout:
-                m = size_re.match(line.decode())
-                if m:
-                    size = int(m.group(1))
-                    topic = m.group(2)
-                    pnum = int(m.group(3))
-
-                    if topic not in self.cluster.topics:
-                        log.warn("Unknown topic found on disk on broker {0}: {1}".format(broker_id, topic))
-                    elif pnum >= len(self.cluster.topics[topic].partitions):
-                        log.warn("Unknown partition found on disk on broker {0}: {1}:{2}".format(broker_id, topic, pnum))
-                    else:
-                        self.cluster.topics[topic].partitions[pnum].set_size(size)
+                self.process_df_match(self.size_re.match(line.decode()), broker_id)
