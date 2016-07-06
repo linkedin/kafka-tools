@@ -19,9 +19,6 @@ We welcome additions and modifications that make managing Kafka better for all!
 .. image:: https://coveralls.io/repos/github/linkedin/kafka-tools/badge.svg?branch=master
    :target: https://coveralls.io/github/linkedin/kafka-tools?branch=master
    :alt: Coveralls Test Coverage
-.. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/gpa.svg
-   :target: https://codeclimate.com/github/linkedin/kafka-tools
-   :alt: Code Climate
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
