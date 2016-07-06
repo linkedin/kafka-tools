@@ -2,7 +2,7 @@ Kafka Tools
 ===========
 
 This repository is a collection of tools for working with
-`Apache Kafka <http://kafka.apache.org>`.
+`Apache Kafka <http://kafka.apache.org>`_.
 
 The Site Reliability team for Kafka at LinkedIn has built these over time in
 order to make managing Kafka a little bit easier. Our intention is to add to
