@@ -101,6 +101,10 @@ class MainTests(unittest.TestCase):
         args = argparse.Namespace(generate=True, execute=True)
         assert is_dry_run(args) is True
 
+    def test_is_dry_run_execute(self):
+        args = argparse.Namespace(generate=False, execute=True)
+        assert is_dry_run(args) is False
+
     @patch.object(SizerSSH, 'get_partition_sizes')
     def test_get_sizes(self, mock_sizes):
         args = argparse.Namespace(sizer='ssh', size=True)
