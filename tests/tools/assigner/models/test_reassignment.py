@@ -9,7 +9,7 @@ from testfixtures.popen import MockPopen
 from kafka.tools.assigner.exceptions import ReassignmentFailedException
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
-from kafka.tools.assigner.models.reassignment import Reassignment, check_reassignment_completion
+from kafka.tools.assigner.models.reassignment import Reassignment
 from kafka.tools.assigner.plugins import PluginModule
 
 
@@ -39,13 +39,23 @@ class ReassignmentTests(unittest.TestCase):
             expect_repr['partitions'].append({'topic': 'testTopic', 'partition': i, 'replicas': [1]})
         assert t_repr == expect_repr
 
+    @patch.object(Reassignment, '_execute')
+    def test_reassignment_execute_real(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False)
+        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools')
+
+    @patch.object(Reassignment, '_execute')
+    def test_reassignment_execute_dryrun(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=True)
+        mock_exec.assert_not_called()
+
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
-    @patch('kafka.tools.assigner.models.reassignment.check_reassignment_completion')
-    def test_reassignment_execute(self, mock_check, mock_popen):
+    @patch.object(Reassignment, 'check_completion')
+    def test_reassignment_internal_execute(self, mock_check, mock_popen):
         mock_popen.set_default()
         mock_check.side_effect = [10, 5, 0]
 
-        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False)
+        self.reassignment._execute(1, 1, 'zkconnect', '/path/to/tools')
 
         compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--execute', '--zookeeper', 'zkconnect', '--reassignment-json-file', ANY],
                             stderr=ANY, stdout=ANY),
@@ -60,10 +70,40 @@ class ReassignmentTests(unittest.TestCase):
                       "Reassignment of partition [testTopic,2] completed successfully\n"
                       "Reassignment of partition [testTopic,3] completed successfully\n")
         mock_popen.set_default(stdout=cmd_stdout.encode('utf-8'))
-        check_reassignment_completion('zkconnect', '/path/to/tools', 'assignfilename')
+        self.reassignment.check_completion('zkconnect', '/path/to/tools', 'assignfilename')
         compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--verify', '--zookeeper', 'zkconnect', '--reassignment-json-file',
                              'assignfilename'], stderr=ANY, stdout=PIPE)],
                 mock_popen.mock.method_calls)
+
+    def test_verify_regex_bad(self):
+        assert self.reassignment.status_re.match("Status of partition reassignment:\n") is None
+
+    def test_verify_regex_failed(self):
+        match_obj = self.reassignment.status_re.match("Reassignment of partition [testTopic,1] failed\n")
+        assert match_obj is not None
+        assert match_obj.group(1) == "failed"
+
+    def test_verify_regex_progress(self):
+        match_obj = self.reassignment.status_re.match("Reassignment of partition [testTopic,1] still in progress\n")
+        assert match_obj is not None
+        assert match_obj.group(1) == "still in progress"
+
+    def test_verify_regex_success(self):
+        match_obj = self.reassignment.status_re.match("Reassignment of partition [testTopic,1] completed successfully\n")
+        assert match_obj is not None
+        assert match_obj.group(1) == "completed successfully"
+
+    def test_process_verify_match_failed(self):
+        count = self.reassignment.process_verify_match("Reassignment of partition [testTopic,1] failed\n")
+        assert count == -1
+
+    def test_process_verify_match_progress(self):
+        count = self.reassignment.process_verify_match("Reassignment of partition [testTopic,1] still in progress\n")
+        assert count == 1
+
+    def test_process_verify_match_other(self):
+        count = self.reassignment.process_verify_match("Reassignment of partition [testTopic,1] completed successfully\n")
+        assert count == 0
 
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
     def test_check_completion_failed(self, mock_popen):
@@ -74,7 +114,7 @@ class ReassignmentTests(unittest.TestCase):
                       "Reassignment of partition [testTopic,2] still in progress\n"
                       "Reassignment of partition [testTopic,3] completed successfully\n")
         mock_popen.set_default(stdout=cmd_stdout.encode('utf-8'))
-        self.assertRaises(ReassignmentFailedException, check_reassignment_completion, 'zkconnect', '/path/to/tools', 'assignfilename')
+        self.assertRaises(ReassignmentFailedException, self.reassignment.check_completion, 'zkconnect', '/path/to/tools', 'assignfilename')
 
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
     def test_check_completion_success(self, mock_popen):
@@ -84,7 +124,7 @@ class ReassignmentTests(unittest.TestCase):
                       "Reassignment of partition [testTopic,2] completed successfully\n"
                       "Reassignment of partition [testTopic,3] completed successfully\n")
         mock_popen.set_default(stdout=cmd_stdout.encode('utf-8'))
-        assert check_reassignment_completion('zkconnect', '/path/to/tools', 'assignfilename') == 0
+        assert self.reassignment.check_completion('zkconnect', '/path/to/tools', 'assignfilename') == 0
 
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
     def test_check_completion_progress(self, mock_popen):
@@ -94,4 +134,4 @@ class ReassignmentTests(unittest.TestCase):
                       "Reassignment of partition [testTopic,2] completed successfully\n"
                       "Reassignment of partition [testTopic,3] completed successfully\n")
         mock_popen.set_default(stdout=cmd_stdout.encode('utf-8'))
-        assert check_reassignment_completion('zkconnect', '/path/to/tools', 'assignfilename') == 1
+        assert self.reassignment.check_completion('zkconnect', '/path/to/tools', 'assignfilename') == 1

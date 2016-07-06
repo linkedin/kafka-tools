@@ -38,7 +38,7 @@ class ActionRemoveTests(unittest.TestCase):
 
     def test_create_class_no_target(self):
         self.args.brokers = [1]
-        self.args.to_brokers = None
+        self.args.to_brokers = []
         action = ActionRemove(self.args, self.cluster)
         assert action.to_brokers == [2]
 
@@ -51,7 +51,7 @@ class ActionRemoveTests(unittest.TestCase):
     def test_process_cluster(self):
         self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
         self.args.brokers = [1]
-        self.args.to_brokers = None
+        self.args.to_brokers = []
         action = ActionRemove(self.args, self.cluster)
         action.process_cluster()
 
@@ -64,6 +64,6 @@ class ActionRemoveTests(unittest.TestCase):
 
     def test_process_cluster_error(self):
         self.args.brokers = [1]
-        self.args.to_brokers = None
+        self.args.to_brokers = []
         action = ActionRemove(self.args, self.cluster)
         self.assertRaises(NotEnoughReplicasException, action.process_cluster)

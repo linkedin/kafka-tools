@@ -27,8 +27,26 @@ def is_exec_file(fname):
     Check if the given filename is a regular file and is executable.
 
     :param fname: the filename to check.
+    :returns: True if the filename given exists and is executable, False otherwise
     """
     return os.path.isfile(fname) and os.access(fname, os.X_OK)
+
+
+def find_path_containing(fname):
+    """
+    Search the PATH for the given executable filename
+
+    :param fname: the filename to check
+    :return: the path that contains the filename
+    :raises: ConfigurationException if the filename cannot be found, or if it is not executable
+    """
+    if 'PATH' in os.environ:
+        for path in os.environ['PATH'].split(os.pathsep):
+            path = path.strip('"')
+            script_file = os.path.join(path, fname)
+            if is_exec_file(script_file):
+                return path
+    raise ConfigurationException("Cannot find the Kafka admin utilities using PATH. Try using the --tools-path option")
 
 
 def get_tools_path(tools_path=None):
@@ -36,6 +54,8 @@ def get_tools_path(tools_path=None):
     Find the Kafka admin utilities, either from the provided arg or the PATH.
 
     :param tools_path: the path to use for locating the Kafka admin utilities.
+    :return: the path that contains Kafka admin utilities
+    :raises: ConfigurationException if the path cannot be determined
     """
     if tools_path is not None:
         script_file = os.path.join(tools_path, 'kafka-reassign-partitions.sh')
@@ -43,19 +63,14 @@ def get_tools_path(tools_path=None):
             raise ConfigurationException("--tools-path does not lead to the Kafka admin utilities ({0} is not an executable)".format(script_file))
         return tools_path
 
-    if 'PATH' in os.environ:
-        for path in os.environ['PATH'].split(os.pathsep):
-            path = path.strip('"')
-            script_file = os.path.join(path, 'kafka-reassign-partitions.sh')
-            if is_exec_file(script_file):
-                return path
-
-    raise ConfigurationException("Cannot find the Kafka admin utilities using PATH. Try using the --tools-path option")
+    return find_path_containing('kafka-reassign-partitions.sh')
 
 
 def check_java_home():
     """
     Make sure that JAVA_HOME in the current environment is specified and is valid.
+
+    :raises: ConfigurationException if JAVA_HOME is not set or does not contain java
     """
     if 'JAVA_HOME' in os.environ:
         java_bin = os.path.join(os.environ['JAVA_HOME'], 'bin', 'java')
