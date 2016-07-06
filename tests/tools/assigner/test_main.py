@@ -3,7 +3,7 @@ import unittest
 
 from mock import call, patch
 
-from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections, run_plugins_at_step
+from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections, run_plugins_at_step, is_dry_run
 from kafka.tools.assigner.exceptions import ProgrammingException
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.models.broker import Broker
@@ -88,6 +88,18 @@ class MainTests(unittest.TestCase):
 
     def test_run_plugins_bad_step(self):
         self.assertRaises(ProgrammingException, run_plugins_at_step, [self.null_plugin], 'not_a_step')
+
+    def test_is_dry_run_noexecute(self):
+        args = argparse.Namespace(generate=False, execute=False)
+        assert is_dry_run(args) is True
+
+    def test_is_dry_run_generate(self):
+        args = argparse.Namespace(generate=True, execute=False)
+        assert is_dry_run(args) is True
+
+    def test_is_dry_run_both(self):
+        args = argparse.Namespace(generate=True, execute=True)
+        assert is_dry_run(args) is True
 
     @patch.object(SizerSSH, 'get_partition_sizes')
     def test_get_sizes(self, mock_sizes):
