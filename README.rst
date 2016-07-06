@@ -22,6 +22,9 @@ We welcome additions and modifications that make managing Kafka better for all!
 .. image:: https://codeclimate.com/github/linkedin/kafka-tools/badges/issue_count.svg
    :target: https://codeclimate.com/github/linkedin/kafka-tools
    :alt: Issue Count
+.. image:: https://requires.io/github/linkedin/kafka-tools/requirements.svg?branch=master
+   :target: https://requires.io/github/linkedin/kafka-tools/requirements/?branch=master
+   :alt: Requirements Status
 
 Quick Start
 -----------
