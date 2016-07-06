@@ -1,8 +1,8 @@
-API Documentation - kafka.tools.assigner
-========================================
+kafka.tools.assigner
+====================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    actions/balance
    actions/balancemodules/count
