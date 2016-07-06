@@ -29,7 +29,7 @@ pygments_style = 'sphinx'
 
 # -- Options for HTML output ---------------------------------------------------
 
-html_theme = 'nature'
+html_theme = 'default'
 html_static_path = ['_static']
 
 # Example configuration for intersphinx: refer to the Python standard library.
