@@ -8,6 +8,7 @@ kafka.tools.assigner
    actions/balancemodules/count
    actions/balancemodules/even
    actions/balancemodules/leader
+   actions/balancemodules/rackaware
    actions/balancemodules/size
    actions/clone
    actions/elect
