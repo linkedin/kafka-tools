@@ -31,6 +31,7 @@ class Broker(BaseModel):
         self.hostname = hostname
         self.jmx_port = -1
         self.port = None
+        self.rack = None
         self.version = None
         self.endpoints = None
         self.timestamp = None
@@ -48,14 +49,11 @@ class Broker(BaseModel):
             raise ConfigurationException("Cannot parse broker data in zookeeper. This version of Kafka may not be supported.")
 
         # These things are optional, and are pulled in for convenience or extra features
-        try:
-            newbroker.jmx_port = data['jmx_port']
-            newbroker.port = data['port']
-            newbroker.version = data['version']
-            newbroker.endpoints = data['endpoints']
-            newbroker.timestamp = data['timestamp']
-        except KeyError:
-            pass
+        for attr in ['jmx_port', 'port', 'rack', 'version', 'endpoints', 'timestamp']:
+            try:
+                setattr(newbroker, attr, data[attr])
+            except KeyError:
+                pass
 
         return newbroker
 
@@ -64,6 +62,7 @@ class Broker(BaseModel):
         newbroker = Broker(self.id, self.hostname)
         newbroker.jmx_port = self.jmx_port
         newbroker.port = self.port
+        newbroker.rack = self.rack
         newbroker.version = self.version
         newbroker.endpoints = self.endpoints
         newbroker.timestamp = self.timestamp
