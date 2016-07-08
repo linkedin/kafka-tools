@@ -9,6 +9,8 @@ def set_up_cluster():
     cluster = Cluster()
     cluster.add_broker(Broker(1, "brokerhost1.example.com"))
     cluster.add_broker(Broker(2, "brokerhost2.example.com"))
+    cluster.brokers[1].rack = "a"
+    cluster.brokers[2].rack = "b"
     cluster.add_topic(Topic("testTopic1", 2))
     cluster.add_topic(Topic("testTopic2", 2))
     partition = cluster.topics['testTopic1'].partitions[0]
@@ -32,6 +34,10 @@ def set_up_cluster_4broker():
     cluster.add_broker(Broker(2, "brokerhost2.example.com"))
     cluster.add_broker(Broker(3, "brokerhost3.example.com"))
     cluster.add_broker(Broker(4, "brokerhost4.example.com"))
+    cluster.brokers[1].rack = "a"
+    cluster.brokers[2].rack = "a"
+    cluster.brokers[3].rack = "b"
+    cluster.brokers[4].rack = "b"
     cluster.add_topic(Topic("testTopic1", 4))
     cluster.add_topic(Topic("testTopic2", 4))
     cluster.add_topic(Topic("testTopic3", 4))
