@@ -41,6 +41,10 @@ class ExceptionTests(unittest.TestCase):
         e = kafka.tools.assigner.exceptions.ReassignmentFailedException()
         assert isinstance(e, kafka.tools.assigner.exceptions.AssignerException)
 
+    def test_exception_balance(self):
+        e = kafka.tools.assigner.exceptions.BalanceException()
+        assert isinstance(e, kafka.tools.assigner.exceptions.AssignerException)
+
     def test_exception_unknown_broker(self):
         e = kafka.tools.assigner.exceptions.UnknownBrokerException()
         assert isinstance(e, kafka.tools.assigner.exceptions.AssignerException)
