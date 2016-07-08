@@ -58,3 +58,7 @@ class ReassignmentFailedException(AssignerException):
 
 class UnknownBrokerException(AssignerException):
     errstr = "There is an unknown broker hostname"
+
+
+class BalanceException(AssignerException):
+    errstr = "The balance module failed to satisfy the requirements"
