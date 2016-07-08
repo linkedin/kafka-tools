@@ -32,7 +32,7 @@ class ActionBalanceRackAware(ActionBalanceModule):
         super(ActionBalanceRackAware, self).__init__(args, cluster)
 
         # Set up a random ordered deque of brokers to use when we can't swap
-        broker_list = self.cluster.brokers.values()
+        broker_list = list(self.cluster.brokers.values())
         random.shuffle(broker_list)
         self._random_brokers = deque(broker_list)
 
