@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import sys
 import time
 
@@ -133,6 +134,7 @@ def main():
         batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'before_ple')
+
     if not args.skip_ple:
         all_cluster_partitions = [p for p in action_to_run.cluster.partitions()]
         batches = split_partitions_into_batches(all_cluster_partitions, batch_size=args.ple_size, use_class=ReplicaElection)
@@ -140,7 +142,8 @@ def main():
         run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'finished')
-    return 0
+
+    return os.EX_OK
 
 if __name__ == "__main__":
     sys.exit(main())
