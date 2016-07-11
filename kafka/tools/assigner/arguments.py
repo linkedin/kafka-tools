@@ -16,6 +16,7 @@
 # under the License.
 
 import argparse
+import pkg_resources
 
 
 # action_map is a map of names to ActionModule children - the top level actions that can be called
@@ -23,6 +24,8 @@ import argparse
 def set_up_arguments(action_map, sizer_map, plugins):
     # Configure basic arguments
     aparser = argparse.ArgumentParser(prog='kafka-assigner', description='Rejigger Kafka cluster partitions')
+
+    aparser.add_argument('-v', '--version', action='version', version=str(pkg_resources.get_distribution("kafka-tools").version))
     aparser.add_argument('-z', '--zookeeper', help='Zookeeper path to the cluster (i.e. zk-eat1-kafka.corp:12913/kafka-data-deployment)', required=True)
     aparser.add_argument('-l', '--leadership', help="Show cluster leadership balance", action='store_true')
     aparser.add_argument('-g', '--generate', help="Generate partition reassignment file", action='store_true')
