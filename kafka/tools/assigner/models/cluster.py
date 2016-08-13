@@ -44,6 +44,7 @@ def add_replica_to_broker_list(cluster, i, replica, newtopic, partition, use_act
     if replica in cluster.brokers:
         newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
 
+
 def add_topic_with_replicas(cluster, topic, topic_data, use_active_brokers):
     newtopic = Topic(topic, len(topic_data['partitions']))
     for partition in topic_data['partitions']:
