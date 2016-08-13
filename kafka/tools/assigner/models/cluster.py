@@ -33,19 +33,22 @@ def add_brokers_from_zk(cluster, zk):
         raise ZookeeperException("The cluster specified does not have any brokers")
 
 
+def add_replica_to_broker_list(cluster, i, replica, newtopic, partition, use_active_brokers):
+    if replica not in cluster.brokers and not use_active_brokers:
+        # Hit a replica that's not in the ID list (which means it's dead)
+        # We'll add it, but trying to get sizes will fail as we don't have a hostname
+
+        # Only add these brokers that are not present in ZK if use_active_brokers is False
+        cluster.add_broker(Broker(replica, None))
+
+    if replica in cluster.brokers:
+        newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
+
 def add_topic_with_replicas(cluster, topic, topic_data, use_active_brokers):
     newtopic = Topic(topic, len(topic_data['partitions']))
     for partition in topic_data['partitions']:
         for i, replica in enumerate(topic_data['partitions'][partition]):
-            if replica not in cluster.brokers and not use_active_brokers:
-                # Hit a replica that's not in the ID list (which means it's dead)
-                # We'll add it, but trying to get sizes will fail as we don't have a hostname
-
-                # Only add these brokers that are not present in ZK if use_active_brokers is False
-                cluster.add_broker(Broker(replica, None))
-
-            if replica in cluster.brokers:
-                newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
+            add_replica_to_broker_list(cluster, i, replica, newtopic, partition, use_active_brokers)
     cluster.add_topic(newtopic)
 
 
