@@ -57,7 +57,7 @@ class Cluster(BaseModel):
         self.topics = {}
 
     @classmethod
-    def create_from_zookeeper(cls, zkconnect, use_active_brokers):
+    def create_from_zookeeper(cls, zkconnect, use_active_brokers=False):
         log.info("Connecting to zookeeper {0}".format(zkconnect))
         try:
             zk = KazooClient(zkconnect)
