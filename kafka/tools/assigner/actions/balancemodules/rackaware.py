@@ -53,7 +53,7 @@ class ActionBalanceRackAware(ActionBalanceModule):
 
     def _get_sorted_partition_list_at_pos(self, pos):
         # Create a list of partitions to use at this position, sorted by size
-        partitions = [p for p in self.cluster.partitions() if (len(p.replicas) > (pos + 1))]
+        partitions = [p for p in self.cluster.partitions(self.args.exclude_topics) if (len(p.replicas) > (pos + 1))]
         partitions.sort(key=attrgetter('size'))
         return partitions
 

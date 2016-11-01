@@ -41,7 +41,7 @@ class ActionClone(ActionModule):
 
     def process_cluster(self):
         source_set = set(self.sources)
-        for partition in self.cluster.partitions():
+        for partition in self.cluster.partitions(self.args.exclude_topics):
             if len(source_set & set([replica.id for replica in partition.replicas])) > 0:
                 if self.to_broker in partition.replicas:
                     log.warn("Target broker (ID {0}) is already in the replica list for {1}:{2}".format(self.to_broker.id, partition.topic.name, partition.num))

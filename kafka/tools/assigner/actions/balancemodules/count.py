@@ -74,6 +74,11 @@ class ActionBalanceCount(ActionBalanceModule):
                             # If we have moved enough partitions from this broker, exit out of the inner loop
                             if (source.num_partitions_at_position(pos) < max_count[pos][0]) or (diff == 0):
                                 break
+
+                            # Skip topics that are being excluded
+                            if partition.topic.name in self.args.exclude_topics:
+                                continue
+
                             # If the partition is already on the target, swap positions only if it makes the balance better
                             if broker in partition.replicas:
                                 other_pos = partition.replicas.index(broker)

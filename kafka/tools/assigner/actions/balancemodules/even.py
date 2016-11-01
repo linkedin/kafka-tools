@@ -32,6 +32,9 @@ class ActionBalanceEven(ActionBalanceModule):
     helpstr = "Evenly spread topics that are a multiple of the number of brokers across the cluster"
 
     def check_topic_ok(self, topic):
+            if topic.name in self.args.exclude_topics:
+                log.warn("Skipping topic {0} as it is explicitly excluded".format(topic.name))
+                return False
             if len(topic.partitions) % len(self.cluster.brokers) != 0:
                 log.warn("Skipping topic {0} as it has {1} partitions, which is not a multiple of the number of brokers ({2})".format(
                     topic.name, len(topic.partitions), len(self.cluster.brokers)))

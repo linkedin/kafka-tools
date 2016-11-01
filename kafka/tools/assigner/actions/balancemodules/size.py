@@ -43,7 +43,7 @@ class ActionBalanceSize(ActionBalanceModule):
 
             # Create a sorted list of partitions to use at this position (descending size)
             # Throw out partitions that are 4K or less in size, as they are effectively empty
-            partitions[pos] = [p for p in self.cluster.partitions() if (len(p.replicas) > pos) and (p.size > 4)]
+            partitions[pos] = [p for p in self.cluster.partitions(self.args.exclude_topics) if (len(p.replicas) > pos) and (p.size > 4)]
             partitions[pos].sort(key=attrgetter('size'), reverse=True)
 
             # Calculate broker size at this position

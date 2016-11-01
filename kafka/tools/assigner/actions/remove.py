@@ -16,6 +16,7 @@
 # under the License.
 
 from collections import deque
+from kafka.tools.assigner import log
 from kafka.tools.assigner.actions import ActionModule
 from kafka.tools.assigner.exceptions import ConfigurationException, NotEnoughReplicasException
 
@@ -53,6 +54,10 @@ class ActionRemove(ActionModule):
             for position in broker.partitions:
                 iterlist = list(broker.partitions[position])
                 for partition in iterlist:
+                    if partition.topic.name in self.args.exclude_topics:
+                        log.debug("Skipping partition {0}-{1} due to exclude-topics".format(partition.topic.name, partition.num))
+                        continue
+
                     # Find a new replica for this partition
                     newreplica = None
                     attempts = 0

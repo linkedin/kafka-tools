@@ -44,7 +44,7 @@ class ActionSetRF(ActionModule):
         random.shuffle(idlist)
         brokers = deque(idlist)
 
-        for partition in self.cluster.partitions():
+        for partition in self.cluster.partitions(self.args.exclude_topics):
             if partition.topic.name not in self.args.topics:
                 continue
 

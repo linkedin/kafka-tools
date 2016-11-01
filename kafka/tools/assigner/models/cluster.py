@@ -112,8 +112,12 @@ class Cluster(BaseModel):
 
     # Iterate over all the partitions in this cluster
     # Order is undefined
-    def partitions(self):
+    def partitions(self, exclude_topics=[]):
         for topic in self.topics:
+            if topic in exclude_topics:
+                log.debug("Skipping topic {0} due to exclude-topics".format(topic))
+                continue
+
             for partition in self.topics[topic].partitions:
                 yield partition
 
@@ -136,7 +140,7 @@ class Cluster(BaseModel):
     def changed_partitions(self, newcluster):
         moves = []
         try:
-            for partition in newcluster.partitions():
+            for partition in newcluster.partitions([]):
                 if partition.replicas != self.topics[partition.topic.name].partitions[partition.num].replicas:
                     moves.append(partition)
         except KeyError:
