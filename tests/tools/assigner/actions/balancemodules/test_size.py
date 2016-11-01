@@ -19,7 +19,7 @@ class ActionBalanceSizeTests(unittest.TestCase):
         self.cluster.topics['testTopic2'].partitions[1].size = 2000
 
         (self.parser, self.subparsers) = set_up_subparser()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_configure_args(self):
         ActionBalance.configure_args(self.subparsers)

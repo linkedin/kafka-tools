@@ -127,7 +127,7 @@ class PartitionOperationTests(unittest.TestCase):
             assert newcluster.brokers[bid] == self.cluster.brokers[bid]
         for tname in newcluster.topics:
             assert newcluster.topics[tname] == self.cluster.topics[tname]
-        for partition in newcluster.partitions():
+        for partition in newcluster.partitions([]):
             assert partition == self.cluster.topics[partition.topic.name].partitions[partition.num]
             assert partition.replicas == self.cluster.topics[partition.topic.name].partitions[partition.num].replicas
 

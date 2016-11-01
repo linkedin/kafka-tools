@@ -14,7 +14,7 @@ class ActionBalanceLeaderTests(unittest.TestCase):
     def setUp(self):
         self.cluster = set_up_cluster()
         (self.parser, self.subparsers) = set_up_subparser()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_configure_args(self):
         ActionBalance.configure_args(self.subparsers)

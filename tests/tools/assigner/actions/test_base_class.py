@@ -9,7 +9,7 @@ from kafka.tools.assigner.actions import ActionModule, ActionBalanceModule
 class ActionModuleTests(unittest.TestCase):
     def setUp(self):
         self.cluster = set_up_cluster()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_create_class(self):
         action = ActionModule(self.args, self.cluster)

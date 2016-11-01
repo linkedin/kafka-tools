@@ -1,3 +1,4 @@
+import argparse
 import inspect
 import sys
 import unittest
@@ -6,7 +7,7 @@ from contextlib import contextmanager
 
 import kafka.tools.assigner.actions
 
-from kafka.tools.assigner.arguments import set_up_arguments
+from kafka.tools.assigner.arguments import set_up_arguments, CSVAction
 from kafka.tools.assigner.modules import get_modules
 from kafka.tools.assigner.plugins import PluginModule
 
@@ -54,3 +55,25 @@ class ArgumentTests(unittest.TestCase):
         assert args.moves == 10
         assert args.ple_size == 2000
         assert args.ple_wait == 120
+
+    def test_csv_action_single(self):
+        aparser = argparse.ArgumentParser()
+        aparser.add_argument('--foo', action=CSVAction)
+        args = aparser.parse_args(['--foo', '1'])
+        assert args.foo == ['1']
+
+    def test_csv_action_nargs(self):
+        aparser = argparse.ArgumentParser()
+        self.assertRaises(ValueError, aparser.add_argument, '--foo', action=CSVAction, nargs='*')
+
+    def test_csv_action_two_args(self):
+        aparser = argparse.ArgumentParser()
+        aparser.add_argument('--foo', action=CSVAction)
+        args = aparser.parse_args(['--foo', '1', '--foo', '2'])
+        assert args.foo == ['1', '2']
+
+    def test_csv_action_commas(self):
+        aparser = argparse.ArgumentParser()
+        aparser.add_argument('--foo', action=CSVAction)
+        args = aparser.parse_args(['--foo', '1,2'])
+        assert args.foo == ['1', '2']
