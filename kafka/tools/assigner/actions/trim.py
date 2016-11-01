@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.assigner import log
 from kafka.tools.assigner.actions import ActionModule
 from kafka.tools.assigner.exceptions import NotEnoughReplicasException
 
@@ -41,11 +40,13 @@ class ActionTrim(ActionModule):
             for position in broker.partitions:
                 partition_list = broker.partitions[position][:]
                 for partition in partition_list:
-                    if partition.topic.name in self.args.exclude_topics:
-                        log.debug("Skipping partition {0}-{1} due to exclude-topics".format(partition.topic.name, partition.num))
-                        continue
+                    self._process_partition(broker, partition)
 
-                    partition.remove_replica(broker)
-                    if len(partition.replicas) < 1:
-                        raise NotEnoughReplicasException("Cannot trim {0}:{1} as it would result in an empty replica list".format(
-                            partition.topic.name, partition.num))
+    def _process_partition(self, broker, partition):
+        if partition.topic.name in self.args.exclude_topics:
+            return
+
+        partition.remove_replica(broker)
+        if len(partition.replicas) < 1:
+            raise NotEnoughReplicasException("Cannot trim {0}:{1} as it would result in an empty replica list".format(
+                partition.topic.name, partition.num))
