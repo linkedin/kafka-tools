@@ -16,7 +16,6 @@
 # under the License.
 
 from collections import deque
-from kafka.tools.assigner import log
 from kafka.tools.assigner.actions import ActionModule
 from kafka.tools.assigner.exceptions import ConfigurationException, NotEnoughReplicasException
 
