@@ -19,6 +19,22 @@ import argparse
 import pkg_resources
 
 
+class CSVAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(CSVAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        val_array = values.split(',')
+        if hasattr(namespace, self.dest):
+            old_array = getattr(namespace, self.dest)
+            if old_array is not None:
+                old_array.extend(val_array)
+                val_array = old_array
+        setattr(namespace, self.dest, val_array)
+
+
 # action_map is a map of names to ActionModule children - the top level actions that can be called
 # sizer_map is a map of names to SizerModule children - the modules to get partition sizes
 def set_up_arguments(action_map, sizer_map, plugins):
@@ -31,6 +47,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('-g', '--generate', help="Generate partition reassignment file", action='store_true')
     aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
     aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=10, type=int)
+    aparser.add_argument('-x', '--exclude-topics', help="Comma-separated list of topics to skip when performing actions", action=CSVAction, default=[])
     aparser.add_argument('--sizer', help="Select module to use to get partition sizes", required=False, default='ssh', choices=sizer_map.keys())
     aparser.add_argument('-s', '--size', help="Show partition sizes", action='store_true')
     aparser.add_argument('-d', '--datadir', help="Path to the data directory on the broker", required=False, default="/mnt/u001/kafka/i001_caches")

@@ -13,7 +13,7 @@ class ActionRemoveTests(unittest.TestCase):
     def setUp(self):
         self.cluster = set_up_cluster()
         (self.parser, self.subparsers) = set_up_subparser()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_create_class(self):
         self.args.brokers = [1]
@@ -59,6 +59,22 @@ class ActionRemoveTests(unittest.TestCase):
         b3 = self.cluster.brokers[3]
         assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b3, b2]
         assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b3]
+        assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b3]
+        assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b3, b2]
+
+    def test_process_cluster_exclude(self):
+        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.args.brokers = [1]
+        self.args.to_brokers = []
+        self.args.exclude_topics = ['testTopic1']
+        action = ActionRemove(self.args, self.cluster)
+        action.process_cluster()
+
+        b1 = self.cluster.brokers[1]
+        b2 = self.cluster.brokers[2]
+        b3 = self.cluster.brokers[3]
+        assert self.cluster.topics['testTopic1'].partitions[0].replicas == [b1, b2]
+        assert self.cluster.topics['testTopic1'].partitions[1].replicas == [b2, b1]
         assert self.cluster.topics['testTopic2'].partitions[0].replicas == [b2, b3]
         assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b3, b2]
 

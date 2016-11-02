@@ -13,7 +13,7 @@ class ActionBalanceTests(unittest.TestCase):
     def setUp(self):
         self.cluster = set_up_cluster()
         (self.parser, self.subparsers) = set_up_subparser()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_create_class(self):
         self.args.types = ['count']

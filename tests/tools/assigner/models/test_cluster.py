@@ -53,9 +53,16 @@ class SimpleClusterTests(unittest.TestCase):
     def test_cluster_partition_iterator(self):
         self.add_topics(2)
         seen_partitions = {}
-        for partition in self.cluster.partitions():
+        for partition in self.cluster.partitions([]):
             seen_partitions["{0}:{1}".format(partition.topic.name, partition.num)] = 1
         assert seen_partitions == {'testTopic1:0': 1, 'testTopic1:1': 1, 'testTopic2:0': 1, 'testTopic2:1': 1}
+
+    def test_cluster_partition_iterator_with_exclude(self):
+        self.add_topics(2)
+        seen_partitions = {}
+        for partition in self.cluster.partitions(['testTopic1']):
+            seen_partitions["{0}:{1}".format(partition.topic.name, partition.num)] = 1
+        assert seen_partitions == {'testTopic2:0': 1, 'testTopic2:1': 1}
 
     def test_cluster_max_replication_factor(self):
         self.add_brokers(2)

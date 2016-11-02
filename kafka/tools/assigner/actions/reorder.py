@@ -30,7 +30,7 @@ class ActionReorder(ActionModule):
         for broker in self.cluster.brokers:
             leaders[broker] = 0
 
-        for partition in self.cluster.partitions():
+        for partition in self.cluster.partitions(self.args.exclude_topics):
             # The best leader is either:
             #  1) The first replica that has 0 leaders so far
             #  2) The replica with the lowest leader ratio

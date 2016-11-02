@@ -14,7 +14,7 @@ class ActionBalanceCountTests(unittest.TestCase):
     def setUp(self):
         self.cluster = set_up_cluster()
         (self.parser, self.subparsers) = set_up_subparser()
-        self.args = Namespace()
+        self.args = Namespace(exclude_topics=[])
 
     def test_configure_args(self):
         ActionBalance.configure_args(self.subparsers)
@@ -38,6 +38,27 @@ class ActionBalanceCountTests(unittest.TestCase):
         assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
 
     def test_process_cluster_one_move(self):
+        b1 = self.cluster.brokers[1]
+        b2 = self.cluster.brokers[2]
+        self.cluster.add_topic(Topic("testTopic3", 2))
+        partition = self.cluster.topics['testTopic3'].partitions[0]
+        partition.add_replica(b1, 0)
+        partition.add_replica(b2, 1)
+        partition = self.cluster.topics['testTopic3'].partitions[1]
+        partition.add_replica(b2, 0)
+        partition.add_replica(b1, 1)
+        self.cluster.topics['testTopic1'].partitions[0].swap_replica_positions(b1, b2)
+
+        action = ActionBalanceCount(self.args, self.cluster)
+        action.process_cluster()
+
+        assert len(b1.partitions[0]) == 3
+        assert len(b1.partitions[1]) == 3
+        assert len(b2.partitions[0]) == 3
+        assert len(b2.partitions[1]) == 3
+
+    def test_process_cluster_exclude(self):
+        self.args.exclude_topics = ['testTopic1']
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
         self.cluster.add_topic(Topic("testTopic3", 2))

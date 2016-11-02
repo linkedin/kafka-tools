@@ -40,7 +40,13 @@ class ActionTrim(ActionModule):
             for position in broker.partitions:
                 partition_list = broker.partitions[position][:]
                 for partition in partition_list:
-                    partition.remove_replica(broker)
-                    if len(partition.replicas) < 1:
-                        raise NotEnoughReplicasException("Cannot trim {0}:{1} as it would result in an empty replica list".format(
-                            partition.topic.name, partition.num))
+                    self._process_partition(broker, partition)
+
+    def _process_partition(self, broker, partition):
+        if partition.topic.name in self.args.exclude_topics:
+            return
+
+        partition.remove_replica(broker)
+        if len(partition.replicas) < 1:
+            raise NotEnoughReplicasException("Cannot trim {0}:{1} as it would result in an empty replica list".format(
+                partition.topic.name, partition.num))

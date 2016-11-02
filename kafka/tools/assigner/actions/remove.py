@@ -53,6 +53,9 @@ class ActionRemove(ActionModule):
             for position in broker.partitions:
                 iterlist = list(broker.partitions[position])
                 for partition in iterlist:
+                    if partition.topic.name in self.args.exclude_topics:
+                        continue
+
                     # Find a new replica for this partition
                     newreplica = None
                     attempts = 0

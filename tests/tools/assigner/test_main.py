@@ -73,6 +73,7 @@ class MainTests(unittest.TestCase):
                                                          datadir='/path/to/data',
                                                          moves=10,
                                                          execute=False,
+                                                         exclude_topics=[],
                                                          generate=False,
                                                          size=False,
                                                          skip_ple=False,
