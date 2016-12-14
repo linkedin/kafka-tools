@@ -27,7 +27,7 @@ from kafka.tools.assigner.arguments import set_up_arguments
 from kafka.tools.assigner.batcher import split_partitions_into_batches
 from kafka.tools.assigner.exceptions import ProgrammingException
 from kafka.tools.assigner.modules import get_modules
-from kafka.tools.assigner.tools import get_tools_path, check_java_home
+from kafka.tools.assigner.tools import get_tools_path_with_ext, check_java_home
 from kafka.tools.assigner.models.cluster import Cluster
 from kafka.tools.assigner.models.reassignment import Reassignment
 from kafka.tools.assigner.models.replica_election import ReplicaElection
@@ -53,7 +53,7 @@ def check_and_get_sizes(action_cls, args, cluster, sizer_map):
                     log.info("{0} {1}:{2}".format(partition.size, topic, partition.num))
 
 
-def run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run):
+def run_preferred_replica_elections(batches, args, tools_path, extension, plugins, dry_run):
     for i, batch in enumerate(batches):
         # Sleep between PLEs
         if i > 0 and not dry_run:
@@ -61,7 +61,7 @@ def run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
             time.sleep(args.ple_wait)
 
         log.info("Executing preferred replica election {0}/{1}".format(i + 1, len(batches)))
-        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
+        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, extension, plugins, dry_run)
 
 
 def get_all_plugins():
@@ -103,7 +103,7 @@ def main():
     args = set_up_arguments(action_map, sizer_map, plugins)
     run_plugins_at_step(plugins, 'set_arguments', args)
 
-    tools_path = get_tools_path(args.tools_path)
+    tools_path, extension = get_tools_path_with_ext(args.tools_path)
     check_java_home()
 
     cluster = Cluster.create_from_zookeeper(args.zookeeper)
@@ -131,7 +131,7 @@ def main():
 
     for i, batch in enumerate(batches):
         log.info("Executing partition reassignment {0}/{1}: {2}".format(i + 1, len(batches), repr(batch)))
-        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
+        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, extension, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'before_ple')
 
@@ -139,7 +139,7 @@ def main():
         all_cluster_partitions = [p for p in action_to_run.cluster.partitions(args.exclude_topics)]
         batches = split_partitions_into_batches(all_cluster_partitions, batch_size=args.ple_size, use_class=ReplicaElection)
         log.info("Number of replica elections: {0}".format(len(batches)))
-        run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
+        run_preferred_replica_elections(batches, args, tools_path, extension, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'finished')
 
