@@ -1,9 +1,6 @@
 language: python
 matrix:
   include:
-    - python: 2.6
-      env:
-      - TOXENV=py26
     - python: 2.7
       env:
       - TOXENV=py27
@@ -21,7 +18,6 @@ install:
 script:
   - tox
   - pip install kazoo # Only for building docs
-  - '[ "${TRAVIS_PYTHON_VERSION}" = "2.6" ] && pip install importlib || true' # Only for building docs
   - sphinx-build -nW -b html -d ./docs/_build/doctrees ./docs ./docs/_build/html
 after_success:
   - codeclimate-test-reporter

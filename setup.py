@@ -16,12 +16,6 @@ install_requires = [
     'pex',
 ]
 
-# Python 2.6 doesn't have a native importlib
-try:
-    import importlib
-except ImportError:
-    install_requires.append('importlib')
-    install_requires.append('argparse')
 
 class Pex(Command):
     user_options = []
@@ -144,8 +138,8 @@ setup(
         'testfixtures',
     ],
     setup_requires=[
-        'nose>=1.0',
-        'flake8==2.6.2',
+        'nose>=1.3.4',
+        'flake8==3.3.0',
     ],
     test_suite="nose.collector",
     extras_require={
