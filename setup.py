@@ -144,7 +144,7 @@ setup(
         'testfixtures',
     ],
     setup_requires=[
-        'nose>=1.3.4',
+        'nose>=1.3.7',
         'flake8==2.6.2',
     ],
     test_suite="nose.collector",
