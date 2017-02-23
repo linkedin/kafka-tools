@@ -12,7 +12,11 @@ class SizerJMX(SizerModule):
 
     def __init__(self, args, cluster):
         super(SizerJMX, self).__init__(args, cluster)
-        jpype.startJVM("/export/apps/jdk/JDK-1_8_0_72/jre/lib/amd64/server/libjvm.so")
+
+        if 'libjvm' in self.properties:
+            jpype.startJVM(self.properties['libjvm'])
+        else:
+            jpype.startJVM("/export/apps/jdk/JDK-1_8_0_72/jre/lib/amd64/server/libjvm.so")
 
     def get_partition_sizes(self):
         # Get broker partition sizes

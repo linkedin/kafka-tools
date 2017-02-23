@@ -15,6 +15,10 @@ class SizerSSH(SizerModule):
 
         self.size_re = re.compile("^([0-9]+)\s+.*?\/([a-z0-9_-]+)-([0-9]+)\s*$", re.I)
 
+        # Add a default for datadir if it doesn't exist already
+        if 'datadir' not in self.properties:
+            self.properties['datadir'] = "/mnt/u001/kafka/i001_caches"
+
     def process_df_match(self, match_obj, broker_id):
         if match_obj:
             size = int(match_obj.group(1))
@@ -38,7 +42,7 @@ class SizerSSH(SizerModule):
                                              "Remove the broker from the cluster before balance".format(broker_id))
 
             log.info("Getting partition sizes via SSH for {0}".format(broker.hostname))
-            proc = subprocess.Popen(['ssh', broker.hostname, 'du -sk {0}/*'.format(self.args.datadir)],
+            proc = subprocess.Popen(['ssh', broker.hostname, 'du -sk {0}/*'.format(self.properties['datadir'])],
                                     stdout=subprocess.PIPE, stderr=FNULL)
             for line in proc.stdout:
                 self.process_df_match(self.size_re.match(line.decode()), broker_id)
