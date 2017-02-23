@@ -12,6 +12,7 @@ entry_points = {
 }
 
 install_requires = [
+    'JPype1',
     'kazoo',
     'pex',
 ]
