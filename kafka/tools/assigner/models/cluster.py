@@ -69,7 +69,7 @@ class Cluster(BaseModel):
         log.info("Getting partition list from Zookeeper")
         for topic in zk.get_children("/brokers/topics"):
             zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
-            add_topic_with_replicas(cluster, topic, json.loads(zdata))
+            add_topic_with_replicas(cluster, topic, json.loads(zdata.decode('utf-8')))
 
         if cluster.num_topics() == 0:
             raise ZookeeperException("The cluster specified does not have any topics")
