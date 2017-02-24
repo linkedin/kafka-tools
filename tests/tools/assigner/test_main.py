@@ -70,7 +70,7 @@ class MainTests(unittest.TestCase):
                                                          action='balance',
                                                          types=['count'],
                                                          tools_path='/path/to/tools',
-                                                         datadir='/path/to/data',
+                                                         property=['datadir=/path/to/data'],
                                                          moves=10,
                                                          execute=False,
                                                          exclude_topics=[],
@@ -108,7 +108,7 @@ class MainTests(unittest.TestCase):
 
     @patch.object(SizerSSH, 'get_partition_sizes')
     def test_get_sizes(self, mock_sizes):
-        args = argparse.Namespace(sizer='ssh', size=True)
+        args = argparse.Namespace(sizer='ssh', size=True, property=[])
         check_and_get_sizes(ActionBalance, args, set_up_cluster(), {'ssh': SizerSSH})
 
     @patch('time.sleep')

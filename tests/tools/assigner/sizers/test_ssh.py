@@ -16,7 +16,7 @@ from kafka.tools.assigner.sizers.ssh import SizerSSH
 class SizerSSHTests(unittest.TestCase):
     def setUp(self):
         self.args = Namespace()
-        self.args.datadir = "/path/to/data"
+        self.args.property = ['datadir=/path/to/data']
         self.cluster = self.create_cluster_onehost()
 
     def create_cluster_onehost(self):

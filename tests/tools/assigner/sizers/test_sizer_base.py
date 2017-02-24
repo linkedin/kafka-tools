@@ -10,6 +10,7 @@ class SizerBaseTests(unittest.TestCase):
     def setUp(self):
         self.cluster = Cluster()
         self.args = Namespace()
+        self.args.property = []
 
     def test_sizer_create(self):
         sizer = SizerModule(self.args, self.cluster)
