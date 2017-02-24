@@ -40,7 +40,7 @@ class Broker(BaseModel):
 
     @classmethod
     def create_from_json(cls, broker_id, jsondata):
-        data = json.loads(jsondata.decode('utf-8'))
+        data = json.loads(jsondata)
 
         # These things are required, and we can't proceed if they're not there
         try:
