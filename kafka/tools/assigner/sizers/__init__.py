@@ -22,10 +22,15 @@ class SizerModule(object):
     helpstr = ""
 
     ##########################################################################################################
-    # OVERRIDE ME - These are all the things you can/must override in your child class
+    # OVERRIDE, BUT CALL ME - These are all the things you can/must override in your child class
     def __init__(self, args, cluster):
         self.args = args
         self.cluster = cluster
+
+        self.properties = {}
+        for pair in self.args.property:
+            k, v = pair.split('=', 2)
+            self.properties[k] = v
 
     def get_partition_sizes(self):
         pass

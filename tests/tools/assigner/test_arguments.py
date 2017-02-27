@@ -48,10 +48,10 @@ class ArgumentTests(unittest.TestCase):
         assert args.leadership is False
         assert args.generate is False
         assert args.execute is False
+        assert args.property == []
         assert args.size is False
         assert args.skip_ple is False
         assert args.sizer == 'ssh'
-        assert args.datadir == '/mnt/u001/kafka/i001_caches'
         assert args.moves == 10
         assert args.ple_size == 2000
         assert args.ple_wait == 120
