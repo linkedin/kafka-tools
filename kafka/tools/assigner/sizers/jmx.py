@@ -1,5 +1,5 @@
 from kafka.tools.assigner import log
-from kafka.tools.assigner.exceptions import UnknownBrokerException
+from kafka.tools.assigner.exceptions import UnknownBrokerException, ConfigurationException
 from kafka.tools.assigner.sizers import SizerModule
 
 import jpype
@@ -21,6 +21,23 @@ class SizerJMX(SizerModule):
         else:
             self._java_provider = java_provider
 
+        # If username or password is provided, you must have both
+        self._envhash = self._java_provider.java.util.HashMap()
+        if 'jmxuser' in self.properties and 'jmxpass' in self.properties:
+            jarray = self._java_provider.JArray(self._java_provider.java.lang.String)([self.properties['jmxuser'], self.properties['jmxpass']])
+            self._envhash.put(self._java_provider.javax.management.remote.JMXConnector.CREDENTIALS, jarray)
+        else:
+            if 'jmxpass' in self.properties or 'jmxuser' in self.properties:
+                raise ConfigurationException("JMX sizer requires both jmxuser and jmxpass properties, or neither of them")
+
+        # If truststore or truststorepass is provided, you must have both
+        if 'truststore' in self.properties and 'truststorepass' in self.properties:
+            self._java_provider.java.lang.System.setProperty("javax.net.ssl.trustStore", self.properties['truststore'])
+            self._java_provider.java.lang.System.setProperty("javax.net.ssl.trustStorePassword", self.properties['truststorepass'])
+        else:
+            if 'truststorepass' in self.properties or 'truststore' in self.properties:
+                raise ConfigurationException("JMX sizer requires both truststore and truststorepass properties, or neither of them")
+
     def _fetch_bean(self, connection, bean):
         topic = bean.getKeyProperty("topic")
         partition = int(bean.getKeyProperty("partition"))
@@ -35,7 +52,7 @@ class SizerJMX(SizerModule):
             log.info("Getting partition sizes via JMX for {0}".format(broker.hostname))
             jmxurl = self._java_provider.javax.management.remote.JMXServiceURL(
                 "service:jmx:rmi:///jndi/rmi://{0}:{1}/jmxrmi".format(broker.hostname, broker.jmx_port))
-            jmxsoc = self._java_provider.javax.management.remote.JMXConnectorFactory.connect(jmxurl)
+            jmxsoc = self._java_provider.javax.management.remote.JMXConnectorFactory.connect(jmxurl, self._envhash)
 
             connection = jmxsoc.getMBeanServerConnection()
             beans = connection.queryNames(self._java_provider.javax.management.ObjectName("kafka.log:name=Size,*"), None)
