@@ -9,9 +9,15 @@ class SizerJMX(SizerModule):
     name = 'jmx'
     helpstr = 'Get partition sizes by connection to each broker via JMX'
 
-    def __init__(self, args, cluster, java_provider=None):
-        super(SizerJMX, self).__init__(args, cluster)
+    def _validate_both_properties(self, prop1, prop2):
+        if prop1 in self.properties and prop2 in self.properties:
+            return True
+        elif prop1 in self.properties or prop2 in self.properties:
+            raise ConfigurationException("JMX sizer requires both {0} and {1} properties, or neither of them".format(prop1, prop2))
+        else:
+            return False
 
+    def _set_java_provider(self, java_provider):
         if java_provider is None:
             self._java_provider = jpype
             if 'libjvm' in self.properties:
@@ -21,22 +27,20 @@ class SizerJMX(SizerModule):
         else:
             self._java_provider = java_provider
 
+    def __init__(self, args, cluster, java_provider=None):
+        super(SizerJMX, self).__init__(args, cluster)
+        self._set_java_provider(java_provider)
+
         # If username or password is provided, you must have both
         self._envhash = self._java_provider.java.util.HashMap()
-        if 'jmxuser' in self.properties and 'jmxpass' in self.properties:
+        if self._validate_both_properties('jmxuser', 'jmxpass'):
             jarray = self._java_provider.JArray(self._java_provider.java.lang.String)([self.properties['jmxuser'], self.properties['jmxpass']])
             self._envhash.put(self._java_provider.javax.management.remote.JMXConnector.CREDENTIALS, jarray)
-        else:
-            if 'jmxpass' in self.properties or 'jmxuser' in self.properties:
-                raise ConfigurationException("JMX sizer requires both jmxuser and jmxpass properties, or neither of them")
 
         # If truststore or truststorepass is provided, you must have both
-        if 'truststore' in self.properties and 'truststorepass' in self.properties:
+        if self._validate_both_properties('truststore', 'truststorepass'):
             self._java_provider.java.lang.System.setProperty("javax.net.ssl.trustStore", self.properties['truststore'])
             self._java_provider.java.lang.System.setProperty("javax.net.ssl.trustStorePassword", self.properties['truststorepass'])
-        else:
-            if 'truststorepass' in self.properties or 'truststore' in self.properties:
-                raise ConfigurationException("JMX sizer requires both truststore and truststorepass properties, or neither of them")
 
     def _fetch_bean(self, connection, bean):
         topic = bean.getKeyProperty("topic")
