@@ -56,6 +56,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('--ple-size', help="Max number of partitions in a single preferred leader election", required=False, default=2000, type=int)
     aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=120, type=int)
     aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
+    aparser.add_argument('--use-active-brokers', help="Use only active brokers as ZK sets in /brokers/ids/", action='store_true')
 
     # Call action module arg setup
     subparsers = aparser.add_subparsers(help='Select manipulation module to use')

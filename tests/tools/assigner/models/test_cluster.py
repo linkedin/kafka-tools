@@ -3,7 +3,7 @@ from testfixtures import LogCapture
 
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
-from kafka.tools.assigner.models.cluster import Cluster
+from kafka.tools.assigner.models.cluster import Cluster, add_topic_with_replicas
 
 
 class SimpleClusterTests(unittest.TestCase):
@@ -77,3 +77,17 @@ class SimpleClusterTests(unittest.TestCase):
             self.cluster.log_broker_summary()
             l.check(('kafka-assigner', 'INFO', 'Broker 1: partitions=0/0 (0.00%), size=0'),
                     ('kafka-assigner', 'INFO', 'Broker 2: partitions=0/0 (0.00%), size=0'))
+
+    def test_add_topic_with_replicas_active_brokers(self):
+        self.add_brokers(2)
+        topic = "test_topic"
+        topic_data = {'partitions': {0: [1111, 2222, 1]}}  # Only 1 is an active broker
+        add_topic_with_replicas(self.cluster, topic, topic_data, use_active_brokers=True)
+        assert len(self.cluster.brokers) == 2
+
+    def test_add_topic_with_replicas(self):
+        self.add_brokers(2)
+        topic = "test_topic"
+        topic_data = {'partitions': {0: [1111, 2222, 1]}}  # Add all brokers
+        add_topic_with_replicas(self.cluster, topic, topic_data, use_active_brokers=False)
+        assert len(self.cluster.brokers) == 4

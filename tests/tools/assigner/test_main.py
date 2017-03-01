@@ -80,7 +80,8 @@ class MainTests(unittest.TestCase):
                                                          ple_size=2,
                                                          ple_wait=120,
                                                          sizer='ssh',
-                                                         leadership=True)
+                                                         leadership=True,
+                                                         use_active_brokers=False)
         assert main() == 0
 
     def test_get_plugins(self):
