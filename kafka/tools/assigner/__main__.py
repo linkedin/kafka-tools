@@ -106,7 +106,7 @@ def main():
     tools_path = get_tools_path(args.tools_path)
     check_java_home()
 
-    cluster = Cluster.create_from_zookeeper(args.zookeeper)
+    cluster = Cluster.create_from_zookeeper(args.zookeeper, getattr(args, 'default_retention', 1))
     run_plugins_at_step(plugins, 'set_cluster', cluster)
 
     # If the module needs the partition sizes, call a size module to get the information
