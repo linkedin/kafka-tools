@@ -18,6 +18,7 @@
 import kafka.tools.assigner.actions.balancemodules
 from kafka.tools.assigner.actions import ActionModule, ActionBalanceModule
 from kafka.tools.assigner.modules import get_modules
+from kafka.tools.assigner.exceptions import BalanceException
 
 
 class ActionBalance(ActionModule):
@@ -26,6 +27,9 @@ class ActionBalance(ActionModule):
     needs_sizes = True
 
     def __init__(self, args, cluster):
+        if "rackaware" in args.types and args.types[len(args.types)-1] != "rackaware":
+            raise BalanceException("In order to work properly, rackaware must always be the last module specified")
+
         super(ActionBalance, self).__init__(args, cluster)
 
         self.balance_types = dict((cls.name, cls) for cls in get_modules(kafka.tools.assigner.actions.balancemodules, ActionBalanceModule))
