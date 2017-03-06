@@ -7,6 +7,7 @@ from kafka.tools.assigner.models.topic import Topic
 
 def set_up_cluster():
     cluster = Cluster()
+    cluster.retention = 100000
     cluster.add_broker(Broker(1, "brokerhost1.example.com"))
     cluster.add_broker(Broker(2, "brokerhost2.example.com"))
     cluster.brokers[1].rack = "a"

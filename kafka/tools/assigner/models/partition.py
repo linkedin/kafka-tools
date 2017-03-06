@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from __future__ import division
+
 from kafka.tools.assigner.exceptions import ReplicaNotFoundException
 from kafka.tools.assigner.models import BaseModel
 
@@ -27,6 +29,7 @@ class Partition(BaseModel):
         self.num = num
         self.replicas = []
         self.size = 0
+        self.scaled_size = 0
 
     # Shallow copy - do not copy replica list (zero length)
     def copy(self):
@@ -38,6 +41,7 @@ class Partition(BaseModel):
     def set_size(self, size):
         if size > self.size:
             self.size = size
+            self.scaled_size = (self.topic.cluster.retention / self.topic.retention) * self.size
 
     def dict_for_reassignment(self):
         return {"topic": self.topic.name, "partition": self.num, "replicas": [broker.id for broker in self.replicas]}

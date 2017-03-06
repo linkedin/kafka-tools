@@ -46,7 +46,9 @@ class ClusterZookeeperTests(unittest.TestCase):
                                      (('{"jmx_port":7667,"timestamp":"1465289114807","endpoints":["PLAINTEXT://brokerhost2.example.com:9223",'
                                       '"SSL://brokerhost2.example.com:9224"],"host":"brokerhost2.example.com","version":1,"port":9223}'), None),
                                      ('{"version":1,"partitions":{"0":[1,2],"1":[3,1]}}', None),
-                                     ('{"version":1,"partitions":{"0":[3,1],"1":[1,2]}}', None)]
+                                     ('{"version":1,"config":{}}', None),
+                                     ('{"version":1,"partitions":{"0":[3,1],"1":[1,2]}}', None),
+                                     ('{"version":1,"config":{}}', None)]
         cluster = Cluster.create_from_zookeeper('zkconnect')
 
         assert len(cluster.brokers) == 3
@@ -63,7 +65,9 @@ class ClusterZookeeperTests(unittest.TestCase):
                                      (('{"jmx_port":7667,"timestamp":"1465289114807","endpoints":["PLAINTEXT://brokerhost2.example.com:9223",'
                                       '"SSL://brokerhost2.example.com:9224"],"host":"brokerhost2.example.com","version":1,"port":9223}'), None),
                                      ('{"version":1,"partitions":{"0":[1,2],"1":[2,1]}}', None),
-                                     ('{"version":1,"partitions":{"0":[2,1],"1":[1,2]}}', None)]
+                                     ('{"version":1,"config":{}}', None),
+                                     ('{"version":1,"partitions":{"0":[2,1],"1":[1,2]}}', None),
+                                     ('{"version":1,"config":{}}', None)]
         cluster = Cluster.create_from_zookeeper('zkconnect')
 
         assert len(cluster.brokers) == 2
@@ -85,3 +89,18 @@ class ClusterZookeeperTests(unittest.TestCase):
         assert len(t2.partitions) == 2
         assert t2.partitions[0].replicas == [b2, b1]
         assert t2.partitions[1].replicas == [b1, b2]
+
+    def test_cluster_create_with_retention(self):
+        self.mock_children.side_effect = [['1', '2'], ['testTopic1', 'testTopic2']]
+        self.mock_get.side_effect = [(('{"jmx_port":7667,"timestamp":"1465289114807","endpoints":["PLAINTEXT://brokerhost1.example.com:9223",'
+                                     '"SSL://brokerhost1.example.com:9224"],"host":"brokerhost1.example.com","version":1,"port":9223}'), None),
+                                     (('{"jmx_port":7667,"timestamp":"1465289114807","endpoints":["PLAINTEXT://brokerhost2.example.com:9223",'
+                                      '"SSL://brokerhost2.example.com:9224"],"host":"brokerhost2.example.com","version":1,"port":9223}'), None),
+                                     ('{"version":1,"partitions":{"0":[1,2],"1":[2,1]}}', None),
+                                     ('{"version":1,"config":{}}', None),
+                                     ('{"version":1,"partitions":{"0":[2,1],"1":[1,2]}}', None),
+                                     ('{"version":1,"config":{"retention.ms":"172800000"}}', None)]
+        cluster = Cluster.create_from_zookeeper('zkconnect')
+
+        assert cluster.topics['testTopic1'].retention == 1
+        assert cluster.topics['testTopic2'].retention == 172800000

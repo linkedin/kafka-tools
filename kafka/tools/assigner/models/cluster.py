@@ -17,6 +17,7 @@
 
 import json
 from kazoo.client import KazooClient
+from kazoo.exceptions import KazooException
 
 from kafka.tools.assigner import log
 from kafka.tools.assigner.exceptions import ZookeeperException, ClusterConsistencyException
@@ -45,15 +46,26 @@ def add_topic_with_replicas(cluster, topic, topic_data):
     cluster.add_topic(newtopic)
 
 
+def set_topic_retention(topic, zk):
+    try:
+        zdata, zstat = zk.get("/config/topics/{0}".format(topic.name))
+        tdata = json.loads(zdata)
+        topic.retention = int(tdata['config']['retention.ms'])
+    except (KeyError, ValueError, KazooException):
+        # If we can't get the config override for any reason, just stick with whatever the default is
+        pass
+
+
 class Cluster(BaseModel):
     equality_attrs = ['brokers', 'topics']
 
-    def __init__(self):
+    def __init__(self, retention=1):
         self.brokers = {}
         self.topics = {}
+        self.retention = retention
 
     @classmethod
-    def create_from_zookeeper(cls, zkconnect):
+    def create_from_zookeeper(cls, zkconnect, default_retention=1):
         log.info("Connecting to zookeeper {0}".format(zkconnect))
         try:
             zk = KazooClient(zkconnect)
@@ -62,7 +74,7 @@ class Cluster(BaseModel):
             raise ZookeeperException("Cannot connect to Zookeeper: {0}".format(e))
 
         # Get broker list
-        cluster = cls()
+        cluster = cls(retention=default_retention)
         add_brokers_from_zk(cluster, zk)
 
         # Get current partition state
@@ -70,6 +82,7 @@ class Cluster(BaseModel):
         for topic in zk.get_children("/brokers/topics"):
             zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
             add_topic_with_replicas(cluster, topic, json.loads(zdata))
+            set_topic_retention(cluster.topics[topic], zk)
 
         if cluster.num_topics() == 0:
             raise ZookeeperException("The cluster specified does not have any topics")
@@ -82,6 +95,7 @@ class Cluster(BaseModel):
 
     def clone(self):
         newcluster = Cluster()
+        newcluster.retention = self.retention
 
         # We're not going to clone in the subclasses because we need to map partitions between topics and brokers
         # So we do shallow copies and populate the partition information ourselves
@@ -108,6 +122,7 @@ class Cluster(BaseModel):
 
     def add_topic(self, topic):
         topic.cluster = self
+        topic.retention = self.retention
         self.topics[topic.name] = topic
 
     # Iterate over all the partitions in this cluster
