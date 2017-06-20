@@ -108,6 +108,9 @@ class ActionBalanceCount(ActionBalanceModule):
                             # Skip partitions that are already on the target broker
                             if target in partition.replicas:
                                 continue
+                            # Skip topics that are being excluded
+                            if partition.topic.name in self.args.exclude_topics:
+                                continue
 
                             partition.swap_replicas(broker, target)
                             diff += 1

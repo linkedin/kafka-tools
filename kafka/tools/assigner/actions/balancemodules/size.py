@@ -49,6 +49,8 @@ class ActionBalanceSize(ActionBalanceModule):
             # Create a sorted list of partitions to use at this position (descending size)
             # Throw out partitions that are 4K or less in size, as they are effectively empty
             partitions[pos] = [p for p in self.cluster.partitions(self.args.exclude_topics) if (len(p.replicas) > pos) and (getattr(p, self._size_attr) > 4)]
+            if len(partitions[pos]) == 0:
+                continue
             partitions[pos].sort(key=attrgetter(self._size_attr), reverse=True)
 
             # Calculate broker size at this position
@@ -69,6 +71,9 @@ class ActionBalanceSize(ActionBalanceModule):
 
         # Balance partitions for each replica position separately
         for pos in range(max_rf):
+            if len(sizes[pos]) == 0:
+                continue
+
             log.info("Calculating ideal state for replica position {0}".format(pos))
             log.debug("Target average size per-broker is {0} kibibytes (+/- {1})".format(targets[pos], margins[pos]))
 
