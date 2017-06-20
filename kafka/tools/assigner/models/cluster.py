@@ -49,7 +49,10 @@ def add_topic_with_replicas(cluster, topic, topic_data):
 def set_topic_retention(topic, zk):
     try:
         zdata, zstat = zk.get("/config/topics/{0}".format(topic.name))
-        tdata = json.loads(zdata)
+        try:
+            tdata = json.loads(zdata)
+        except TypeError:
+            tdata = json.loads(zdata.decode('utf-8'))
         topic.retention = int(tdata['config']['retention.ms'])
     except (KeyError, ValueError, KazooException):
         # If we can't get the config override for any reason, just stick with whatever the default is
@@ -81,7 +84,10 @@ class Cluster(BaseModel):
         log.info("Getting partition list from Zookeeper")
         for topic in zk.get_children("/brokers/topics"):
             zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
-            add_topic_with_replicas(cluster, topic, json.loads(zdata))
+            try:
+                add_topic_with_replicas(cluster, topic, json.loads(zdata))
+            except TypeError:
+                add_topic_with_replicas(cluster, topic, json.loads(zdata.decode('utf-8')))
             set_topic_retention(cluster.topics[topic], zk)
 
         if cluster.num_topics() == 0:

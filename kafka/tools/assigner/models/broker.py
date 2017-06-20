@@ -40,7 +40,10 @@ class Broker(BaseModel):
 
     @classmethod
     def create_from_json(cls, broker_id, jsondata):
-        data = json.loads(jsondata)
+        try:
+            data = json.loads(jsondata)
+        except TypeError:
+            data = json.loads(jsondata.decode('utf-8'))
 
         # These things are required, and we can't proceed if they're not there
         try:
