@@ -15,27 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.assigner.models import BaseModel
-from kafka.tools.assigner.models.partition import Partition
+from kafka.tools.assigner.actions.balancemodules.size import ActionBalanceSize
+from kafka.tools.assigner.actions import ActionBalanceModule
 
 
-class Topic(BaseModel):
-    equality_attrs = ['name']
+class ActionBalanceRate(ActionBalanceModule):
+    name = "rate"
+    helpstr = "Move the busiest partitions in the cluster to even the total bytes rate per-broker for each replica position"
 
-    def __init__(self, name, partitions):
-        self.name = name
-        self.partitions = []
-        self.cluster = None
-        self.retention = 1
+    def __init__(self, args, cluster):
+        super(ActionBalanceRate, self).__init__(args, cluster)
 
-        for i in range(partitions):
-            self.add_partition(Partition(self, i))
+        # This module merely calls the balance "size" module with the scaled_size attr, so we're going to instantiate a copy of that
+        self._size = ActionBalanceSize(args, cluster, size_attr='scaled_size')
 
-    # Shallow copy - do not copy partitions (zero partitions)
-    def copy(self):
-        newtopic = Topic(self.name, 0)
-        newtopic.cluster = self.cluster
-        return newtopic
-
-    def add_partition(self, partition):
-        self.partitions.append(partition)
+    def process_cluster(self):
+        # Call the size module
+        self._size.process_cluster()

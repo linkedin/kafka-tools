@@ -1,5 +1,6 @@
 import unittest
 
+from kafka.tools.assigner.models.cluster import Cluster
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
 from kafka.tools.assigner.models.partition import Partition
@@ -7,12 +8,15 @@ from kafka.tools.assigner.models.partition import Partition
 
 class TopicAndPartitionTests(unittest.TestCase):
     def setUp(self):
+        self.cluster = Cluster(retention=500000)
         self.topic = Topic('testTopic', 1)
+        self.topic.cluster = self.cluster
+        self.topic.cluster.topics['testTopic'] = self.topic
 
     def test_topic_create(self):
         assert self.topic.name == 'testTopic'
         assert len(self.topic.partitions) == 1
-        assert self.topic.cluster is None
+        assert self.topic.cluster == self.cluster
 
     def test_partition_create(self):
         assert len(self.topic.partitions) == 1
@@ -99,6 +103,16 @@ class TopicAndPartitionTests(unittest.TestCase):
         self.topic.partitions[0].set_size(100)
         self.topic.partitions[0].set_size(200)
         assert self.topic.partitions[0].size == 200
+
+    def test_set_partition_scaled_size_smaller(self):
+        self.topic.retention = 1000000
+        self.topic.partitions[0].set_size(100)
+        assert self.topic.partitions[0].scaled_size == 50
+
+    def test_set_partition_scaled_size_larger(self):
+        self.topic.retention = 100000
+        self.topic.partitions[0].set_size(100)
+        assert self.topic.partitions[0].scaled_size == 500
 
     def test_partition_dict_for_reassignment_without_replicas(self):
         expected = {"topic": 'testTopic', "partition": 0, "replicas": []}
