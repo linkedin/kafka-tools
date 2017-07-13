@@ -132,9 +132,9 @@ class Cluster(BaseModel):
         self.topics[topic.name] = topic
 
     # Iterate over all the partitions in this cluster
-    # Order is undefined
+    # Order is alphabetical by topic, numeric by partition
     def partitions(self, exclude_topics=[]):
-        for topic in self.topics:
+        for topic in sorted(self.topics):
             if topic in exclude_topics:
                 log.debug("Skipping topic {0} due to exclude-topics".format(topic))
                 continue
