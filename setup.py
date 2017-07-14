@@ -41,6 +41,7 @@ class Pex(Command):
             pex_cmd = [
               'pex',
               '--no-pypi',
+              '--disable-cache',
               '--repo=dist/wheel-cache',
               '-o', 'build/bin/{0}'.format(name),
               '-e', call,
