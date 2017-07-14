@@ -15,7 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 from kazoo.client import KazooClient
 from kazoo.exceptions import KazooException
 
@@ -24,6 +23,7 @@ from kafka.tools.assigner.exceptions import ZookeeperException, ClusterConsisten
 from kafka.tools.assigner.models import BaseModel
 from kafka.tools.assigner.models.broker import Broker
 from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.assigner.tools import json_loads
 
 
 def add_brokers_from_zk(cluster, zk):
@@ -49,7 +49,7 @@ def add_topic_with_replicas(cluster, topic, topic_data):
 def set_topic_retention(topic, zk):
     try:
         zdata, zstat = zk.get("/config/topics/{0}".format(topic.name))
-        tdata = json.loads(zdata)
+        tdata = json_loads(zdata)
         topic.retention = int(tdata['config']['retention.ms'])
     except (KeyError, ValueError, KazooException):
         # If we can't get the config override for any reason, just stick with whatever the default is
@@ -81,7 +81,7 @@ class Cluster(BaseModel):
         log.info("Getting partition list from Zookeeper")
         for topic in zk.get_children("/brokers/topics"):
             zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
-            add_topic_with_replicas(cluster, topic, json.loads(zdata))
+            add_topic_with_replicas(cluster, topic, json_loads(zdata))
             set_topic_retention(cluster.topics[topic], zk)
 
         if cluster.num_topics() == 0:
@@ -126,9 +126,9 @@ class Cluster(BaseModel):
         self.topics[topic.name] = topic
 
     # Iterate over all the partitions in this cluster
-    # Order is undefined
+    # Order is alphabetical by topic, numeric by partition
     def partitions(self, exclude_topics=[]):
-        for topic in self.topics:
+        for topic in sorted(self.topics):
             if topic in exclude_topics:
                 log.debug("Skipping topic {0} due to exclude-topics".format(topic))
                 continue

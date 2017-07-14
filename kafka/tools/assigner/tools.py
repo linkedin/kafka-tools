@@ -17,6 +17,7 @@
 
 from __future__ import division
 
+import json
 import os
 
 from kafka.tools.assigner.exceptions import ConfigurationException
@@ -78,3 +79,16 @@ def check_java_home():
             raise ConfigurationException("The JAVA_HOME environment variable doesn't seem to work ({0} is not an executable)".format(java_bin))
     else:
         raise ConfigurationException("The JAVA_HOME environment variable must be set")
+
+
+def json_loads(json_str):
+    """
+    Load the provided string as JSON data. Make sure to try the python2 way and the python3 way
+
+    :param json_str: The JSON encoded string
+    :return: The decoded JSON object
+    """
+    try:
+        return json.loads(json_str)
+    except TypeError:
+        return json.loads(json_str.decode('utf-8'))

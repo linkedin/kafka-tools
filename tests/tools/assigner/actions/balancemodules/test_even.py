@@ -27,7 +27,7 @@ class ActionBalanceEvenTests(unittest.TestCase):
                 for i, replica in enumerate(partition.replicas):
                     pmap[i][replica.id] += 1
 
-            if not pmap_matches_target(pmap, len(topic.partitions) / len(self.cluster.brokers)):
+            if not pmap_matches_target(pmap, len(topic.partitions) // len(self.cluster.brokers)):
                 print("Position map for topic {0}: {1}".format(topic_name, pmap))
                 return False
         return True
@@ -123,23 +123,6 @@ class ActionBalanceEvenTests(unittest.TestCase):
         partition.add_replica(b2, 1)
         partition = self.cluster.topics['testTopic3'].partitions[1]
         partition.add_replica(b1, 0)
-
-        action = ActionBalanceEven(self.args, self.cluster)
-        assert not action.check_topic_ok(self.cluster.topics['testTopic3'])
-
-    def test_skip_topic_odd_count(self):
-        b1 = self.cluster.brokers[1]
-        b2 = self.cluster.brokers[2]
-        self.cluster.add_topic(Topic("testTopic3", 3))
-        partition = self.cluster.topics['testTopic3'].partitions[0]
-        partition.add_replica(b1, 0)
-        partition.add_replica(b2, 1)
-        partition = self.cluster.topics['testTopic3'].partitions[1]
-        partition.add_replica(b1, 0)
-        partition.add_replica(b2, 1)
-        partition = self.cluster.topics['testTopic3'].partitions[2]
-        partition.add_replica(b1, 0)
-        partition.add_replica(b2, 1)
 
         action = ActionBalanceEven(self.args, self.cluster)
         assert not action.check_topic_ok(self.cluster.topics['testTopic3'])
