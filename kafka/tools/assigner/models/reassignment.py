@@ -44,20 +44,20 @@ class Reassignment(BaseModel):
             reassignment['partitions'].append(partition.dict_for_reassignment())
         return reassignment
 
-    def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
+    def execute(self, num, total, zookeeper, tools_path, extension, plugins=[], dry_run=True):
         for plugin in plugins:
             plugin.before_execute_batch(num)
         if not dry_run:
-            self._execute(num, total, zookeeper, tools_path)
+            self._execute(num, total, zookeeper, tools_path, extension)
         for plugin in plugins:
             plugin.after_execute_batch(num)
 
-    def _execute(self, num, total, zookeeper, tools_path):
+    def _execute(self, num, total, zookeeper, tools_path, extension):
         with NamedTemporaryFile(mode='w') as assignfile:
             json.dump(self.dict_for_reassignment(), assignfile)
             assignfile.flush()
             FNULL = open(os.devnull, 'w')
-            proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
+            proc = subprocess.Popen(['{0}/kafka-reassign-partitions{1}'.format(tools_path, extension), '--execute',
                                      '--zookeeper', zookeeper,
                                      '--reassignment-json-file', assignfile.name],
                                     stdout=FNULL, stderr=FNULL)
@@ -65,7 +65,7 @@ class Reassignment(BaseModel):
 
             # Wait until finished
             while True:
-                remaining_partitions = self.check_completion(zookeeper, tools_path, assignfile.name)
+                remaining_partitions = self.check_completion(zookeeper, tools_path, extension, assignfile.name)
                 if remaining_partitions == 0:
                     break
 
@@ -85,9 +85,9 @@ class Reassignment(BaseModel):
                 return 1
         return 0
 
-    def check_completion(self, zookeeper, tools_path, assign_filename):
+    def check_completion(self, zookeeper, tools_path, extension, assign_filename):
         FNULL = open(os.devnull, 'w')
-        proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--verify',
+        proc = subprocess.Popen(['{0}/kafka-reassign-partitions{1}'.format(tools_path, extension), '--verify',
                                  '--zookeeper', zookeeper,
                                  '--reassignment-json-file', assign_filename],
                                 stdout=subprocess.PIPE, stderr=FNULL)

@@ -50,7 +50,17 @@ def find_path_containing(fname):
     raise ConfigurationException("Cannot find the Kafka admin utilities using PATH. Try using the --tools-path option")
 
 
-def get_tools_path(tools_path=None):
+def get_tools_path_with_ext(tools_path=None, executable_name='kafka-reassign-partitions'):
+    extension = ".sh"
+    try:
+        tools_path = get_tools_path(tools_path=tools_path, executable_name=executable_name)
+        return tools_path, ""
+    except ConfigurationException:
+        tools_path = get_tools_path(tools_path=tools_path, executable_name=(executable_name+extension))
+        return tools_path, extension
+
+
+def get_tools_path(tools_path=None, executable_name='kafka-reassign-partitions.sh'):
     """
     Find the Kafka admin utilities, either from the provided arg or the PATH.
 
@@ -59,12 +69,12 @@ def get_tools_path(tools_path=None):
     :raises: ConfigurationException if the path cannot be determined
     """
     if tools_path is not None:
-        script_file = os.path.join(tools_path, 'kafka-reassign-partitions.sh')
+        script_file = os.path.join(tools_path, executable_name)
         if not is_exec_file(script_file):
             raise ConfigurationException("--tools-path does not lead to the Kafka admin utilities ({0} is not an executable)".format(script_file))
         return tools_path
 
-    return find_path_containing('kafka-reassign-partitions.sh')
+    return find_path_containing(executable_name)
 
 
 def check_java_home():
