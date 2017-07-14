@@ -63,7 +63,6 @@ class ActionBalanceEven(ActionBalanceModule):
             # How many partitions per broker, and what's the last one that can be evenly balanced
             target = len(topic.partitions) // len(self.cluster.brokers)
             last_even_partition = len(topic.partitions) - (len(topic.partitions) % len(self.cluster.brokers)) - 1
-            log.debug("Balancing topic {0}: {1} partitions, {2} per-broker, {3} remainder ".format(topic.name, len(topic.partitions), target, len(topic.partitions) - last_even_partition - 1))
 
             # Initialize broker map for this topic.
             pmap = [dict.fromkeys(self.cluster.brokers.keys(), 0) for pos in range(len(topic.partitions[0].replicas))]
@@ -103,7 +102,7 @@ class ActionBalanceEven(ActionBalanceModule):
 
             # Distribute the remainder partitions evenly among the brokers
             # This is a pretty dumb round robin distribution, but it will be stable
-            for pnum in range(last_even_partition, len(topic.partitions)):
+            for pnum in range(last_even_partition + 1, len(topic.partitions)):
                 partition = topic.partitions[pnum]
 
                 for pos in range(len(partition.replicas)):
