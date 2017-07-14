@@ -17,7 +17,7 @@
 
 from collections import deque
 from kafka.tools.assigner.actions import ActionModule
-from kafka.tools.assigner.exceptions import ConfigurationException, NotEnoughReplicasException
+from kafka.tools.exceptions import ConfigurationException, NotEnoughReplicasException
 
 
 class ActionRemove(ActionModule):

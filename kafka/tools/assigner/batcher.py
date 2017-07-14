@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.assigner.exceptions import ProgrammingException
+from kafka.tools.exceptions import ProgrammingException
 
 
 def split_partitions_into_batches(partitions, batch_size=10, use_class=None):

@@ -1,9 +1,9 @@
 import unittest
 
-from kafka.tools.assigner.exceptions import ReplicaNotFoundException, ClusterConsistencyException
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
-from kafka.tools.assigner.models.cluster import Cluster
+from kafka.tools.exceptions import ReplicaNotFoundException, ClusterConsistencyException
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
+from kafka.tools.models.cluster import Cluster
 
 
 class PartitionOperationTests(unittest.TestCase):

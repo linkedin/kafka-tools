@@ -4,9 +4,9 @@ import unittest
 from argparse import Namespace
 from .fixtures import set_up_cluster, set_up_subparser
 
-from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException
 from kafka.tools.assigner.actions.clone import ActionClone
-from kafka.tools.assigner.models.broker import Broker
+from kafka.tools.models.broker import Broker
 
 
 class ActionCloneTests(unittest.TestCase):

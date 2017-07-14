@@ -1,9 +1,9 @@
 import unittest
 
-from kafka.tools.assigner.exceptions import ProgrammingException
+from kafka.tools.exceptions import ProgrammingException
 from kafka.tools.assigner.batcher import split_partitions_into_batches
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.models.reassignment import Reassignment
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 

@@ -17,8 +17,8 @@
 
 import kafka.tools.assigner.actions.balancemodules
 from kafka.tools.assigner.actions import ActionModule, ActionBalanceModule
-from kafka.tools.assigner.modules import get_modules
-from kafka.tools.assigner.exceptions import BalanceException
+from kafka.tools.modules import get_modules
+from kafka.tools.exceptions import BalanceException
 
 
 class ActionBalance(ActionModule):

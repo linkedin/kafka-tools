@@ -1,8 +1,8 @@
 import os
 import re
 import subprocess
-from kafka.tools.assigner import log
-from kafka.tools.assigner.exceptions import UnknownBrokerException
+from kafka.tools import log
+from kafka.tools.exceptions import UnknownBrokerException
 from kafka.tools.assigner.sizers import SizerModule
 
 

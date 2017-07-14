@@ -4,8 +4,8 @@ import unittest
 from argparse import Namespace
 from ..fixtures import set_up_cluster, set_up_subparser
 
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.actions.balancemodules.rate import ActionBalanceRate
 

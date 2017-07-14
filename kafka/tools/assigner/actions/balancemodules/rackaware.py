@@ -19,9 +19,9 @@ import random
 from collections import deque
 from operator import attrgetter
 
-from kafka.tools.assigner import log
+from kafka.tools import log
+from kafka.tools.exceptions import BalanceException
 from kafka.tools.assigner.actions import ActionBalanceModule
-from kafka.tools.assigner.exceptions import BalanceException
 
 
 class ActionBalanceRackAware(ActionBalanceModule):

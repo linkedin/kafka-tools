@@ -3,10 +3,10 @@ import unittest
 from argparse import Namespace
 from mock import patch, Mock, call
 
-from kafka.tools.assigner.exceptions import UnknownBrokerException, ConfigurationException
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.cluster import Cluster
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.exceptions import UnknownBrokerException, ConfigurationException
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.cluster import Cluster
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.sizers.jmx import SizerJMX, _validate_broker
 
 

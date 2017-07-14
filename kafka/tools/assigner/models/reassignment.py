@@ -22,9 +22,9 @@ import subprocess
 import time
 from tempfile import NamedTemporaryFile
 
-from kafka.tools.assigner import log
-from kafka.tools.assigner.exceptions import ReassignmentFailedException
-from kafka.tools.assigner.models import BaseModel
+from kafka.tools import log
+from kafka.tools.exceptions import ReassignmentFailedException
+from kafka.tools.models import BaseModel
 
 
 class Reassignment(BaseModel):

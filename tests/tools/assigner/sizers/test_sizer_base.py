@@ -2,7 +2,7 @@ import unittest
 
 from argparse import Namespace
 
-from kafka.tools.assigner.models.cluster import Cluster
+from kafka.tools.models.cluster import Cluster
 from kafka.tools.assigner.sizers import SizerModule
 
 

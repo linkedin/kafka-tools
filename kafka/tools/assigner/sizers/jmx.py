@@ -1,5 +1,5 @@
-from kafka.tools.assigner import log
-from kafka.tools.assigner.exceptions import UnknownBrokerException, ConfigurationException
+from kafka.tools import log
+from kafka.tools.exceptions import UnknownBrokerException, ConfigurationException
 from kafka.tools.assigner.sizers import SizerModule
 
 import jpype

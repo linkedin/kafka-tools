@@ -2,7 +2,7 @@ import unittest
 
 import argparse
 
-from kafka.tools.assigner.models.cluster import Cluster
+from kafka.tools.models.cluster import Cluster
 from kafka.tools.assigner.plugins import PluginModule
 
 

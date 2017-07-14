@@ -3,8 +3,8 @@ import unittest
 
 from mock import patch, ANY
 
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 
 

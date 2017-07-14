@@ -6,8 +6,8 @@ from collections import deque
 from mock import call, patch
 from ..fixtures import set_up_cluster, set_up_subparser
 
-from kafka.tools.assigner.exceptions import BalanceException
-from kafka.tools.assigner.models.broker import Broker
+from kafka.tools.exceptions import BalanceException
+from kafka.tools.models.broker import Broker
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.actions.balancemodules.rackaware import (ActionBalanceRackAware, check_partition_swappable, racks_for_replica_list,
                                                                    difference_in_size_to_last_partition)
