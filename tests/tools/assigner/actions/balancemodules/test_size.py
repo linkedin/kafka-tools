@@ -56,7 +56,7 @@ class ActionBalanceSizeTests(unittest.TestCase):
         assert sum([p.size for p in self.cluster.brokers[2].partitions[1]], 0) == 3000
 
     def test_process_cluster_empty_broker(self):
-        self.cluster.add_broker(Broker(3, 'brokerhost3.example.com'))
+        self.cluster.add_broker(Broker('brokerhost3.example.com', id=3))
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
         self.cluster.add_topic(Topic("testTopic3", 2))

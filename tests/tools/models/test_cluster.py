@@ -12,7 +12,7 @@ class SimpleClusterTests(unittest.TestCase):
 
     def add_brokers(self, num):
         for i in range(1, num + 1):
-            broker = Broker(i, "brokerhost{0}.example.com".format(i))
+            broker = Broker("brokerhost{0}.example.com".format(i), id=i)
             self.cluster.add_broker(broker)
 
     def add_topics(self, num, partition_count=2):

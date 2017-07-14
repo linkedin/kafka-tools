@@ -38,7 +38,7 @@ class ActionCloneTests(unittest.TestCase):
         assert parsed_args.action == 'clone'
 
     def test_process_cluster_clean_target(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.brokers = [1]
         self.args.to_broker = 3
         action = ActionClone(self.args, self.cluster)
@@ -66,7 +66,7 @@ class ActionCloneTests(unittest.TestCase):
         assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b2, b1]
 
     def test_process_cluster_no_change(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.brokers = [3]
         self.args.to_broker = 1
         action = ActionClone(self.args, self.cluster)

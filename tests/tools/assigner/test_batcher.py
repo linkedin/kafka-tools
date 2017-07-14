@@ -11,7 +11,7 @@ from kafka.tools.assigner.models.replica_election import ReplicaElection
 class BatcherTests(unittest.TestCase):
     def setUp(self):
         self.topic = Topic('testTopic', 10)
-        self.broker = Broker(1, 'brokerhost1.example.com')
+        self.broker = Broker('brokerhost1.example.com', id=1)
         for i in range(10):
             self.topic.partitions[i].replicas = [self.broker]
 

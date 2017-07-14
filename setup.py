@@ -8,7 +8,7 @@ from setuptools import setup, find_packages, Command
 entry_points = {
     'console_scripts': [
         'kafka-assigner = kafka.tools.assigner.__main__:main',
-        'kafka-protocl = kafka.tools.protocol.__main__:main',
+        'kafka-protocol = kafka.tools.protocol.__main__:main',
     ],
 }
 

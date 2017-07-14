@@ -16,7 +16,7 @@ from kafka.tools.assigner.plugins import PluginModule
 class ReassignmentTests(unittest.TestCase):
     def setUp(self):
         self.topic = Topic('testTopic', 10)
-        self.broker = Broker(1, 'brokerhost1.example.com')
+        self.broker = Broker('brokerhost1.example.com', id=1)
         for i in range(10):
             self.topic.partitions[i].replicas = [self.broker]
         self.reassignment = Reassignment(self.topic.partitions, pause_time=0)

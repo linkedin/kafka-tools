@@ -45,8 +45,8 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
     def test_check_partition_swappable_racks_collide(self):
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(3, 'brokerhost3.example.com')
-        b4 = Broker(4, 'brokerhost4.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
+        b4 = Broker('brokerhost4.example.com', id=4)
         b2.rack = "a"
         b3.rack = "a"
         b4.rack = "b"
@@ -58,8 +58,8 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
     def test_check_partition_swappable_racks_ok(self):
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(1, 'brokerhost3.example.com')
-        b4 = Broker(1, 'brokerhost4.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
+        b4 = Broker('brokerhost4.example.com', id=4)
         b2.rack = "a"
         b3.rack = "b"
         b4.rack = "b"
@@ -105,7 +105,7 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
     def test_try_pick_new_broker_skipself(self):
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(3, 'brokerhost3.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
         self.cluster.add_broker(b3)
         b3.rack = "a"
         action = ActionBalanceRackAware(self.args, self.cluster)
@@ -123,7 +123,7 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
     def test_try_pick_new_broker(self):
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(3, 'brokerhost3.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
         self.cluster.add_broker(b3)
         b3.rack = "b"
         action = ActionBalanceRackAware(self.args, self.cluster)
@@ -226,8 +226,8 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
         action = ActionBalanceRackAware(self.args, self.cluster)
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(3, 'brokerhost3.example.com')
-        b4 = Broker(4, 'brokerhost4.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
+        b4 = Broker('brokerhost4.example.com', id=4)
         self.cluster.add_broker(b3)
         self.cluster.add_broker(b4)
         b3.rack = "a"
@@ -246,8 +246,8 @@ class ActionBalanceRackAwareTests(unittest.TestCase):
         action = ActionBalanceRackAware(self.args, self.cluster)
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
-        b3 = Broker(3, 'brokerhost3.example.com')
-        b4 = Broker(4, 'brokerhost4.example.com')
+        b3 = Broker('brokerhost3.example.com', id=3)
+        b4 = Broker('brokerhost4.example.com', id=4)
         self.cluster.add_broker(b3)
         self.cluster.add_broker(b4)
         b3.rack = "a"

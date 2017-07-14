@@ -53,7 +53,7 @@ class TopicAndPartitionTests(unittest.TestCase):
 
     def test_partition_equality_with_different_replicas(self):
         partition2 = Partition(self.topic, 0)
-        broker = Broker(1, 'testhost1')
+        broker = Broker('testhost1', id=1)
         partition2.replicas = [broker]
         assert self.topic.partitions[0] == partition2
 
@@ -74,7 +74,7 @@ class TopicAndPartitionTests(unittest.TestCase):
         assert self.topic.partitions[0] is not partition2
 
     def test_partition_copy_with_replicas(self):
-        broker = Broker(1, 'testhost1')
+        broker = Broker('testhost1', id=1)
         self.topic.partitions[0].replicas = [broker]
         partition2 = self.topic.partitions[0].copy()
         assert self.topic.partitions[0] == partition2
@@ -119,7 +119,7 @@ class TopicAndPartitionTests(unittest.TestCase):
         assert self.topic.partitions[0].dict_for_reassignment() == expected
 
     def test_partition_dict_for_reassignment_with_replicas(self):
-        broker = Broker(1, 'testhost1')
+        broker = Broker('testhost1', id=1)
         self.topic.partitions[0].replicas = [broker]
         expected = {"topic": 'testTopic', "partition": 0, "replicas": [1]}
         assert self.topic.partitions[0].dict_for_reassignment() == expected

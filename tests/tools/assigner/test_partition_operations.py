@@ -9,9 +9,9 @@ from kafka.tools.models.cluster import Cluster
 class PartitionOperationTests(unittest.TestCase):
     def setUp(self):
         self.cluster = Cluster()
-        self.cluster.add_broker(Broker(1, "brokerhost1.example.com"))
-        self.cluster.add_broker(Broker(2, "brokerhost2.example.com"))
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost1.example.com", id=1))
+        self.cluster.add_broker(Broker("brokerhost2.example.com", id=2))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.cluster.add_topic(Topic("testTopic1", 2))
         self.cluster.add_topic(Topic("testTopic2", 2))
 

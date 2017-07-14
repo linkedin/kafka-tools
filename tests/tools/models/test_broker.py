@@ -7,7 +7,7 @@ from kafka.tools.models.topic import Topic
 
 class BrokerTests(unittest.TestCase):
     def setUp(self):
-        self.broker = Broker(1, 'brokerhost1.example.com')
+        self.broker = Broker('brokerhost1.example.com', id=1)
 
     def add_partitions(self, pos, num):
         topic = Topic('testTopic', num)
@@ -89,15 +89,15 @@ class BrokerTests(unittest.TestCase):
         assert self.broker.percent_leaders() == 0.0
 
     def test_broker_equality(self):
-        broker2 = Broker(1, 'brokerhost1.example.com')
+        broker2 = Broker('brokerhost1.example.com', id=1)
         assert self.broker == broker2
 
     def test_broker_inequality_hostname(self):
-        broker2 = Broker(1, 'brokerhost2.example.com')
+        broker2 = Broker('brokerhost2.example.com', id=1)
         assert self.broker != broker2
 
     def test_broker_inequality_id(self):
-        broker2 = Broker(2, 'brokerhost1.example.com')
+        broker2 = Broker('brokerhost1.example.com', id=2)
         assert self.broker != broker2
 
     def test_broker_equality_typeerror(self):

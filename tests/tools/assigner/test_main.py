@@ -16,8 +16,8 @@ from kafka.tools.assigner.sizers.ssh import SizerSSH
 
 def set_up_cluster():
     cluster = Cluster()
-    cluster.add_broker(Broker(1, "brokerhost1.example.com"))
-    cluster.add_broker(Broker(2, "brokerhost2.example.com"))
+    cluster.add_broker(Broker("brokerhost1.example.com", id=1))
+    cluster.add_broker(Broker("brokerhost2.example.com", id=2))
     cluster.add_topic(Topic("testTopic1", 2))
     cluster.add_topic(Topic("testTopic2", 2))
     partition = cluster.topics['testTopic1'].partitions[0]

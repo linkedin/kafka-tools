@@ -73,7 +73,7 @@ class SizerJMXTests(unittest.TestCase):
 
     def create_cluster_onehost(self):
         cluster = Cluster()
-        cluster.add_broker(Broker(1, "brokerhost1.example.com"))
+        cluster.add_broker(Broker("brokerhost1.example.com", id=1))
         cluster.brokers[1].jmx_port = 1099
         cluster.add_topic(Topic("testTopic1", 2))
         cluster.add_topic(Topic("testTopic2", 2))

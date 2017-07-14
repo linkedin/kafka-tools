@@ -47,7 +47,7 @@ def main():
             request_cmds[cmd + "v{0}".format(ver)] = request_classes[cmd][ver]
 
     # Connect to the specified Kafka broker
-    broker = Broker(args.broker, args.port)
+    broker = Broker(args.broker, port=args.port)
     broker.connect()
 
     # Loop on reading a command

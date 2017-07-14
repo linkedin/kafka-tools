@@ -41,7 +41,7 @@ def add_topic_with_replicas(cluster, topic, topic_data):
             if replica not in cluster.brokers:
                 # Hit a replica that's not in the ID list (which means it's dead)
                 # We'll add it, but trying to get sizes will fail as we don't have a hostname
-                cluster.add_broker(Broker(replica, None))
+                cluster.add_broker(Broker(None, id=replica))
             newtopic.partitions[int(partition)].add_replica(cluster.brokers[replica], i)
     cluster.add_topic(newtopic)
 

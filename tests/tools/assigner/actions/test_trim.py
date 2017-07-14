@@ -31,7 +31,7 @@ class ActionTrimTests(unittest.TestCase):
         assert parsed_args.action == 'trim'
 
     def test_process_cluster_no_change(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.brokers = [3]
         action = ActionTrim(self.args, self.cluster)
         action.process_cluster()

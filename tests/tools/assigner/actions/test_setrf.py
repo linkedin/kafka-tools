@@ -64,7 +64,7 @@ class ActionSetRFTests(unittest.TestCase):
         assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
 
     def test_process_cluster_increase(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.topics = ['testTopic1']
         self.args.replication_factor = 3
         action = ActionSetRF(self.args, self.cluster)

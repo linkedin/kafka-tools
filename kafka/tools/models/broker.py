@@ -30,11 +30,11 @@ from kafka.tools.utilities import json_loads
 class Broker(BaseModel):
     equality_attrs = ['hostname', 'id']
 
-    def __init__(self, id, hostname, sock=None):
+    def __init__(self, hostname, id=0, port=None, sock=None):
         self.id = id
         self.hostname = hostname
         self.jmx_port = -1
-        self.port = None
+        self.port = port
         self.rack = None
         self.version = None
         self.endpoints = None
@@ -55,7 +55,7 @@ class Broker(BaseModel):
 
         # These things are required, and we can't proceed if they're not there
         try:
-            newbroker = cls(broker_id, data['host'])
+            newbroker = cls(data['host'], id=broker_id)
         except KeyError:
             raise ConfigurationException("Cannot parse broker data in zookeeper. This version of Kafka may not be supported.")
 
@@ -70,7 +70,7 @@ class Broker(BaseModel):
 
     # Shallow copy - do not copy partitions map over
     def copy(self):
-        newbroker = Broker(self.id, self.hostname)
+        newbroker = Broker(self.hostname, id=self.id, port=self.port)
         newbroker.jmx_port = self.jmx_port
         newbroker.port = self.port
         newbroker.rack = self.rack
