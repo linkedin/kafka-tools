@@ -17,10 +17,9 @@
 
 from __future__ import division
 
-import json
-
 from kafka.tools.assigner.exceptions import ConfigurationException
 from kafka.tools.assigner.models import BaseModel
+from kafka.tools.assigner.tools import json_loads
 
 
 class Broker(BaseModel):
@@ -40,10 +39,7 @@ class Broker(BaseModel):
 
     @classmethod
     def create_from_json(cls, broker_id, jsondata):
-        try:
-            data = json.loads(jsondata)
-        except TypeError:
-            data = json.loads(jsondata.decode('utf-8'))
+        data = json_loads(jsondata)
 
         # These things are required, and we can't proceed if they're not there
         try:
