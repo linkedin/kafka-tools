@@ -30,7 +30,7 @@ from kafka.tools.utilities import json_loads
 class Broker(BaseModel):
     equality_attrs = ['hostname', 'id']
 
-    def __init__(self, hostname, id=0, port=None, sock=None):
+    def __init__(self, hostname, id=0, port=9092, sock=None):
         self.id = id
         self.hostname = hostname
         self.jmx_port = -1
@@ -106,7 +106,13 @@ class Broker(BaseModel):
 
     def close(self):
         log.info("Disconnecting from {0}".format(self.hostname))
-        self._sock.shutdown(socket.SHUT_RDWR)
+
+        # Shutdown throws an error if the socket is not connected, but that's OK
+        try:
+            self._sock.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+
         self._sock.close()
 
     def send(self, request):
@@ -115,7 +121,7 @@ class Broker(BaseModel):
         payload += encode_int16(request.api_key)
         payload += encode_int16(request.api_version)
         payload += encode_int32(self._correlation_id)
-        payload += encode_string("kafka-tools")
+        payload += encode_string(b'kafka-tools')
         payload += request.encode()
 
         # Add the size to the payload

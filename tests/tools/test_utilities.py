@@ -3,7 +3,7 @@ import unittest
 
 from mock import patch
 
-from kafka.tools.utilities import is_exec_file, get_tools_path, check_java_home, find_path_containing
+from kafka.tools.utilities import is_exec_file, get_tools_path, check_java_home, find_path_containing, json_loads
 from kafka.tools.exceptions import ConfigurationException
 
 
@@ -79,3 +79,9 @@ class ToolsTests(unittest.TestCase):
     def test_check_java_home_notset(self):
         del os.environ['JAVA_HOME']
         self.assertRaises(ConfigurationException, check_java_home)
+
+    def test_json_loads(self):
+        assert json_loads('1') == 1
+
+    def test_json_loads_bytes(self):
+        assert json_loads(b'1') == 1

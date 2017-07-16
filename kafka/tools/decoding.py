@@ -40,7 +40,7 @@ def decode_string(byte_array):
         raise ValueError('Expected at least 2 bytes, only got {0}'.format(len(byte_array)))
     str_len, str_data = decode_int16(byte_array)
     if str_len == -1:
-        return None
+        return None, str_data
     if str_len > len(str_data):
         raise ValueError('Expected {0} bytes, only got {1}'.format(str_len + 2, len(byte_array)))
     return str_data[0:str_len], str_data[str_len:]
@@ -51,7 +51,7 @@ def decode_bytes(byte_array):
         raise ValueError('Expected at least 2 bytes, only got {0}'.format(len(byte_array)))
     str_len, str_data = decode_int16(byte_array)
     if str_len == -1:
-        return None
+        return None, str_data
     if str_len > len(str_data):
         raise ValueError('Expected {0} bytes, only got {1}'.format(str_len + 2, len(byte_array)))
     return binascii.hexlify(str_data[0:str_len]), str_data[str_len:]

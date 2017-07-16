@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import abc
 import collections
 import six
 
@@ -33,38 +34,44 @@ basic_type_encoder = {
 }
 
 
-class BaseRequest(object):
-    equality_attrs = []
-    request_format = None
+@six.add_metaclass(abc.ABCMeta)
+class BaseRequest():  # pragma: no cover
+    @abc.abstractproperty
+    def request_format(self):
+        raise NotImplementedError
 
-    api_key = 0
-    api_version = 0
-    cmd = None
+    @abc.abstractproperty
+    def api_key(self):
+        raise NotImplementedError
+
+    @abc.abstractproperty
+    def api_version(self):
+        pass
+
+    @abc.abstractproperty
+    def cmd(self):
+        raise NotImplementedError
 
     def __init__(self, cmd_args):
         self.payload = self.process_arguments(cmd_args)
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError
-        return not any([getattr(self, attr_name) != getattr(other, attr_name) for attr_name in self.equality_attrs])
-
     def __hash__(self):
         return id(self)
 
-    def process_arguments(self, cmd_args):
-        raise Exception("You cannot process_arguments using BaseRequest")
-
     def encode(self):
-        if self.request_format is None:
-            raise Exception("You cannot encode using BaseRequest")
         return encode_struct(self.payload, self.request_format)
 
-    def response(self):
-        raise Exception("You cannot parse a response for a BaseRequest")
+    @abc.abstractmethod
+    def process_arguments(self, cmd_args):
+        raise NotImplementedError
 
+    @abc.abstractmethod
+    def response(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def show_help(self):
-        raise Exception("There is no help for BaseRequest")
+        raise NotImplementedError
 
 
 def encode_object(obj, obj_def):
@@ -73,7 +80,7 @@ def encode_object(obj, obj_def):
     elif isinstance(obj_def['type'], collections.Sequence):
         return encode_struct(obj, obj_def['type'])
     else:
-        raise Exception("Request definition type must be a string or a sequence, not: ".format(obj_def['type']))
+        raise TypeError("Request definition type must be a string or a sequence, not: ".format(obj_def['type']))
     pass
 
 
@@ -83,7 +90,7 @@ def encode_basic_types(obj, obj_def):
     if obj_def['type'] in basic_type_encoder:
         return basic_type_encoder[obj_def['type']](obj)
     else:
-        raise Exception("Unknown protocol type: {0}".format(obj_def['type']))
+        raise ValueError("Unknown protocol type: {0}".format(obj_def['type']))
 
 
 def encode_struct(obj, obj_def):

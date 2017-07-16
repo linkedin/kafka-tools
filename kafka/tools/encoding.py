@@ -53,7 +53,7 @@ def encode_int64(num):
 def encode_string(str):
     if str is None:
         return struct.pack('>h', -1)
-    if not isinstance(str, six.string_types):
+    if not isinstance(str, six.binary_type):
         raise TypeError('Expected "{0}" to be a string, got: {1}'.format(type(str), repr(str)))
 
     str_len = len(str)
@@ -63,9 +63,12 @@ def encode_string(str):
 def encode_bytes(str):
     if str is None:
         return struct.pack('>h', -1)
-    if not isinstance(str, six.string_types):
+    if not isinstance(str, six.binary_type):
         raise TypeError('Expected "{0}" to be a string, got: {1}'.format(type(str), repr(str)))
 
     str_len = len(str)
+    if str_len % 2 != 0:
+        raise TypeError('String must be of even length, got {0} characters'.format(str_len))
+
     bytes = binascii.unhexlify(str)
-    return encode_int16(str_len / 2) + bytes
+    return encode_int16(str_len // 2) + bytes

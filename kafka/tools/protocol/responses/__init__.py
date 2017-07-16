@@ -1,3 +1,4 @@
+import abc
 import collections
 import six
 
@@ -16,31 +17,26 @@ basic_type_decoder = {
 }
 
 
-class BaseResponse(object):
-    equality_attrs = []
-    response_format = None
+@six.add_metaclass(abc.ABCMeta)
+class BaseResponse():  # pragma: no cover
+    @abc.abstractproperty
+    def response_format(self):
+        pass
 
     def __init__(self, correlation_id):
         self.correlation_id = correlation_id
         self.response = []
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            raise TypeError
-        return not any([getattr(self, attr_name) != getattr(other, attr_name) for attr_name in self.equality_attrs])
-
     def __hash__(self):
         return id(self)
 
     def decode(self, byte_array):
-        if self.response_format is None:
-            raise Exception("You cannot decode using BaseResponse")
-
         obj, byte_array = decode_struct(byte_array, {'type': self.response_format})
         self.response = obj
 
+    @abc.abstractmethod
     def __str__(self):
-        raise Exception("You cannot display a BaseResponse")
+        pass
 
 
 def decode_object(byte_array, obj_def):
@@ -49,7 +45,7 @@ def decode_object(byte_array, obj_def):
     elif isinstance(obj_def['type'], collections.Sequence):
         return decode_struct(byte_array, obj_def)
     else:
-        raise Exception("Response definition type must be a string or a sequence, not: ".format(obj_def['type']))
+        raise TypeError("Response definition type must be a string or a sequence, not: ".format(obj_def['type']))
 
 
 def decode_basic_types(byte_array, obj_def):
@@ -58,7 +54,7 @@ def decode_basic_types(byte_array, obj_def):
     if obj_def['type'] in basic_type_decoder:
         return basic_type_decoder[obj_def['type']](byte_array)
     else:
-        raise Exception("Unknown protocol type: {0}".format(obj_def['type']))
+        raise ValueError("Unknown protocol type: {0}".format(obj_def['type']))
 
 
 def decode_struct(byte_array, obj_def):
