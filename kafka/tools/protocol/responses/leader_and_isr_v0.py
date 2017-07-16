@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class LeaderAndIsrV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'error', 'type': 'int16'},
         {'name': 'partitions',
          'type': 'array',

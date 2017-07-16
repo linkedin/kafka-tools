@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class ApiVersionsV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'error', 'type': 'int16'},
         {'name': 'api_versions',
          'type': 'array',

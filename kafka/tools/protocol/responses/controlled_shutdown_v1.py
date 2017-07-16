@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class ControlledShutdownV1Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'error', 'type': 'int16'},
         {'name': 'partitions_remaining',
          'type': 'array',

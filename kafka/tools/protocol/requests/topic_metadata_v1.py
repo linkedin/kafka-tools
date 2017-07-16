@@ -24,7 +24,7 @@ class TopicMetadataV1Request(BaseRequest):
     api_version = 1
     cmd = "TopicMetadata"
 
-    request_format = [
+    schema = [
         {'name': 'topics', 'type': 'array', 'item_type': 'string'}
     ]
 

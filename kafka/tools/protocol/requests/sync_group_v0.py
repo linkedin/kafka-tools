@@ -24,7 +24,7 @@ class SyncGroupV0Request(BaseRequest):
     api_version = 0
     cmd = "SyncGroup"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
         {'name': 'generation_id', 'type': 'int32'},
         {'name': 'member_id', 'type': 'string'},

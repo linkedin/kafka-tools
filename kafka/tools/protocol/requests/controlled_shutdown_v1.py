@@ -26,7 +26,7 @@ class ControlledShutdownV1Request(BaseRequest):
     api_version = 1
     cmd = "ControlledShutdown"
 
-    request_format = [
+    schema = [
         {'name': 'broker_id', 'type': 'int32'}
     ]
 

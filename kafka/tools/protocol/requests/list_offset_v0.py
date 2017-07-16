@@ -24,7 +24,7 @@ class ListOffsetV0Request(BaseRequest):
     api_version = 0
     cmd = "ListOffset"
 
-    request_format = [
+    schema = [
         {'name': 'replica_id', 'type': 'int32'},
         {'name': 'topics',
          'type': 'array',

@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class FetchV1Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'throttle_time_ms', 'type': 'int32'},
         {'name': 'responses',
          'type': 'array',

@@ -24,7 +24,7 @@ class OffsetFetchV1Request(BaseRequest):
     api_version = 1
     cmd = "OffsetFetch"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
         {'name': 'topics',
          'type': 'array',

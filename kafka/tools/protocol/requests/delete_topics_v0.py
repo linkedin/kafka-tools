@@ -24,7 +24,7 @@ class DeleteTopicsV0Request(BaseRequest):
     api_version = 0
     cmd = "DeleteTopics"
 
-    request_format = [
+    schema = [
         {'name': 'topics', 'type': 'array', 'item_type': 'string'},
         {'name': 'timeout', 'type': 'int32'},
     ]

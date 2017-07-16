@@ -37,7 +37,7 @@ basic_type_encoder = {
 @six.add_metaclass(abc.ABCMeta)
 class BaseRequest():  # pragma: no cover
     @abc.abstractproperty
-    def request_format(self):
+    def schema(self):
         raise NotImplementedError
 
     @abc.abstractproperty
@@ -59,7 +59,7 @@ class BaseRequest():  # pragma: no cover
         return id(self)
 
     def encode(self):
-        return encode_struct(self.payload, self.request_format)
+        return encode_struct(self.payload, self.schema)
 
     @abc.abstractmethod
     def process_arguments(self, cmd_args):

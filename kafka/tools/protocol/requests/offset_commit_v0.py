@@ -24,7 +24,7 @@ class OffsetCommitV0Request(BaseRequest):
     api_version = 0
     cmd = "OffsetCommit"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
         {'name': 'topics',
          'type': 'array',

@@ -24,7 +24,7 @@ class ListGroupsV0Request(BaseRequest):
     api_version = 0
     cmd = "ListGroups"
 
-    request_format = []
+    schema = []
 
     def process_arguments(self, cmd_args):
         return []

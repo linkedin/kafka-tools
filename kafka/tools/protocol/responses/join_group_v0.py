@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class JoinGroupV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'error', 'type': 'int16'},
         {'name': 'generation_id', 'type': 'int32'},
         {'name': 'group_protocol', 'type': 'string'},

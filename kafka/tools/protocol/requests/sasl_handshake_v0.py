@@ -24,7 +24,7 @@ class SaslHandshakeV0Request(BaseRequest):
     api_version = 0
     cmd = "SaslHandshake"
 
-    request_format = [
+    schema = [
         {'name': 'mechanisms', 'type': 'string'},
     ]
 

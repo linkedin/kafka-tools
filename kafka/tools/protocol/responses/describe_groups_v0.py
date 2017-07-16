@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class DescribeGroupsV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'groups',
          'type': 'array',
          'item_type': [

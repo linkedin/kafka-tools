@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class DeleteTopicsV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'topic_errors',
          'type': 'array',
          'item_type': [

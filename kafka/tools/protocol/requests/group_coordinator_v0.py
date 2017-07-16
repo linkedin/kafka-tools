@@ -24,7 +24,7 @@ class GroupCoordinatorV0Request(BaseRequest):
     api_version = 0
     cmd = "GroupCoordinator"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
     ]
 

@@ -24,7 +24,7 @@ class CreateTopicsV0Request(BaseRequest):
     api_version = 0
     cmd = "CreateTopics"
 
-    request_format = [
+    schema = [
         {'name': 'topics',
          'type': 'array',
          'item_type': [

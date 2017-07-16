@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class ListOffsetV0Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'responses',
          'type': 'array',
          'item_type': [

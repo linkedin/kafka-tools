@@ -24,7 +24,7 @@ class JoinGroupV0Request(BaseRequest):
     api_version = 0
     cmd = "JoinGroup"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
         {'name': 'session_timeout', 'type': 'int32'},
         {'name': 'member_id', 'type': 'string'},

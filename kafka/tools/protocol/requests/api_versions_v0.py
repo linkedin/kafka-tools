@@ -24,7 +24,7 @@ class ApiVersionsV0Request(BaseRequest):
     api_version = 0
     cmd = "ApiVersions"
 
-    request_format = []
+    schema = []
 
     def process_arguments(self, cmd_args):
         return []

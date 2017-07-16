@@ -24,7 +24,7 @@ class StopReplicaV0Request(BaseRequest):
     api_version = 0
     cmd = "StopReplica"
 
-    request_format = [
+    schema = [
         {'name': 'controller_id', 'type': 'int32'},
         {'name': 'controller_epoch', 'type': 'int32'},
         {'name': 'delete_partitions', 'type': 'boolean'},

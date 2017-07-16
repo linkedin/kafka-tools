@@ -19,7 +19,7 @@ from kafka.tools.protocol.responses import BaseResponse
 
 
 class MetadataV1Response(BaseResponse):
-    response_format = [
+    schema = [
         {'name': 'brokers',
          'type': 'array',
          'item_type': [

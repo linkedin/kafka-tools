@@ -24,7 +24,7 @@ class LeaveGroupV0Request(BaseRequest):
     api_version = 0
     cmd = "LeaveGroup"
 
-    request_format = [
+    schema = [
         {'name': 'group_id', 'type': 'string'},
         {'name': 'member_id', 'type': 'string'},
     ]

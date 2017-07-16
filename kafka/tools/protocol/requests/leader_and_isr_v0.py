@@ -24,7 +24,7 @@ class LeaderAndIsrV0Request(BaseRequest):
     api_version = 0
     cmd = "LeaderAndIsr"
 
-    request_format = [
+    schema = [
         {'name': 'controller_id', 'type': 'int32'},
         {'name': 'controller_epoch', 'type': 'int32'},
         {'name': 'partition_states',

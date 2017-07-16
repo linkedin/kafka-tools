@@ -20,7 +20,7 @@ basic_type_decoder = {
 @six.add_metaclass(abc.ABCMeta)
 class BaseResponse():  # pragma: no cover
     @abc.abstractproperty
-    def response_format(self):
+    def schema(self):
         pass
 
     def __init__(self, correlation_id):
@@ -31,7 +31,7 @@ class BaseResponse():  # pragma: no cover
         return id(self)
 
     def decode(self, byte_array):
-        obj, byte_array = decode_struct(byte_array, {'type': self.response_format})
+        obj, byte_array = decode_struct(byte_array, {'type': self.schema})
         self.response = obj
 
     @abc.abstractmethod

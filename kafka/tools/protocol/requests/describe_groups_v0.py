@@ -24,7 +24,7 @@ class DescribeGroupsV0Request(BaseRequest):
     api_version = 0
     cmd = "DescribeGroups"
 
-    request_format = [
+    schema = [
         {'name': 'group_ids', 'type': 'array', 'item_type': 'string'},
     ]
 
