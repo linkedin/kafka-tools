@@ -16,7 +16,7 @@ class BytesTests(unittest.TestCase):
         self.assertRaises(TypeError, Bytes, 123)
 
     def test_encode_bad_length(self):
-        self.assertRaises(TypeError, Bytes, b'87349DB')
+        self.assertRaises(ValueError, Bytes, b'87349DB')
 
     def test_decode(self):
         (val, rest) = Bytes.decode(b'\x00\x04\x874\x9d\xbc')
@@ -39,7 +39,7 @@ class BytesTests(unittest.TestCase):
         self.assertRaises(ValueError, Bytes.decode, b'')
 
     def test_decode_underflow(self):
-        self.assertRaises(ValueError, Bytes.decode, b'\x00\x03\x874\x9d')
+        self.assertRaises(ValueError, Bytes.decode, b'\x00\x04\x874\x9d')
 
     def test_encode(self):
         val = Bytes(b'87349DBC')
