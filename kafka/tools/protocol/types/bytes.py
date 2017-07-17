@@ -15,18 +15,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import binascii
 import six
-import struct
 from kafka.tools.protocol.types import BaseType
 from kafka.tools.protocol.types.integers import Int16
 
 
-class String(BaseType):
+class Bytes(BaseType):
     def _validate(self, val):
         if val is None:
             return True
         if not isinstance(val, six.binary_type):
             raise TypeError('Expected "{0}" to be {1}, got: {2}'.format(type(val), six.binary_type, repr(val)))
+        if len(val) % 2 != 0:
+            raise ValueError('String must be of even length, got {0} characters'.format(len(val)))
         return True
 
     @classmethod
@@ -38,10 +40,12 @@ class String(BaseType):
             return cls(None), str_data
         if str_len.value() > len(str_data):
             raise ValueError('Expected {0} bytes, only got {1}'.format(str_len.value() + 2, len(byte_array)))
-        return cls(str_data[0:str_len.value()]), str_data[str_len.value():]
+        return cls(binascii.hexlify(str_data[0:str_len.value()])), str_data[str_len.value():]
 
     def encode(self):
         if self._value is None:
             return Int16(-1).encode()
-        str_len = Int16(len(self._value))
-        return str_len.encode() + struct.pack('{0}s'.format(str_len.value()), self._value)
+        str_len = Int16(len(self._value) // 2)
+
+        bytes = binascii.unhexlify(self._value)
+        return str_len.encode() + bytes

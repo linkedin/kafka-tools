@@ -3,7 +3,7 @@ import unittest
 from kafka.tools.protocol.types.string import String
 
 
-class Int8Tests(unittest.TestCase):
+class StringTests(unittest.TestCase):
     def test_create(self):
         val = String(b'foo')
         assert val.value() == b'foo'
