@@ -34,7 +34,7 @@ def _parse_argument(values, arg):
                                                'leader_epoch': int(cparts[4]),
                                                'isr': _get_integer_list(cparts[5]),
                                                'zk_version': int(cparts[6]),
-                                               'replicas': _get_integer_list(cparts[7]),
+                                               'replicas': _get_integer_list(cparts[7])})
         except ValueError:
             raise ArgumentError("partition_states fields, except for topic, must be integers")
     elif len(cparts) == 3:
