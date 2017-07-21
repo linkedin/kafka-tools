@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.assigner import log
+from kafka.tools import log
 from kafka.tools.assigner.actions import ActionModule
-from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException
 
 
 class ActionClone(ActionModule):

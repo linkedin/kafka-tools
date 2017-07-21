@@ -8,6 +8,7 @@ from setuptools import setup, find_packages, Command
 entry_points = {
     'console_scripts': [
         'kafka-assigner = kafka.tools.assigner.__main__:main',
+        'kafka-protocol = kafka.tools.protocol.__main__:main',
     ],
 }
 
@@ -104,7 +105,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.3',
+    version='0.1.0',
 
     author='Todd Palino',
     author_email='tpalino@linkedin.com',
@@ -138,6 +139,7 @@ setup(
         'mock',
         'nose',
         'testfixtures',
+        'timeout-decorator',
     ],
     setup_requires=[
         'nose>=1.3.4',

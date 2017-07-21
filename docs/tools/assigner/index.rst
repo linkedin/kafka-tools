@@ -18,13 +18,6 @@ kafka.tools.assigner
    actions/trim
    arguments
    batcher
-   exceptions
-   models/broker
-   models/cluster
-   models/partition
    models/reassignment
    models/replica_election
-   models/topic
-   modules
    sizers/ssh
-   tools

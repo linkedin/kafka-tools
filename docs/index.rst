@@ -17,7 +17,9 @@ API Documentation
 .. toctree::
    :maxdepth: 1
 
+   tools/index
    tools/assigner/index
+   tools/protocol/index
 
 Indices and tables
 ==================

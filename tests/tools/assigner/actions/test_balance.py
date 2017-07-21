@@ -7,7 +7,7 @@ from .fixtures import set_up_cluster, set_up_subparser
 
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.actions.balancemodules.count import ActionBalanceCount
-from kafka.tools.assigner.exceptions import BalanceException
+from kafka.tools.exceptions import BalanceException
 
 
 class ActionBalanceTests(unittest.TestCase):

@@ -4,8 +4,8 @@ import unittest
 from argparse import Namespace
 from ..fixtures import set_up_cluster, set_up_subparser, set_up_cluster_4broker
 
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.actions.balancemodules.count import ActionBalanceCount
 
@@ -79,7 +79,7 @@ class ActionBalanceCountTests(unittest.TestCase):
         assert len(b2.partitions[1]) == 3
 
     def test_process_cluster_empty_broker(self):
-        self.cluster.add_broker(Broker(3, 'brokerhost3.example.com'))
+        self.cluster.add_broker(Broker('brokerhost3.example.com', id=3))
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
         b3 = self.cluster.brokers[3]
@@ -103,7 +103,7 @@ class ActionBalanceCountTests(unittest.TestCase):
         assert len(b3.partitions[1]) == 2
 
     def test_process_cluster_empty_one(self):
-        self.cluster.add_broker(Broker(3, 'brokerhost3.example.com'))
+        self.cluster.add_broker(Broker('brokerhost3.example.com', id=3))
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
         b3 = self.cluster.brokers[3]
@@ -130,7 +130,7 @@ class ActionBalanceCountTests(unittest.TestCase):
         assert len(b3.partitions[1]) == 2
 
     def test_process_cluster_rf3(self):
-        self.cluster.add_broker(Broker(3, 'brokerhost3.example.com'))
+        self.cluster.add_broker(Broker('brokerhost3.example.com', id=3))
         b1 = self.cluster.brokers[1]
         b2 = self.cluster.brokers[2]
         b3 = self.cluster.brokers[3]

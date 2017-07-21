@@ -17,7 +17,7 @@
 
 from collections import deque
 
-from kafka.tools.assigner import log
+from kafka.tools import log
 from kafka.tools.assigner.actions import ActionBalanceModule
 
 

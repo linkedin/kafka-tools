@@ -4,11 +4,11 @@ import unittest
 from mock import call, patch
 
 from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections, run_plugins_at_step, is_dry_run
-from kafka.tools.assigner.exceptions import ProgrammingException
+from kafka.tools.exceptions import ProgrammingException
 from kafka.tools.assigner.actions.balance import ActionBalance
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.cluster import Cluster
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.cluster import Cluster
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 from kafka.tools.assigner.plugins import PluginModule
 from kafka.tools.assigner.sizers.ssh import SizerSSH
@@ -16,8 +16,8 @@ from kafka.tools.assigner.sizers.ssh import SizerSSH
 
 def set_up_cluster():
     cluster = Cluster()
-    cluster.add_broker(Broker(1, "brokerhost1.example.com"))
-    cluster.add_broker(Broker(2, "brokerhost2.example.com"))
+    cluster.add_broker(Broker("brokerhost1.example.com", id=1))
+    cluster.add_broker(Broker("brokerhost2.example.com", id=2))
     cluster.add_topic(Topic("testTopic1", 2))
     cluster.add_topic(Topic("testTopic2", 2))
     partition = cluster.topics['testTopic1'].partitions[0]

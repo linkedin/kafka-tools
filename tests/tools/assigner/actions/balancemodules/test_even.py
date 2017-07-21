@@ -4,7 +4,7 @@ import unittest
 from argparse import Namespace
 from ..fixtures import set_up_cluster, set_up_subparser, set_up_cluster_4broker
 
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.assigner.actions.balancemodules.even import ActionBalanceEven, pmap_matches_target
 

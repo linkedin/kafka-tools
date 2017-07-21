@@ -22,13 +22,14 @@ import time
 import kafka.tools.assigner.actions
 import kafka.tools.assigner.plugins
 import kafka.tools.assigner.sizers
-from kafka.tools.assigner import log
+from kafka.tools import log
+from kafka.tools.utilities import get_tools_path, check_java_home
+from kafka.tools.models.cluster import Cluster
+
 from kafka.tools.assigner.arguments import set_up_arguments
 from kafka.tools.assigner.batcher import split_partitions_into_batches
-from kafka.tools.assigner.exceptions import ProgrammingException
-from kafka.tools.assigner.modules import get_modules
-from kafka.tools.assigner.tools import get_tools_path, check_java_home
-from kafka.tools.assigner.models.cluster import Cluster
+from kafka.tools.exceptions import ProgrammingException
+from kafka.tools.modules import get_modules
 from kafka.tools.assigner.models.reassignment import Reassignment
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 
@@ -146,5 +147,5 @@ def main():
     return os.EX_OK
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     sys.exit(main())

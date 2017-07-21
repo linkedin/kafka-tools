@@ -16,7 +16,7 @@
 # under the License.
 
 from kafka.tools.assigner.actions import ActionModule
-from kafka.tools.assigner.exceptions import NotEnoughReplicasException
+from kafka.tools.exceptions import NotEnoughReplicasException
 
 
 class ActionTrim(ActionModule):

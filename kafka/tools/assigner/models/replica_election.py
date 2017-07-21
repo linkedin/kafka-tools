@@ -20,7 +20,7 @@ import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from kafka.tools.assigner.models import BaseModel
+from kafka.tools.models import BaseModel
 
 
 class ReplicaElection(BaseModel):

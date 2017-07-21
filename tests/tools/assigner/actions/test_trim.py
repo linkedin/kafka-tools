@@ -4,9 +4,9 @@ import unittest
 from argparse import Namespace
 from .fixtures import set_up_cluster, set_up_subparser
 
-from kafka.tools.assigner.exceptions import ConfigurationException, NotEnoughReplicasException
+from kafka.tools.exceptions import ConfigurationException, NotEnoughReplicasException
 from kafka.tools.assigner.actions.trim import ActionTrim
-from kafka.tools.assigner.models.broker import Broker
+from kafka.tools.models.broker import Broker
 
 
 class ActionTrimTests(unittest.TestCase):
@@ -31,7 +31,7 @@ class ActionTrimTests(unittest.TestCase):
         assert parsed_args.action == 'trim'
 
     def test_process_cluster_no_change(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.brokers = [3]
         action = ActionTrim(self.args, self.cluster)
         action.process_cluster()

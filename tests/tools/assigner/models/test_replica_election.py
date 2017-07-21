@@ -3,15 +3,15 @@ import unittest
 
 from mock import patch, ANY
 
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 
 
 class ReplicaElectionTests(unittest.TestCase):
     def setUp(self):
         self.topic = Topic('testTopic', 10)
-        self.broker = Broker(1, 'brokerhost1.example.com')
+        self.broker = Broker('brokerhost1.example.com', id=1)
         for i in range(10):
             self.topic.partitions[i].replicas = [self.broker]
         self.replica_election = ReplicaElection(self.topic.partitions, pause_time=0)

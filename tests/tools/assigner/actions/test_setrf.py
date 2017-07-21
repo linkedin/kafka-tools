@@ -4,9 +4,9 @@ import unittest
 from argparse import Namespace
 from .fixtures import set_up_cluster, set_up_subparser
 
-from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException
 from kafka.tools.assigner.actions.setrf import ActionSetRF
-from kafka.tools.assigner.models.broker import Broker
+from kafka.tools.models.broker import Broker
 
 
 class ActionSetRFTests(unittest.TestCase):
@@ -64,7 +64,7 @@ class ActionSetRFTests(unittest.TestCase):
         assert self.cluster.topics['testTopic2'].partitions[1].replicas == [b1, b2]
 
     def test_process_cluster_increase(self):
-        self.cluster.add_broker(Broker(3, "brokerhost3.example.com"))
+        self.cluster.add_broker(Broker("brokerhost3.example.com", id=3))
         self.args.topics = ['testTopic1']
         self.args.replication_factor = 3
         action = ActionSetRF(self.args, self.cluster)

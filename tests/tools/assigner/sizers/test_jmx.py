@@ -3,10 +3,10 @@ import unittest
 from argparse import Namespace
 from mock import patch, Mock, call
 
-from kafka.tools.assigner.exceptions import UnknownBrokerException, ConfigurationException
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.cluster import Cluster
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.exceptions import UnknownBrokerException, ConfigurationException
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.cluster import Cluster
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.sizers.jmx import SizerJMX, _validate_broker
 
 
@@ -73,7 +73,7 @@ class SizerJMXTests(unittest.TestCase):
 
     def create_cluster_onehost(self):
         cluster = Cluster()
-        cluster.add_broker(Broker(1, "brokerhost1.example.com"))
+        cluster.add_broker(Broker("brokerhost1.example.com", id=1))
         cluster.brokers[1].jmx_port = 1099
         cluster.add_topic(Topic("testTopic1", 2))
         cluster.add_topic(Topic("testTopic2", 2))

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException
 
 
 # Base class that all kafka-assigner actions inherit from

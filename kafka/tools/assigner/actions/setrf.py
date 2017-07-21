@@ -18,7 +18,7 @@
 import random
 from collections import deque
 from kafka.tools.assigner.actions import ActionModule
-from kafka.tools.assigner.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException
 
 
 class ActionSetRF(ActionModule):

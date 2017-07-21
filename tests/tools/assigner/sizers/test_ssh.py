@@ -6,10 +6,10 @@ from subprocess import PIPE
 from testfixtures import compare
 from testfixtures.popen import MockPopen
 
-from kafka.tools.assigner.exceptions import UnknownBrokerException
-from kafka.tools.assigner.models.broker import Broker
-from kafka.tools.assigner.models.cluster import Cluster
-from kafka.tools.assigner.models.topic import Topic
+from kafka.tools.exceptions import UnknownBrokerException
+from kafka.tools.models.broker import Broker
+from kafka.tools.models.cluster import Cluster
+from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.sizers.ssh import SizerSSH
 
 
@@ -21,7 +21,7 @@ class SizerSSHTests(unittest.TestCase):
 
     def create_cluster_onehost(self):
         cluster = Cluster()
-        cluster.add_broker(Broker(1, "brokerhost1.example.com"))
+        cluster.add_broker(Broker("brokerhost1.example.com", id=1))
         cluster.add_topic(Topic("testTopic1", 2))
         cluster.add_topic(Topic("testTopic2", 2))
         partition = cluster.topics['testTopic1'].partitions[0]

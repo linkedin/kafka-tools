@@ -17,7 +17,7 @@
 
 from operator import attrgetter
 
-from kafka.tools.assigner import log
+from kafka.tools import log
 from kafka.tools.assigner.actions import ActionBalanceModule
 
 
@@ -105,11 +105,8 @@ class ActionBalanceCount(ActionBalanceModule):
                             # If we have moved enough partitions to this broker, exit out of the inner loop
                             if ((pos in target.partitions) and (target.num_partitions_at_position(pos) >= max_count[pos][0])) or (diff == 0):
                                 break
-                            # Skip partitions that are already on the target broker
-                            if target in partition.replicas:
-                                continue
-                            # Skip topics that are being excluded
-                            if partition.topic.name in self.args.exclude_topics:
+                            # Skip partitions that are already on the target broker or are being excluded
+                            if (target in partition.replicas) or (partition.topic.name in self.args.exclude_topics):
                                 continue
 
                             partition.swap_replicas(broker, target)
