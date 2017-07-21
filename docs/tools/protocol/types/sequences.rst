@@ -1,5 +1,5 @@
-kafka.tools.protocol.models.sequences
-=====================================
+kafka.tools.protocol.types.sequences
+====================================
 
-.. automodule:: kafka.tools.protocol.models.sequences
+.. automodule:: kafka.tools.protocol.types.sequences
    :members:

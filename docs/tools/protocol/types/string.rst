@@ -1,5 +1,5 @@
-kafka.tools.protocol.models.string
-==================================
+kafka.tools.protocol.types.string
+=================================
 
-.. automodule:: kafka.tools.protocol.models.string
+.. automodule:: kafka.tools.protocol.types.string
    :members:

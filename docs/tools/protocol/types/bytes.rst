@@ -1,5 +1,5 @@
-kafka.tools.protocol.models.bytes
-=================================
+kafka.tools.protocol.types.bytes
+================================
 
-.. automodule:: kafka.tools.protocol.models.bytes
+.. automodule:: kafka.tools.protocol.types.bytes
    :members:

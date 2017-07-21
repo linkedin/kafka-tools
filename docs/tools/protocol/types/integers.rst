@@ -1,5 +1,5 @@
-kafka.tools.protocol.models.integers
-====================================
+kafka.tools.protocol.types.integers
+===================================
 
-.. automodule:: kafka.tools.protocol.models.integers
+.. automodule:: kafka.tools.protocol.types.integers
    :members:

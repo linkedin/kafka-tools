@@ -1,5 +1,5 @@
-kafka.tools.protocol.models.boolean
-===================================
+kafka.tools.protocol.types.boolean
+==================================
 
-.. automodule:: kafka.tools.protocol.models.boolean
+.. automodule:: kafka.tools.protocol.types.boolean
    :members:
