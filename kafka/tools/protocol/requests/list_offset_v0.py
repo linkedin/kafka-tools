@@ -19,6 +19,20 @@ from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
 
 
+def _get_partition_map(partition):
+    if len(partition) != 3:
+        raise ArgumentError("Partition tuple must have exactly 3 fields")
+
+    try:
+        pmap = {'partition': int(partition[0]),
+                'timestamp': int(partition[1]),
+                'max_num_offsets': int(partition[2])}
+    except ValueError:
+        raise ArgumentError("Partition tuple must be exactly 3 integers")
+
+    return pmap
+
+
 def _parse_next_topic(cmd_args):
     topic = {'topic': cmd_args.pop(0), 'partitions': []}
     while True:
@@ -29,14 +43,7 @@ def _parse_next_topic(cmd_args):
                 raise ArgumentError("Topic is missing partitions")
             return topic, cmd_args
         partition = cmd_args.pop(0).split(',')
-        if len(partition) != 3:
-            raise ArgumentError("Partition tuple must be exactly 3 integers")
-        try:
-            topic['partitions'].append({'partition': int(partition[0]),
-                                        'timestamp': int(partition[1]),
-                                        'max_num_offsets': int(partition[2])})
-        except ValueError:
-            raise ArgumentError("Partition tuple must be exactly 3 integers")
+        topic['partitions'].append(_get_partition_map(partition))
 
 
 class ListOffsetV0Request(BaseRequest):

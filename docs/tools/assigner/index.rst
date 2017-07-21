@@ -22,4 +22,3 @@ kafka.tools.assigner
    models/replica_election
    sizers/ssh
    sizers/jmx
-   tools

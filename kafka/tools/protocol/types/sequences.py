@@ -70,10 +70,10 @@ def _evaluate_value(value, schema):
     for entry in schema:
         if entry['name'] not in value:
             raise KeyError('Value is missing an entry with key "{0}"'.format(entry['name']))
+        entry_schema = entry['type']
         if entry['type'].lower() == 'array':
-            rv[entry['name']] = schema_type_map[entry['type'].lower()](value[entry['name']], entry['item_type'])
-        else:
-            rv[entry['name']] = schema_type_map[entry['type'].lower()](value[entry['name']], entry['type'])
+            entry_schema = entry['item_type']
+        rv[entry['name']] = schema_type_map[entry['type'].lower()](value[entry['name']], entry_schema)
     return rv
 
 
@@ -201,17 +201,19 @@ class ArrayIterator():
 class Array(BaseType):
     _type = "array"
 
-    def _validate(self):
-        if self._value is None:
-            return
-        if (not isinstance(self._value, collections.Sequence)) or isinstance(self._value, six.string_types):
-            raise ValueError("The value must be None or a list, not {0}".format(type(self._value)))
-
+    def _evaluate_value(self):
         try:
             klass = schema_type_map[self._schema.lower()] if isinstance(self._schema, six.string_types) else Sequence
         except KeyError:
             raise TypeError('Unknown schema type {0}'.format(self._schema.lower()))
         self._value = [klass(item, schema=self._schema) for item in self._value]
+
+    def _validate(self):
+        if self._value is None:
+            return
+        if (not isinstance(self._value, collections.Sequence)) or isinstance(self._value, six.string_types):
+            raise ValueError("The value must be None or a list, not {0}".format(type(self._value)))
+        self._evaluate_value()
 
     @classmethod
     def decode(cls, byte_array, schema=None):

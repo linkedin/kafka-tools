@@ -19,6 +19,10 @@ from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.leader_and_isr_v0 import LeaderAndIsrV0Response
 
 
+def _get_integer_list(delimited_str):
+    return [int(x) for x in delimited_str.split("|")]
+
+
 def _parse_argument(values, arg):
     cparts = arg.split(",")
     if len(cparts) == 8:
@@ -28,9 +32,9 @@ def _parse_argument(values, arg):
                                                'controller_epoch': int(cparts[2]),
                                                'leader': int(cparts[3]),
                                                'leader_epoch': int(cparts[4]),
-                                               'isr': [int(x) for x in cparts[5].split("|")],
+                                               'isr': _get_integer_list(cparts[5]),
                                                'zk_version': int(cparts[6]),
-                                               'replicas': [int(x) for x in cparts[7].split("|")]})
+                                               'replicas': _get_integer_list(cparts[7]),
         except ValueError:
             raise ArgumentError("partition_states fields, except for topic, must be integers")
     elif len(cparts) == 3:

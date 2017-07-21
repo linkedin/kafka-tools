@@ -11,6 +11,4 @@ kafka.tools
    models/partition
    models/topic
    modules
-   sizers/ssh
-   sizers/jmx
-   tools
+   utilities
