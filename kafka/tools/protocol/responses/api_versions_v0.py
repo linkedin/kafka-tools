@@ -29,12 +29,3 @@ class ApiVersionsV0Response(BaseResponse):
              {'name': 'max_version', 'type': 'int16'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("Error: {0}".format(self.response[0]))
-        for api_version in self.response[1]:
-            strs.append("API Key: {0}".format(api_version[0]))
-            strs.append("    Min version: {0}".format(api_version[1]))
-            strs.append("    Max version: {0}".format(api_version[2]))
-        return "\n".join(strs)

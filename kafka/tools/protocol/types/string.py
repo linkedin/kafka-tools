@@ -22,15 +22,20 @@ from kafka.tools.protocol.types.integers import Int16
 
 
 class String(BaseType):
-    def _validate(self, val):
-        if val is None:
-            return True
-        if not isinstance(val, six.binary_type):
-            raise TypeError('Expected "{0}" to be {1}, got: {2}'.format(type(val), six.binary_type, repr(val)))
-        return True
+    _type = "string"
+
+    def _validate(self):
+        if self._value is None:
+            return
+        if not isinstance(self._value, six.string_types):
+            raise TypeError('Expected "{0}" to be {1}, got: {2}'.format(type(self._value), six.string_types, repr(self._value)))
+        try:
+            self._value = self._value.decode("utf-8")
+        except AttributeError:
+            pass
 
     @classmethod
-    def decode(cls, byte_array):
+    def decode(cls, byte_array, schema=None):
         if len(byte_array) < 2:
             raise ValueError('Expected at least 2 bytes, only got {0}'.format(len(byte_array)))
         str_len, str_data = Int16.decode(byte_array)
@@ -38,10 +43,16 @@ class String(BaseType):
             return cls(None), str_data
         if str_len.value() > len(str_data):
             raise ValueError('Expected {0} bytes, only got {1}'.format(str_len.value() + 2, len(byte_array)))
-        return cls(str_data[0:str_len.value()]), str_data[str_len.value():]
+        return cls(str_data[0:str_len.value()].decode("utf-8"), schema=cls._type), str_data[str_len.value():]
 
     def encode(self):
         if self._value is None:
             return Int16(-1).encode()
         str_len = Int16(len(self._value))
-        return str_len.encode() + struct.pack('{0}s'.format(str_len.value()), self._value)
+        return str_len.encode() + struct.pack('{0}s'.format(str_len.value()), self._value.encode("utf-8"))
+
+    def __str__(self):
+        return '{0} (string)'.format(self._value)
+
+    def __repr__(self):
+        return '<String length={0}>'.format(len(self._value))

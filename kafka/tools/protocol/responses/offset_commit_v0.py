@@ -32,11 +32,3 @@ class OffsetCommitV0Response(BaseResponse):
               ]},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        for topic in self.response[0]:
-            strs.append("Topic: {0}".format(topic[0]))
-            for partition in topic[1]:
-                strs.append("    partition: {0}, error: {1}".format(partition[0], partition[1]))
-        return "\n".join(strs)

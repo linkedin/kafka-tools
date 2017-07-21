@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.heartbeat_v0 import HeartbeatV0Response
 
 
@@ -23,6 +23,11 @@ class HeartbeatV0Request(BaseRequest):
     api_key = 12
     api_version = 0
     cmd = "Heartbeat"
+    response = HeartbeatV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} group_id group_generation_id member_id\n".format(cmd, api_version) +
+                   "Description: Send heartbeat for the specified member\n")
 
     schema = [
         {'name': 'group_id', 'type': 'string'},
@@ -30,14 +35,14 @@ class HeartbeatV0Request(BaseRequest):
         {'name': 'member_id', 'type': 'string'},
     ]
 
-    def process_arguments(self, cmd_args):
-        return [cmd_args[0], int(cmd_args[1]), cmd_args[2]]
-
-    def response(self, correlation_id):
-        return HeartbeatV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} group_id group_generation_id member_id".format(cls.cmd, cls.api_version))
-        print("Description: Send heartbeat for the specified member")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) != 3:
+            raise ArgumentError("HeartbeatV0 takes exactly three arguments")
+
+        try:
+            return {'group_id': cmd_args[0],
+                    'group_generation_id': int(cmd_args[1]),
+                    'member_id': cmd_args[2]}
+        except ValueError:
+            raise ArgumentError("the group_generation_id must be an integer")

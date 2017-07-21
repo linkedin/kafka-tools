@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.sasl_handshake_v0 import SaslHandshakeV0Response
 
 
@@ -23,19 +23,18 @@ class SaslHandshakeV0Request(BaseRequest):
     api_key = 17
     api_version = 0
     cmd = "SaslHandshake"
+    response = SaslHandshakeV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} mechanism\n".format(cmd, api_version) +
+                   "Description: Handshake for SASL with the mechanism chosen by the client\n")
 
     schema = [
         {'name': 'mechanisms', 'type': 'string'},
     ]
 
-    def process_arguments(self, cmd_args):
-        return [cmd_args[0]]
-
-    def response(self, correlation_id):
-        return SaslHandshakeV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} mechanism".format(cls.cmd, cls.api_version))
-        print("Description: Handshake for SASL with the mechanism chosen by the client")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) != 1:
+            raise ArgumentError("SaslHandshakeV0 requires exactly one argument")
+        return {'mechanism': cmd_args[0]}

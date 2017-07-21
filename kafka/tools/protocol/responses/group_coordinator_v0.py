@@ -28,13 +28,3 @@ class GroupCoordinatorV0Response(BaseResponse):
              {'name': 'port', 'type': 'int32'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("Error: {0}".format(self.response[0]))
-        coordinator = self.response[1]
-        strs.append("Coordinator:")
-        strs.append("    node_id: {0}".format(coordinator[0]))
-        strs.append("    host: {0}".format(coordinator[1]))
-        strs.append("    port: {0}".format(coordinator[2]))
-        return "\n".join(strs)

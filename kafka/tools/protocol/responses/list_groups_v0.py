@@ -28,11 +28,3 @@ class ListGroupsV0Response(BaseResponse):
              {'name': 'protocol_type', 'type': 'string'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        strs.append("Groups:")
-        for group in self.response[1]:
-            strs.append("    id: {0}, protocol_type: {1}".format(group[0], group[1]))
-        return "\n".join(strs)

@@ -22,8 +22,3 @@ class UpdateMetadataV0Response(BaseResponse):
     schema = [
         {'name': 'error', 'type': 'int16'},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        return "\n".join(strs)

@@ -23,9 +23,3 @@ class SyncGroupV0Response(BaseResponse):
         {'name': 'error', 'type': 'int16'},
         {'name': 'member_assignment', 'type': 'bytes'},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        strs.append("member_assignment: {0}".format(self.response[1]))
-        return "\n".join(strs)

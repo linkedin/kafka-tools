@@ -27,9 +27,3 @@ class CreateTopicsV0Response(BaseResponse):
              {'name': 'error', 'type': 'int16'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        for error in self.response[0]:
-            strs.append("Topic: {0}, error: {1}".format(error[0], error[1]))
-        return "\n".join(strs)

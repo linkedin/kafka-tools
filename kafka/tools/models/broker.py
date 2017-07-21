@@ -22,8 +22,8 @@ import socket
 from kafka.tools import log
 from kafka.tools.models import BaseModel
 from kafka.tools.exceptions import ConfigurationException
-from kafka.tools.encoding import encode_int16, encode_int32, encode_string
-from kafka.tools.decoding import decode_int32
+from kafka.tools.protocol.types.integers import Int16, Int32
+from kafka.tools.protocol.types.string import String
 from kafka.tools.utilities import json_loads
 
 
@@ -118,15 +118,15 @@ class Broker(BaseModel):
     def send(self, request):
         # Build the payload based on the request passed in
         payload = b''
-        payload += encode_int16(request.api_key)
-        payload += encode_int16(request.api_version)
-        payload += encode_int32(self._correlation_id)
-        payload += encode_string(b'kafka-tools')
+        payload += Int16(request.api_key).encode()
+        payload += Int16(request.api_version).encode()
+        payload += Int32(self._correlation_id).encode()
+        payload += String('kafka-tools').encode()
         payload += request.encode()
 
         # Add the size to the payload
         payload_len = len(payload)
-        payload = encode_int32(payload_len) + payload
+        payload = Int32(payload_len).encode() + payload
 
         # Increment the correlation ID for the next request
         self._correlation_id += 1
@@ -136,19 +136,16 @@ class Broker(BaseModel):
 
         # Read the first 4 bytes so we know the size
         resp = self._sock.recv(4)
-        size, junk = decode_int32(resp)
+        size, junk = Int32.decode(resp)
 
         # Read the response that we're expecting
-        response_data = self._read_bytes(size)
+        response_data = self._read_bytes(size.value())
 
         # Parse off the correlation ID for the response
-        correlation_id, response_data = decode_int32(response_data)
+        correlation_id, response_data = Int32.decode(response_data)
 
         # Get the proper response class and parse the response
-        response = request.response(correlation_id)
-        response.decode(response_data)
-
-        return correlation_id, response
+        return correlation_id.value(), request.response(correlation_id, response_data)
 
     def _read_bytes(self, size):
         bytes_left = size

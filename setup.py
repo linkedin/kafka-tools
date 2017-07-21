@@ -139,6 +139,7 @@ setup(
         'mock',
         'nose',
         'testfixtures',
+        'timeout-decorator',
     ],
     setup_requires=[
         'nose>=1.3.4',

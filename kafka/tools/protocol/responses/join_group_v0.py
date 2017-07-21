@@ -32,15 +32,3 @@ class JoinGroupV0Response(BaseResponse):
              {'name': 'member_assignment', 'type': 'bytes'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        strs.append("generation_id: {0}".format(self.response[1]))
-        strs.append("group_protocol: {0}".format(self.response[2]))
-        strs.append("leader_id: {0}".format(self.response[3]))
-        strs.append("member_id: {0}".format(self.response[4]))
-        for member in self.response[5]:
-            strs.append("Member: {0}".format(member[0]))
-            strs.append("    assignment: {0}".format(member[1]))
-        return "\n".join(strs)

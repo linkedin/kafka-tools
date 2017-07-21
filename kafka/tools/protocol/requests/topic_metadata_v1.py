@@ -23,26 +23,20 @@ class TopicMetadataV1Request(BaseRequest):
     api_key = 3
     api_version = 1
     cmd = "TopicMetadata"
+    response = MetadataV1Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} [topic_name ...]\n".format(cmd, api_version) +
+                   "Description: Fetch metadata for the specified topics. If no topics are specified, all topics are requested\n")
 
     schema = [
         {'name': 'topics', 'type': 'array', 'item_type': 'string'}
     ]
 
-    def process_arguments(self, cmd_args):
-        topic_set = set()
-        for topic in cmd_args:
-            topic_set.add(topic)
-
-        # This looks weird, but it's correct. The list is the first item
-        if len(topic_set) == 0:
-            return [None]
-        return [list(topic_set)]
-
-    def response(self, correlation_id):
-        return MetadataV1Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} [topic_name ...]".format(cls.cmd, cls.api_version))
-        print("Description: Fetch metadata for the specified topics. If no topics are specified, all topics are requested")
+    def process_arguments(cls, cmd_args):
+        # This looks weird, but it's correct. The list is the first item
+        if len(cmd_args) == 0:
+            return {'topics': None}
+        else:
+            return {'topics': cmd_args}

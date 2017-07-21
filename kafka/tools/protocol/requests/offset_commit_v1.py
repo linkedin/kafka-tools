@@ -15,14 +15,50 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.offset_commit_v1 import OffsetCommitV1Response
+
+
+def _get_partition_map(partition):
+    if (len(partition) < 3) or (len(partition) > 4):
+        raise ArgumentError("Partition tuple must have 3 or 4 fields")
+
+    try:
+        pmap = {'partition': int(partition[0]),
+                'offset': int(partition[1]),
+                'timestamp': int(partition[2]),
+                'metadata': None}
+    except ValueError:
+        raise ArgumentError("Partition tuple must be exactly 3 integers and an optional string")
+
+    if len(partition) == 4:
+        pmap['metadata'] = partition[3]
+    return pmap
+
+
+def _parse_next_topic(cmd_args):
+    topic = {'topic': cmd_args.pop(0), 'partitions': []}
+    while True:
+        try:
+            cmd_args[0].index(',')
+        except (IndexError, ValueError):
+            if len(topic['partitions']) == 0:
+                raise ArgumentError("Topic is missing partitions")
+            return topic, cmd_args
+        partition = cmd_args.pop(0).split(',')
+        topic['partitions'].append(_get_partition_map(partition))
 
 
 class OffsetCommitV1Request(BaseRequest):
     api_key = 8
     api_version = 1
     cmd = "OffsetCommit"
+    response = OffsetCommitV1Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} group_id group_generation_id member_id ".format(cmd, api_version) +
+                   "(topic (partition,offset,timestamp[,metadata] ...) ...)\n" +
+                   "Description: Commit offsets for the specified consumer group\n")
 
     schema = [
         {'name': 'group_id', 'type': 'string'},
@@ -43,32 +79,20 @@ class OffsetCommitV1Request(BaseRequest):
          ]},
     ]
 
-    def process_arguments(self, cmd_args):
-        topic = None
-        topics = []
-        partitions = []
-        for item in cmd_args[3:]:
-            parts = item.split(",")
-            if len(parts) == 1:
-                if (topic is not None) and (len(partitions) > 0):
-                    topics.append([topic, partitions])
-                topic = parts[0]
-                partitions = []
-            elif len(parts) == 3:
-                partitions.append([int(parts[0]), int(parts[1]), int(parts[2]), None])
-            elif len(parts) == 4:
-                partitions.append([int(parts[0]), int(parts[1]), int(parts[2]), parts[3]])
-            else:
-                raise Exception("request format incorrect. check help.")
-
-        return [cmd_args[0], int(cmd_args[1]), cmd_args[2], topics]
-
-    def response(self, correlation_id):
-        return OffsetCommitV1Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} group_id group_generation_id member_id (topic (partition,offset,timestamp[,metadata] ...) ...)".format(
-          cls.cmd, cls.api_version))
-        print("Description: Commit offsets for the specified consumer group")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) < 5:
+            raise ArgumentError("OffsetCommitV1 requires at least 5 arguments")
+        try:
+            values = {'group_id': cmd_args.pop(0),
+                      'group_generation_id': int(cmd_args.pop(0)),
+                      'member_id': cmd_args.pop(0),
+                      'topics': []}
+        except ValueError:
+            raise ArgumentError("group_generation_id must be an integer")
+
+        while len(cmd_args) > 0:
+            topic, cmd_args = _parse_next_topic(cmd_args)
+            values['topics'].append(topic)
+
+        return values

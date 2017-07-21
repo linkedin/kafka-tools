@@ -28,11 +28,3 @@ class ControlledShutdownV1Response(BaseResponse):
              {'name': 'partition', 'type': 'int32'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("Error: {0}".format(self.response[0]))
-        for partition in self.response[1]:
-            strs.append("Partitions Remaining:")
-            strs.append("    topic: {0}, partition: {1}".format(partition[0], partition[1]))
-        return "\n".join(strs)

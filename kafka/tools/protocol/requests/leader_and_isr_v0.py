@@ -15,14 +15,62 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.leader_and_isr_v0 import LeaderAndIsrV0Response
+
+
+def _parse_argument(values, arg):
+    cparts = arg.split(",")
+    if len(cparts) == 8:
+        try:
+            values['partition_states'].append({'topic': cparts[0],
+                                               'partition': int(cparts[1]),
+                                               'controller_epoch': int(cparts[2]),
+                                               'leader': int(cparts[3]),
+                                               'leader_epoch': int(cparts[4]),
+                                               'isr': [int(x) for x in cparts[5].split("|")],
+                                               'zk_version': int(cparts[6]),
+                                               'replicas': [int(x) for x in cparts[7].split("|")]})
+        except ValueError:
+            raise ArgumentError("partition_states fields, except for topic, must be integers")
+    elif len(cparts) == 3:
+        try:
+            values['live_leaders'].append({'id': int(cparts[0]), 'host': cparts[1], 'port': int(cparts[2])})
+        except ValueError:
+            raise ArgumentError("live_leaders broker_id and port fields must be integers")
+    else:
+        raise ArgumentError("partition_states or live_leaders format incorrect. check help.")
+
+
+def _process_arguments(cmd_name, cmd_args):
+    if len(cmd_args) < 4:
+        raise ArgumentError("{0} requires at least 4 arguments".format(cmd_name))
+
+    try:
+        values = {'controller_id': int(cmd_args[0]),
+                  'controller_epoch': int(cmd_args[1]),
+                  'partition_states': [],
+                  'live_leaders': []}
+    except ValueError:
+        raise ArgumentError("The controller_id and controller_epoch must be integers")
+
+    for csv in cmd_args[2:]:
+        _parse_argument(values, csv)
+
+    return values
 
 
 class LeaderAndIsrV0Request(BaseRequest):
     api_key = 4
     api_version = 0
     cmd = "LeaderAndIsr"
+    response = LeaderAndIsrV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} controller_id controller_epoch ".format(cmd, api_version) +
+                   "(topic,partition,controller_epoch,leader,leader_epoch,isr,zk_version,replicas ...) (broker_id,host,port ...)\n" +
+                   "             isr and replicas are a '|' separated list of broker IDs (e.g. '2|3')\n" +
+                   "Description: Send replica information to broker\n")
 
     schema = [
         {'name': 'controller_id', 'type': 'int32'},
@@ -48,32 +96,6 @@ class LeaderAndIsrV0Request(BaseRequest):
          ]},
     ]
 
-    def process_arguments(self, cmd_args):
-        if (len(cmd_args) < 4) or (not cmd_args[0].isdigit()) or (not cmd_args[1].isdigit()):
-            raise TypeError("The first two arguments must be integers, and at least one each of partition and live brokers must be provided")
-
-        partitions = []
-        brokers = []
-        for csv in cmd_args[2:]:
-            cparts = csv.split(",")
-            if len(cparts) == 8:
-                isr = [int(x) for x in cparts[5].split("|")]
-                replicas = [int(x) for x in cparts[7].split("|")]
-                brokers.append([cparts[0], int(cparts[1]), int(cparts[2]), int(cparts[3]), int(cparts[4]), isr, int(cparts[6]), replicas])
-            elif len(cparts) == 3:
-                brokers.append([int(cparts[0]), cparts[1], int(cparts[2])])
-            else:
-                raise Exception("request format incorrect. check help.")
-
-        return [int(cmd_args[0]), int(cmd_args[1]), partitions, brokers]
-
-    def response(self, correlation_id):
-        return LeaderAndIsrV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} controller_id controller_epoch (topic,partition,controller_epoch,leader,leader_epoch,isr,zk_version,replicas ...) " +
-              "(broker_id,host,port ...)".format(cls.cmd, cls.api_version))
-        print("             isr and replicas are a '|' separated list of broker IDs (e.g. '2|3')")
-        print("Description: Send replica information to broker")
+    def process_arguments(cls, cmd_args):
+        return _process_arguments("LeaderAndIsrV0", cmd_args)

@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.delete_topics_v0 import DeleteTopicsV0Response
 
 
@@ -23,26 +23,20 @@ class DeleteTopicsV0Request(BaseRequest):
     api_key = 20
     api_version = 0
     cmd = "DeleteTopics"
+    response = DeleteTopicsV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} timeout (topic_name ...)\n".format(cmd, api_version) +
+                   "Description: Delete the specified topics.\n")
 
     schema = [
         {'name': 'topics', 'type': 'array', 'item_type': 'string'},
         {'name': 'timeout', 'type': 'int32'},
     ]
 
-    def process_arguments(self, cmd_args):
-        if (len(cmd_args) < 2) or (not cmd_args[0].isdigit()):
-            raise TypeError("The first argument must be an integer, and at least one topic must be provided")
-
-        topic_set = set()
-        for topic in cmd_args[1:]:
-            topic_set.add(topic)
-        return [list(topic_set), int(cmd_args[0])]
-
-    def response(self, correlation_id):
-        return DeleteTopicsV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} timeout (topic_name ...)".format(cls.cmd, cls.api_version))
-        print("Description: Delete the specified topics.")
+    def process_arguments(cls, cmd_args):
+        if (len(cmd_args) < 2) or (not cmd_args[0].isdigit()):
+            raise ArgumentError("The first argument must be an integer, and at least one topic must be provided")
+
+        return {'topics': cmd_args[1:], 'timeout': int(cmd_args[0])}

@@ -29,11 +29,3 @@ class LeaderAndIsrV0Response(BaseResponse):
              {'name': 'error', 'type': 'int16'},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        strs.append("Partitions:")
-        for partition in self.response[1]:
-            strs.append("    topic: {0}, partition: {1}, error: {2}".format(partition[0], partition[1], partition[2]))
-        return "\n".join(strs)

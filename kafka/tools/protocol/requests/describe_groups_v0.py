@@ -23,22 +23,19 @@ class DescribeGroupsV0Request(BaseRequest):
     api_key = 15
     api_version = 0
     cmd = "DescribeGroups"
+    response = DescribeGroupsV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} [group_id ...]\n".format(cmd, api_version) +
+                   "Description: Request metadata for the specified groups, or all groups if none are provided\n")
 
     schema = [
         {'name': 'group_ids', 'type': 'array', 'item_type': 'string'},
     ]
 
-    def process_arguments(self, cmd_args):
-        group_set = set()
-        for group in cmd_args:
-            group_set.add(group)
-        return [list(group_set)]
-
-    def response(self, correlation_id):
-        return DescribeGroupsV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} [group_id ...]".format(cls.cmd, cls.api_version))
-        print("Description: Request metadata for the specified groups, or all groups if none are provided")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) > 0:
+            return {'group_ids': cmd_args}
+        else:
+            return {'group_ids': None}

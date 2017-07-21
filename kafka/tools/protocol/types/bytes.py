@@ -22,30 +22,43 @@ from kafka.tools.protocol.types.integers import Int16
 
 
 class Bytes(BaseType):
-    def _validate(self, val):
-        if val is None:
-            return True
-        if not isinstance(val, six.binary_type):
-            raise TypeError('Expected "{0}" to be {1}, got: {2}'.format(type(val), six.binary_type, repr(val)))
-        if len(val) % 2 != 0:
-            raise ValueError('String must be of even length, got {0} characters'.format(len(val)))
-        return True
+    _type = "bytes"
+
+    def _validate(self):
+        if self._value is None:
+            return
+        if not isinstance(self._value, six.binary_type):
+            raise TypeError('Expected {1}, got: {2}'.format(six.binary_type, type(self._value)))
 
     @classmethod
-    def decode(cls, byte_array):
+    def decode(cls, byte_array, schema=None):
         if len(byte_array) < 2:
             raise ValueError('Expected at least 2 bytes, only got {0}'.format(len(byte_array)))
         str_len, str_data = Int16.decode(byte_array)
         if str_len.value() == -1:
-            return cls(None), str_data
+            return cls(None, schema=cls._type), str_data
         if str_len.value() > len(str_data):
             raise ValueError('Expected {0} bytes, only got {1}'.format(str_len.value() + 2, len(byte_array)))
-        return cls(binascii.hexlify(str_data[0:str_len.value()])), str_data[str_len.value():]
+        return cls(str_data[0:str_len.value()], schema=cls._type), str_data[str_len.value():]
+
+    @classmethod
+    def from_string(cls, hex_str):
+        if hex_str is None:
+            return cls(None, schema=cls._type)
+        if not isinstance(hex_str, six.string_types):
+            raise TypeError('Expected {0}, got: {1}'.format(six.string_types, type(hex_str)))
+        if len(hex_str) % 2 != 0:
+            raise ValueError('String must be of even length, got {0} characters'.format(len(hex_str)))
+        return cls(binascii.unhexlify(hex_str), schema=cls._type)
 
     def encode(self):
         if self._value is None:
             return Int16(-1).encode()
-        str_len = Int16(len(self._value) // 2)
+        str_len = Int16(len(self._value))
+        return str_len.encode() + self._value
 
-        bytes = binascii.unhexlify(self._value)
-        return str_len.encode() + bytes
+    def __str__(self):
+        return '{0} (bytes)'.format(binascii.hexlify(self._value).decode("utf-8"))
+
+    def __repr__(self):
+        return '<Bytes length={0}>'.format(len(self._value))

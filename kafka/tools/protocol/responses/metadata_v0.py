@@ -43,17 +43,3 @@ class MetadataV0Response(BaseResponse):
               ]},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("Brokers:")
-        for broker in self.response[0]:
-            strs.append("    id: {0}, host: {1}, port: {2}".format(broker[0], broker[1], broker[2]))
-        for topic in self.response[1]:
-            strs.append("Topic: {0}".format(topic[1]))
-            strs.append("    error: {0}".format(topic[0]))
-            strs.append("    Partitions:")
-            for partition in sorted(topic[2], key=lambda partition: partition[1]):
-                strs.append("        id: {0}, error: {1}, leader: {2}, replicas: {3}, ISR: {4}".format(
-                  partition[1], partition[0], partition[2], partition[3], partition[4]))
-        return "\n".join(strs)

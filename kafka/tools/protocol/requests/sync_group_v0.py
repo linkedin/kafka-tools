@@ -15,7 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+import binascii
+
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.sync_group_v0 import SyncGroupV0Response
 
 
@@ -23,6 +25,11 @@ class SyncGroupV0Request(BaseRequest):
     api_key = 14
     api_version = 0
     cmd = "SyncGroup"
+    response = SyncGroupV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} group_id generation_id member_id member_assignments\n".format(cmd, api_version) +
+                   "Description: Sync group information after joining. Leader provides member assignments\n")
 
     schema = [
         {'name': 'group_id', 'type': 'string'},
@@ -31,14 +38,20 @@ class SyncGroupV0Request(BaseRequest):
         {'name': 'member_assignments', 'type': 'bytes'},
     ]
 
-    def process_arguments(self, cmd_args):
-        return [cmd_args[0], int(cmd_args[1]), cmd_args[2], cmd_args[3]]
-
-    def response(self, correlation_id):
-        return SyncGroupV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} group_id generation_id member_id member_assignments".format(cls.cmd, cls.api_version))
-        print("Description: Sync group information after joining. Leader provides member assignments")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) != 4:
+            raise ArgumentError("SyncGroupV0 requires exactly 4 arguments")
+
+        try:
+            member_assignments = binascii.unhexlify(cmd_args[3])
+        except:
+            raise ArgumentError("member_assignments must be a hex string")
+
+        try:
+            return {'group_id': cmd_args[0],
+                    'generation_id': int(cmd_args[1]),
+                    'member_id': cmd_args[2],
+                    'member_assignments': member_assignments}
+        except ValueError:
+            raise ArgumentError("The generation_id must be an integer")

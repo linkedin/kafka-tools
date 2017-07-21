@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.list_groups_v0 import ListGroupsV0Response
 
 
@@ -23,17 +23,16 @@ class ListGroupsV0Request(BaseRequest):
     api_key = 16
     api_version = 0
     cmd = "ListGroups"
+    response = ListGroupsV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1}\n".format(cmd, api_version) +
+                   "Description: List all consumer groups for this cluster\n")
 
     schema = []
 
-    def process_arguments(self, cmd_args):
-        return []
-
-    def response(self, correlation_id):
-        return ListGroupsV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Description: List all consumer groups for this cluster")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) != 0:
+            raise ArgumentError("ListGroupsV0 takes no arguments")
+        return {}

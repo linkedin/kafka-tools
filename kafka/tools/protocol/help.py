@@ -16,8 +16,8 @@
 # under the License.
 
 
-def show_help(request_classes, request_cmds, cmd_parts):
-    if len(cmd_parts) == 1:
+def show_help(request_classes, request_cmds, cmd_args):
+    if len(cmd_args) == 0:
         print("Commands:")
         print("    quit        Exit kafka-protocol")
         print("    help        Display this command list")
@@ -28,7 +28,7 @@ def show_help(request_classes, request_cmds, cmd_parts):
                                             ", ".join([request_classes[request][ver].cmd + "V{0}".format(ver)
                                                        for ver in sorted(request_classes[request].keys())])))
         print("\nFor more information on a request, type \"help <request>\"")
-    elif cmd_parts[1] in request_cmds:
-        request_cmds[cmd_parts[1]].show_help()
+    elif cmd_args[0] in request_cmds:
+        print(request_cmds[cmd_args[0]].help_string)
     else:
-        print("{0} is not a valid request".format(cmd_parts[1]))
+        print("{0} is not a valid request".format(cmd_args[0]))

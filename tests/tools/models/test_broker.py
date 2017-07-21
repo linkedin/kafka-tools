@@ -5,6 +5,7 @@ from mock import Mock, call, patch
 from kafka.tools.exceptions import ConfigurationException
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.topic import Topic
+from kafka.tools.protocol.types.sequences import Array
 from kafka.tools.protocol.requests.api_versions_v0 import ApiVersionsV0Request
 from kafka.tools.protocol.responses.api_versions_v0 import ApiVersionsV0Response
 
@@ -137,7 +138,7 @@ class BrokerTests(unittest.TestCase):
         # correlation_id (4), error (2), array of (api_key (2), min_version (2), max_version (2))
         mock_read_bytes.return_value = b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x01\x01\x01\x02\x02'
 
-        request = ApiVersionsV0Request([])
+        request = ApiVersionsV0Request({})
         (correlation_id, response) = self.broker.send(request)
 
         # Check that the request was encoded properly
@@ -148,13 +149,13 @@ class BrokerTests(unittest.TestCase):
         # Check that the response is what was expected to be decoded
         assert isinstance(response, ApiVersionsV0Response)
         assert response.correlation_id == 1
-        assert response.response[0] == 0
-        assert isinstance(response.response[1], list)
-        assert len(response.response[1]) == 1
-        assert len(response.response[1][0]) == 3
-        assert response.response[1][0][0] == 1
-        assert response.response[1][0][1] == 257
-        assert response.response[1][0][2] == 514
+        assert response['error'] == 0
+        assert isinstance(response['api_versions'], Array)
+        assert len(response['api_versions']) == 1
+        assert len(response['api_versions'][0]) == 3
+        assert response['api_versions'][0]['api_key'] == 1
+        assert response['api_versions'][0]['min_version'] == 257
+        assert response['api_versions'][0]['max_version'] == 514
 
         # Correlation ID must be incremented after each request
         assert self.broker._correlation_id == 2

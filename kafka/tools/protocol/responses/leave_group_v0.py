@@ -22,8 +22,3 @@ class LeaveGroupV0Response(BaseResponse):
     schema = [
         {'name': 'error', 'type': 'int16'},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("Error: {0}".format(self.response[0]))
-        return "\n".join(strs)

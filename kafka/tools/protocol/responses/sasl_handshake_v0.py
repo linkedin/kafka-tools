@@ -23,9 +23,3 @@ class SaslHandshakeV0Response(BaseResponse):
         {'name': 'error', 'type': 'int16'},
         {'name': 'enabled_mechanisms', 'type': 'array', 'item_type': 'string'},
     ]
-
-    def __str__(self):
-        strs = []
-        strs.append("error: {0}".format(self.response[0]))
-        strs.append("enabled_mechanisms: {0}".format(self.response[1]))
-        return "\n".join(strs)

@@ -5,10 +5,7 @@ from kafka.tools.protocol.help import show_help
 
 class FakeRequest:
     cmd = "FakeRequest"
-
-    @classmethod
-    def show_help(self):
-        print("Show help for FakeRequest")
+    help_string = "Show help for FakeRequest"
 
 
 class HelpTests(unittest.TestCase):

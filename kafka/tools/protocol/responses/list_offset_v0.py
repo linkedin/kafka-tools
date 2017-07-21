@@ -33,13 +33,3 @@ class ListOffsetV0Response(BaseResponse):
               ]},
          ]},
     ]
-
-    def __str__(self):
-        strs = []
-        for topic in self.response[0]:
-            strs.append("Topic: {0}".format(topic[0]))
-            for partition in topic[1]:
-                strs.append("    Partition: {0}".format(partition[0]))
-                strs.append("        error: {0}".format(partition[1]))
-                strs.append("        offsets: {0}".format(partition[2]))
-        return "\n".join(strs)

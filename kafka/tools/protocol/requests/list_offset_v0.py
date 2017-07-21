@@ -15,14 +15,41 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
+
+
+def _parse_next_topic(cmd_args):
+    topic = {'topic': cmd_args.pop(0), 'partitions': []}
+    while True:
+        try:
+            cmd_args[0].index(',')
+        except (IndexError, ValueError):
+            if len(topic['partitions']) == 0:
+                raise ArgumentError("Topic is missing partitions")
+            return topic, cmd_args
+        partition = cmd_args.pop(0).split(',')
+        if len(partition) != 3:
+            raise ArgumentError("Partition tuple must be exactly 3 integers")
+        try:
+            topic['partitions'].append({'partition': int(partition[0]),
+                                        'timestamp': int(partition[1]),
+                                        'max_num_offsets': int(partition[2])})
+        except ValueError:
+            raise ArgumentError("Partition tuple must be exactly 3 integers")
 
 
 class ListOffsetV0Request(BaseRequest):
     api_key = 2
     api_version = 0
     cmd = "ListOffset"
+    response = ListOffsetV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} replica_id (topic (partition,timestamp,max_num_offsets ...) ...)\n".format(cmd, api_version) +
+                   "             replica_id should be -1 for normal consumers\n" +
+                   "Description: Send replica information to broker\n" +
+                   "Examples:    {0}V{1} -1 ExampleTopic 0,1477613177000,1 1,-1,1 ExampleTopic2 0,-2,1\n".format(cmd, api_version))
 
     schema = [
         {'name': 'replica_id', 'type': 'int32'},
@@ -40,34 +67,18 @@ class ListOffsetV0Request(BaseRequest):
          ]},
     ]
 
-    def process_arguments(self, cmd_args):
-        if (len(cmd_args) < 3) or (not cmd_args[0].isdigit()):
-            raise TypeError("The first argument must be an integer, and at least one topic and partition must be specified")
-
-        topic = None
-        topics = []
-        partitions = []
-        for item in cmd_args[1:]:
-            parts = item.split(",")
-            if len(parts) == 1:
-                if (topic is not None) and (len(partitions) > 0):
-                    topics.append([topic, partitions])
-                topic = parts[0]
-                partitions = []
-            elif len(parts) == 3:
-                partitions.append([int(parts[0]), int(parts[1]), int(parts[2])])
-            else:
-                raise Exception("request format incorrect. check help.")
-
-        return [int(cmd_args[0]), topics]
-
-    def response(self, correlation_id):
-        return ListOffsetV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} replica_id (topic (partition,timestamp,max_num_offsets ...) ...)".format(cls.cmd, cls.api_version))
-        print("             replica_id should be -1 for normal consumers")
-        print("Description: Send replica information to broker")
-        print("Examples:    {0}V{1} -1 ExampleTopic 0,1477613177000,1 1,-1,1 ExampleTopic2 0,-2,1".format(cls.cmd, cls.api_version))
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) < 3:
+            raise ArgumentError("ListOffsetV0 requires at least 3 arguments")
+
+        try:
+            values = {'replica_id': int(cmd_args.pop(0)), 'topics': []}
+        except ValueError:
+            raise ArgumentError("The replica_id must be an integer")
+
+        while len(cmd_args) > 0:
+            topic, cmd_args = _parse_next_topic(cmd_args)
+            values['topics'].append(topic)
+
+        return values

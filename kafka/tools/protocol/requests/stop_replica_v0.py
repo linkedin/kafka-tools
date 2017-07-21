@@ -15,14 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests import BaseRequest, ArgumentError
 from kafka.tools.protocol.responses.stop_replica_v0 import StopReplicaV0Response
+
+
+def _parse_partition(item):
+    parts = item.split(",")
+    if len(parts) != 2:
+        raise ArgumentError("partitions must be specified as topic,partitions")
+
+    try:
+        return {'topic': parts[0], 'partition': int(parts[1])}
+    except ValueError:
+        raise ArgumentError("The partition must be an integer")
 
 
 class StopReplicaV0Request(BaseRequest):
     api_key = 5
     api_version = 0
     cmd = "StopReplica"
+    response = StopReplicaV0Response
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} controller_id controller_epoch delete_partitions (topic,partition ...)\n".format(cmd, api_version) +
+                   "Description: Stop the specified replicas on the broker\n")
 
     schema = [
         {'name': 'controller_id', 'type': 'int32'},
@@ -36,29 +52,20 @@ class StopReplicaV0Request(BaseRequest):
          ]},
     ]
 
-    def process_arguments(self, cmd_args):
-        if (len(cmd_args) < 4) or (not cmd_args[0].isdigit()) or (not cmd_args[1].isdigit()):
-            raise TypeError("The first two arguments must be integers, and at least one topic,partition must be provided")
-
-        delete_partitions = False
-        if cmd_args[2] in ['true', '1', 't', 'y', 'yes']:
-            delete_partitions = True
-
-        partitions = []
-        for item in cmd_args[3:]:
-            parts = item.split(",")
-            if len(parts) == 2:
-                partitions.append([parts[0], int(parts[0])])
-            else:
-                raise Exception("request format incorrect. check help.")
-
-        return [int(cmd_args[0]), int(cmd_args[1]), delete_partitions, partitions]
-
-    def response(self, correlation_id):
-        return StopReplicaV0Response(correlation_id)
-
     @classmethod
-    def show_help(cls):
-        print("Request:     {0}V{1}".format(cls.cmd, cls.api_version))
-        print("Format:      {0}V{1} controller_id controller_epoch delete_partitions (topic,partition ...)".format(cls.cmd, cls.api_version))
-        print("Description: Stop the specified replicas on the broker")
+    def process_arguments(cls, cmd_args):
+        if len(cmd_args) < 4:
+            raise ArgumentError("StopReplicaV0 requires at least 4 arguments")
+
+        try:
+            values = {'controller_id': int(cmd_args[0]),
+                      'controller_epoch': int(cmd_args[1]),
+                      'delete_partitions': cmd_args[2].lower() in ['true', '1', 't', 'y', 'yes'],
+                      'partitions': []}
+        except ValueError:
+            raise ArgumentError("The controller_id and controller_epoch must be integers")
+
+        for item in cmd_args[3:]:
+            values['partitions'].append(_parse_partition(item))
+
+        return values
