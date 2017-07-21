@@ -1,0 +1,60 @@
+kafka.tools
+====================
+
+.. toctree::
+   :maxdepth: 1
+
+   arguments
+   errors
+   help
+   types/boolean
+   types/bytes
+   types/integers
+   types/sequences
+   types/string
+   requests/api_versions_v0
+   requests/controlled_shutdown_v1
+   requests/create_topics_v0
+   requests/delete_topics_v0
+   requests/describe_groups_v0
+   requests/group_coordinator_v0
+   requests/heartbeat_v0
+   requests/join_group_v0
+   requests/leader_and_isr_v0
+   requests/leave_group_v0
+   requests/list_groups_v0
+   requests/list_offset_v0
+   requests/offset_commit_v0
+   requests/offset_commit_v1
+   requests/offset_commit_v2
+   requests/offset_fetch_v0
+   requests/offset_fetch_v1
+   requests/sasl_handshake_v0
+   requests/stop_replica_v0
+   requests/sync_group_v0
+   requests/topic_metadata_v0
+   requests/topic_metadata_v1
+   requests/update_metadata_v0
+   responses/api_versions_v0
+   responses/controlled_shutdown_v1
+   responses/create_topics_v0
+   responses/delete_topics_v0
+   responses/describe_groups_v0
+   responses/group_coordinator_v0
+   responses/heartbeat_v0
+   responses/join_group_v0
+   responses/leader_and_isr_v0
+   responses/leave_group_v0
+   responses/list_groups_v0
+   responses/list_offset_v0
+   responses/metadata_v0
+   responses/metadata_v1
+   responses/offset_commit_v0
+   responses/offset_commit_v1
+   responses/offset_commit_v2
+   responses/offset_fetch_v0
+   responses/offset_fetch_v1
+   responses/sasl_handshake_v0
+   responses/stop_replica_v0
+   responses/sync_group_v0
+   responses/update_metadata_v0
