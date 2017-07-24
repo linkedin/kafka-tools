@@ -27,6 +27,7 @@ class Partition(BaseModel):
     def __init__(self, topic, num):
         self.topic = topic
         self.num = num
+        self.leader = None
         self.replicas = []
         self.size = 0
         self.scaled_size = 0

@@ -18,30 +18,29 @@
 import time
 
 from kafka.tools.models import BaseModel
-from kafka.tools.models.partition import Partition
 
 
-class Topic(BaseModel):
+class Group(BaseModel):
     equality_attrs = ['name']
 
-    def __init__(self, name, partitions):
+    def __init__(self, name):
         self.name = name
-        self.partitions = []
         self.cluster = None
-        self.retention = 1
+        self.coordinator = None
+        self.protocol = None
+        self.members = []
         self._last_updated = time.time()
-
-        for i in range(partitions):
-            self.add_partition(Partition(self, i))
-
-    # Shallow copy - do not copy partitions (zero partitions)
-    def copy(self):
-        newtopic = Topic(self.name, 0)
-        newtopic.cluster = self.cluster
-        return newtopic
-
-    def add_partition(self, partition):
-        self.partitions.append(partition)
 
     def updated_since(self, check_time):
         return check_time >= self._last_updated
+
+
+class GroupMember(BaseModel):
+    equality_attrs = ['name']
+
+    def __init__(self, name, client_id=None, client_host=None, member_metadata=None, member_assignment=None):
+        self.name = name
+        self.client_id = client_id
+        self.client_host = client_host
+        self.member_metadata = member_metadata
+        self.member_assignment = member_assignment
