@@ -25,6 +25,10 @@ class TopicAndPartitionTests(unittest.TestCase):
         assert self.topic.partitions[0].replicas == []
         assert self.topic.partitions[0].size == 0
 
+    def test_updated_since(self):
+        self.topic._last_updated = 100
+        assert self.topic.updated_since(99)
+
     def test_topic_equality(self):
         topic2 = Topic('testTopic', 1)
         assert self.topic == topic2

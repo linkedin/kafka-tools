@@ -28,6 +28,7 @@ class Topic(BaseModel):
         self.name = name
         self.partitions = []
         self.cluster = None
+        self.internal = False
         self.retention = 1
         self._last_updated = time.time()
 
@@ -44,4 +45,4 @@ class Topic(BaseModel):
         self.partitions.append(partition)
 
     def updated_since(self, check_time):
-        return check_time >= self._last_updated
+        return check_time <= self._last_updated

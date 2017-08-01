@@ -66,13 +66,13 @@ class BaseRequest():  # pragma: no cover
         return id(self)
 
     def __len__(self):
-        return len(self._response)
+        return len(self._request)
 
     def __contains__(self, k):
-        return k in self._response
+        return k in self._request
 
     def __getitem__(self, k):
-        return self._response[k]
+        return self._request[k]
 
     def __setitem__(self, k):
         raise NotImplementedError

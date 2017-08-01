@@ -15,33 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import time
 
-from kafka.tools.models import BaseModel
-
-
-class Group(BaseModel):
-    equality_attrs = ['name']
-
-    def __init__(self, name):
-        self.name = name
-        self.cluster = None
-        self.coordinator = None
-        self.protocol = None
-        self.state = None
-        self.members = []
-        self._last_updated = time.time()
-
-    def updated_since(self, check_time):
-        return check_time <= self._last_updated
-
-
-class GroupMember(BaseModel):
-    equality_attrs = ['name']
-
-    def __init__(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
-        self.name = name
-        self.client_id = client_id
-        self.client_host = client_host
-        self.metadata = metadata
-        self.assignment = assignment
+class ClientConfiguration:
+    def __init__(self):
+        """
+        Create an empty configuration object with default values for the client
+        """
+        self.metadata_refresh = 600000

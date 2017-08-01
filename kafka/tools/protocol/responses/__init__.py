@@ -10,11 +10,19 @@ class BaseResponse():  # pragma: no cover
     def schema(self):
         pass
 
-    def __init__(self, correlation_id, byte_array):
-        self.correlation_id = correlation_id
+    @classmethod
+    def from_dict(cls, value_dict):
+        return cls(Sequence(value_dict, cls.schema))
 
-        obj, byte_array = Sequence.decode(byte_array, schema=self.schema)
-        self._response = obj
+    @classmethod
+    def from_bytes(cls, correlation_id, byte_array):
+        seq_obj, byte_array = Sequence.decode(byte_array, schema=cls.schema)
+        rv = cls(seq_obj)
+        rv.correlation_id = correlation_id
+        return rv
+
+    def __init__(self, sequence_obj):
+        self._response = sequence_obj
 
     def __hash__(self):
         return id(self)

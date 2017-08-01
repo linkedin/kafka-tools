@@ -16,16 +16,25 @@
 # under the License.
 
 
-class AssignerException(Exception):
+class KafkaToolsException(Exception):
+    errstr = "Unknown kafka-tools exception"
+
+    def __init__(self, custom_errstr=None):
+        super(KafkaToolsException, self).__init__()
+        if custom_errstr is not None:
+            self.errstr = custom_errstr
+
+    def __str__(self):
+        return self.errstr
+
+
+class AssignerException(KafkaToolsException):
     errstr = "Unknown Assigner Exception"
 
     def __init__(self, custom_errstr=None):
         super(AssignerException, self).__init__()
         if custom_errstr is not None:
             self.errstr = custom_errstr
-
-    def __str__(self):
-        return self.errstr
 
 
 class ReplicaNotFoundException(AssignerException):
@@ -62,3 +71,25 @@ class UnknownBrokerException(AssignerException):
 
 class BalanceException(AssignerException):
     errstr = "The balance module failed to satisfy the requirements"
+
+
+# Errors for the client
+class ClientError(Exception):
+    errstr = "Unknown Client error"
+
+    def __init__(self, custom_errstr=None):
+        super(ClientError, self).__init__()
+        if custom_errstr is not None:
+            self.errstr = custom_errstr
+
+
+class ConnectionError(ClientError):
+    errstr = "There was an error connecting to a Kafka broker"
+
+
+class GroupError(ClientError):
+    errstr = "There was an error getting information about a group"
+
+
+class TopicError(ClientError):
+    errstr = "There was an error getting information about a topic"

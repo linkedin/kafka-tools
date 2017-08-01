@@ -21,10 +21,7 @@ from kafka.tools.protocol.responses import BaseResponse
 class GroupCoordinatorV0Response(BaseResponse):
     schema = [
         {'name': 'error', 'type': 'int16'},
-        {'name': 'coordinator',
-         'type': [
-             {'name': 'node_id', 'type': 'int32'},
-             {'name': 'host', 'type': 'string'},
-             {'name': 'port', 'type': 'int32'},
-         ]},
+        {'name': 'node_id', 'type': 'int32'},
+        {'name': 'host', 'type': 'string'},
+        {'name': 'port', 'type': 'int32'},
     ]

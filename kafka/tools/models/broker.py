@@ -145,7 +145,7 @@ class Broker(BaseModel):
         correlation_id, response_data = Int32.decode(response_data)
 
         # Get the proper response class and parse the response
-        return correlation_id.value(), request.response(correlation_id, response_data)
+        return correlation_id.value(), request.response.from_bytes(correlation_id, response_data)
 
     def _read_bytes(self, size):
         bytes_left = size

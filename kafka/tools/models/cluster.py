@@ -62,6 +62,7 @@ class Cluster(BaseModel):
     def __init__(self, retention=1):
         self.brokers = {}
         self.topics = {}
+        self.groups = {}
         self.retention = retention
 
     @classmethod
@@ -124,6 +125,10 @@ class Cluster(BaseModel):
         topic.cluster = self
         topic.retention = self.retention
         self.topics[topic.name] = topic
+
+    def add_group(self, group):
+        group.cluster = self
+        self.groups[group.name] = group
 
     # Iterate over all the partitions in this cluster
     # Order is alphabetical by topic, numeric by partition

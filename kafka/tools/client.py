@@ -15,18 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import random
+from random import shuffle
 import time
 
-from kafka.tools.exceptions import ConnectionError, TopicError
+from kafka.tools.configuration import ClientConfiguration
+from kafka.tools.exceptions import ConnectionError, GroupError, TopicError
 from kafka.tools.protocol.errors import error_short
 from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Request
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
 from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 from kafka.tools.models.broker import Broker
+from kafka.tools.models.cluster import Cluster
 from kafka.tools.models.group import Group, GroupMember
+from kafka.tools.models.partition import Partition
 from kafka.tools.models.topic import Topic
+
 
 class Client:
     def __init__(self, hostname='localhost', port=9092, zkconnect=None, configuration=None):
@@ -50,10 +54,14 @@ class Client:
             zkconnect (string): The full hostname, port, and path to the Zookeeper data for
                 the cluster. This should be the same zkconnect string used for the broker
                 configurations.
+            configuration (ClientConfiguration): If provided, gives the settings for the
+                client (such as the refresh interval for metadata). If not provided, the
+                defaults are used.
 
         Returns:
             Client: the Client object, ready for a connect call
         """
+        self.configuration = configuration or ClientConfiguration()
         self._controller_id = None
         self._last_full_metadata = 0.0
         self._last_group_list = 0.0
@@ -78,11 +86,8 @@ class Client:
         Todo:
             * Currently assumes everything works. Need to check for failure to connect to
               ZK or bootstrap.
-
-        Raises:
-            
         """
-        if self_bootstrap_broker is not None:
+        if self._bootstrap_broker is not None:
             # Connect to the bootstrap broker
             self._bootstrap_broker.connect()
 
@@ -91,24 +96,25 @@ class Client:
             correlation_id, metadata = self._bootstrap_broker.send(req)
 
             # Add brokers and topics to cluster
-            self._controller_id = metadata['controller_id']
-            self._maybe_update_full_metadata(cache=False)
+            self._controller_id = metadata['controller_id'].value()
+            self._update_from_metadata(metadata)
+            self._last_full_metadata = time.time()
 
             # Don't need the bootstrap broker information anymore
             self._bootstrap_broker.close()
             self._bootstrap_broker = None
 
         # Connect to all brokers
-        for broker in self.cluster.brokers:
-            broker.connect()
+        for broker_id in self.cluster.brokers:
+            self.cluster.brokers[broker_id].connect()
 
-    def close():
+    def close(self):
         """
         Close connections to all brokers. The broker and topic information is retained, so
         calling connect() again will reconnect to all brokers.
         """
-        for broker in self.clusters.brokers:
-            broker.close()
+        for broker_id in self.cluster.brokers:
+            self.cluster.brokers[broker_id].close()
 
     def list_topics(self, cache=True):
         """
@@ -121,7 +127,7 @@ class Client:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
         self._maybe_update_full_metadata(cache)
-        return self.cluster.topics.keys()
+        return list(self.cluster.topics.keys())
 
     def get_topic(self, topic_name, cache=True):
         """
@@ -141,19 +147,17 @@ class Client:
         """
         try:
             topic = self.cluster.topics[topic_name]
-            force_update = (not cache) or (topic.updated_since(time.time() - self.configuration.metadata_refresh))
+            force_update = (not cache) or (not topic.updated_since(time.time() - self.configuration.metadata_refresh))
         except KeyError:
             force_update = True
 
         if force_update:
             # It doesn't matter what broker we fetch topic metadata from
             metadata = self._send_any_broker(TopicMetadataV1Request({'topics': [topic_name]}))
-            if metadata['topics'][0]['error'] != 0
-                raise TopicError(error_short(metadata['topics'][0]['error']))
+            if metadata['topics'][0]['error'].value() != 0:
+                raise TopicError(error_short(metadata['topics'][0]['error'].value()))
 
-            # Since we have broker info, update the brokers as well as the topic
-            self._update_brokers_from_metadata(metadata)
-            self._update_topics_from_metadata(metadata)
+            self._update_from_metadata(metadata)
 
         return self.cluster.topics[topic_name]
 
@@ -169,21 +173,8 @@ class Client:
             list (string): a list of valid group names in the cluster
             int: the number of brokers that failed to response
         """
-        responses = self._send_all_brokers(ListGroupsV0Request({})
-        error_counter = 0
-        for broker_id, response in responses.items():
-            if (response is None) or (response['error'] != 0):
-                error_counter += 1
-                continue
-            for group_info in ['groups']:
-                group_name = group_info['group_id']
-                if group_name not in self.cluster.groups:
-                    self.cluster.groups[group_name] = Group(group_name)
-                group = self.cluster.groups[group_name]
-                group.coordinator = self.clusters.brokers[broker_id]
-                group.protocol_type = group_info['protocol_type']
-
-        return self.cluster.groups.keys(), error_counter
+        error_counter = self._maybe_update_groups_list(cache)
+        return list(self.cluster.groups.keys()), error_counter
 
     def get_group(self, group_name, cache=True):
         """
@@ -202,15 +193,15 @@ class Client:
         """
         try:
             group = self.cluster.groups[group_name]
-            force_update = (not cache) or (group.updated_since(time.time() - self.configuration.metadata_refresh))
+            force_update = (not cache) or (not group.updated_since(time.time() - self.configuration.metadata_refresh))
         except KeyError:
             force_update = True
 
         if force_update:
             # Group detail must come from the coordinator broker
-            group_info = self._send_group_aware_request(DescribeGroupsV0Request({'group_ids': [group_name]}))
-            if group_info['groups'][0]['error'] != 0
-                raise GroupError(error_short(group_info['groups'][0]['error']))
+            group_info = self._send_group_aware_request(group_name, DescribeGroupsV0Request({'group_ids': [group_name]}))
+            if group_info['groups'][0]['error'].value() != 0:
+                raise GroupError(error_short(group_info['groups'][0]['error'].value()))
 
             self._update_groups_from_describe(group_info)
 
@@ -221,7 +212,7 @@ class Client:
     #
     # def create_topic(self):
     #     raise NotImplementedError
-    # 
+    #
     # def delete_topic(self):
     #     raise NotImplementedError
 
@@ -246,13 +237,14 @@ class Client:
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
-        broker_ids = self.cluster.brokers.keys()
+        broker_ids = list(self.cluster.brokers.keys())
+        shuffle(broker_ids)
         response = None
         while len(broker_ids) > 0:
-            broker_id = broker_ids.pop(random.randint(0, len(broker_ids) - 1))
+            broker_id = broker_ids.pop()
             try:
                 correlation_id, response = self.cluster.brokers[broker_id].send(request)
-                return metadata
+                return response
             except ConnectionError:
                 # We're going to ignore failures unless we exhaust brokers
                 pass
@@ -305,13 +297,18 @@ class Client:
                 or a failure to retrieve the coordinator information
             GroupError: If an error is returned when fetching coordinator information
         """
-        coordinator = self._send_any_broker(GroupCoordinatorV0Request({'group_id': group_name}))
-        if coordinator['error'] != 0:
-            raise GroupError(error_short(coordinator['error']))
+        response = self._send_any_broker(GroupCoordinatorV0Request({'group_id': group_name}))
+        if response['error'].value() != 0:
+            raise GroupError(error_short(response['error'].value()))
 
         if group_name not in self.cluster.groups:
             self.cluster.add_group(Group(group_name))
-        self.cluster.groups[group_name].coordinator = self.clusters.brokers[coordinator['coordinator']]
+        try:
+            self.cluster.groups[group_name].coordinator = self.cluster.brokers[response['node_id'].value()]
+        except KeyError:
+            broker = Broker(response['host'].value(), id=response['node_id'].value(), port=response['port'].value())
+            self.cluster.add_broker(broker)
+            self.cluster.groups[group_name].coordinator = broker
 
         correlation_id, response = self.cluster.groups[group_name].coordinator.send(request)
         return response
@@ -319,19 +316,24 @@ class Client:
     def _update_brokers_from_metadata(self, metadata):
         """
         Given a Metadata response (either V0 or V1), update the broker information for this
-        cluster
-
-        Todo:
-            * If the broker details change for a given ID, we should update (and disconnect)
+        cluster. We don't delete brokers because we don't know if the brokers is gone temporarily
+        (crashed or maintenance) or permanently.
 
         Args:
             metadata (MetadataV1Response): A metadata response to create or update brokers for
         """
-        for broker in metadata['brokers']:
-            if broker['node_id'] not in self.brokers:
-                b = Broker(broker['host'], id=broker['node_id'], port=broker['port'])
-                b.rack = broker['rack']
-                self.cluster.add_broker(b)
+        for b in metadata['brokers']:
+            try:
+                broker = self.cluster.brokers[b['node_id'].value()]
+                if (broker.hostname != b['host'].value()) or (broker.port != b['port'].value()):
+                    # if the hostname or port changes, close the existing connection
+                    broker.close()
+                    broker.hostname = b['host'].value()
+                    broker.port = b['port'].value()
+            except KeyError:
+                broker = Broker(b['host'].value(), id=b['node_id'].value(), port=b['port'].value())
+                self.cluster.add_broker(broker)
+            broker.rack = b['rack'].value()
 
     def _add_or_update_replica(self, partition, position, new_broker):
         """
@@ -341,7 +343,7 @@ class Client:
         Args:
             partition (Partition): The partition for which the replica is being set
             position (int): The position in the replica list for the new broker
-            new_broker (Broker): The broker that should new be at that position in the replica set
+            new_broker (Broker): The broker that should now be at that position in the replica set
         """
         if len(partition.replicas) > position:
             if partition.replicas[position] == new_broker:
@@ -349,44 +351,112 @@ class Client:
                 return
             else:
                 # New replica at this position. Swap it in
-                p.add_replica(partition.replicas[position], new_broker)
+                partition.swap_replicas(partition.replicas[position], new_broker)
         else:
             # No replica yet at this position. Add it
-            p.add_replica(new_broker, position=position)
+            partition.add_replica(new_broker, position=position)
 
-    def _update_topics_from_metadata(self, metadata):
+    def _delete_replicas_from_partition(self, partition, target_count):
+        """
+        Assure that the partition has only the specified number of replicas, deleting any extras
+
+        Args:
+            partition (Partition): the partition to check
+            target_count (int): the maximum number of replicas to retain
+        """
+        while len(partition.replicas) > target_count:
+            partition.remove_replica(partition.replicas[-1])
+
+    def _assure_topic_has_partitions(self, topic, target_count):
+        """
+        Assure that the topic has only the specified number of partitions, adding or deleting as needed
+
+        Args:
+            topic (Topic): the topic to check
+            target_count (int): the number of partitions to have
+        """
+        while len(topic.partitions) < target_count:
+            partition = Partition(topic.name, len(topic.partitions))
+            topic.add_partition(partition)
+
+        # While Kafka doesn't support partition deletion (only topics), it's possible for a topic
+        # to be deleted and recreated with a smaller partition count before we see that it's been
+        # deleted. This would look like partition deletion, so we should support it.
+        while len(topic.partitions) > target_count:
+            partition = topic.partitions.pop()
+            self._delete_replicas_from_partition(partition, 0)
+
+    def _maybe_delete_topics_not_in_metadata(self, metadata, delete):
+        """
+        If delete is True, check each topic in the cluster and delete it if it is not also in the metadata
+        response provided. This should only be used when the metadata response has a full list of all topics
+        in the cluster.
+
+        Args:
+            metadata (MetadataV1Response): a metadata response that contains the full list of topics in the
+                cluster
+            delete (boolean): If False, no action is taken
+        """
+        if not delete:
+            return
+
+        topic_list = metadata.topic_names()
+        topics_for_deletion = []
+        for topic_name in self.cluster.topics:
+            if topic_name in topic_list:
+                continue
+
+            self._assure_topic_has_partitions(self.cluster.topics[topic_name], 0)
+            topics_for_deletion.append(topic_name)
+
+        for topic_name in topics_for_deletion:
+            del self.cluster.topics[topic_name]
+
+    def _update_topics_from_metadata(self, metadata, delete=False):
         """
         Given a Metadata response (either V0 or V1 will work), update the topic information
         for this cluster.
 
-        Todo:
-            * Should we delete topics that are not in the metadata response? Maybe as an option?
-
         Args:
             metadata (MetadataV1Response): A metadata response to create or update topics for
+            delete (boolean): If True, delete topics from the cluster that are not present in the
+                metadata response
 
         Raises:
             IndexError: If the brokers in the metadata object are not defined in the cluster
         """
         for t in metadata['topics']:
-            if t['name'] not in self.cluster.topics:
-                self.cluster.add_topic(Topic(t['name'], len(t['partitions'])))
-            topic = self.cluster.topics[t['name']]
+            if t['name'].value() not in self.cluster.topics:
+                self.cluster.add_topic(Topic(t['name'].value(), len(t['partitions'])))
+            topic = self.cluster.topics[t['name'].value()]
             topic._last_updated = time.time()
 
+            self._assure_topic_has_partitions(topic, len(t['partitions']))
             for p in t['partitions']:
-                partition = topic['partitions'][p['id']]
-                partition.leader = p['leader']
-                for i, replica in p['replicas']
-                    self._add_or_update_replica(partition, i, self.cluster.brokers[replica])
+                partition = topic.partitions[p['id'].value()]
+                partition.leader = self.cluster.brokers[p['leader'].value()]
+                for i, replica in enumerate(p['replicas']):
+                    self._add_or_update_replica(partition, i, self.cluster.brokers[replica.value()])
+                self._delete_replicas_from_partition(partition, len(p['replicas']))
 
-    def _update_from_metadata(self, metadata):
+        self._maybe_delete_topics_not_in_metadata(metadata, delete)
+
+    def _update_from_metadata(self, metadata, delete=False):
+        """
+        Given a metadata response, update both the brokers and topics from it. If specified, delete the topics
+        that are not present in the provided metadata
+
+        Args:
+            metadata (MetadataV1Response): A metadata response to create or update brokers and topics for
+            delete (boolean): If True, delete topics from the cluster that are not present in the metadata response
+        """
         self._update_brokers_from_metadata(metadata)
-        self._update_topics_from_metadata(metadata)
+        self._update_topics_from_metadata(metadata, delete=delete)
 
     def _maybe_update_full_metadata(self, cache=True):
         """
-        Fetch all topic metadata from the cluster if cache is False or if the cached metadata has expired
+        Fetch all topic metadata from the cluster if cache is False or if the cached metadata has expired. The cluster
+        brokers and topics are updated with the metadata information, potentially deleting ones that no longer exist
 
         Args:
             cache (boolean): Ignore the metadata expiration and fetch from the cluster anyway
@@ -395,8 +465,62 @@ class Client:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
         if (not cache) or (self._last_full_metadata < (time.time() - self.configuration.metadata_refresh)):
-            self._update_from_metadata(self._send_any_broker(TopicMetadataV1Request({'topics': None})))
+            self._update_from_metadata(self._send_any_broker(TopicMetadataV1Request({'topics': None})), delete=True)
             self._last_full_metadata = time.time()
+
+    def _add_or_update_group(self, group_info, coordinator):
+        """
+        Given group information from a ListGroups response, assure that the group exists in the cluster as specified
+
+        Args:
+            group_info (dict): A group from a ListGroups response, which contains group_id and protocol_type keys
+            coordinator (int): The ID of the group coordinator broker
+        """
+        group_name = group_info['group_id'].value()
+        try:
+            group = self.cluster.groups[group_name]
+        except KeyError:
+            group = Group(group_name)
+            self.cluster.add_group(group)
+        group.coordinator = self.cluster.brokers[coordinator]
+        group.protocol_type = group_info['protocol_type'].value()
+
+    def _update_groups_from_lists(self, responses):
+        """
+        Given a list of ListGroups responses, make sure that all the groups are in the cluster correctly
+
+        Args:
+            responses (list): a list of ListGroupsV0Response instances from each broker
+
+        Returns:
+            int: a count of the number of responses that were not present or in error
+        """
+        error_counter = 0
+        for broker_id, response in responses.items():
+            if (response is None) or (response['error'].value() != 0):
+                error_counter += 1
+                continue
+
+            for group_info in response['groups']:
+                self._add_or_update_group(group_info, broker_id)
+
+        return error_counter
+
+    def _maybe_update_groups_list(self, cache=True):
+        """
+        Fetch lists of groups from all brokers if cache is False or if the cached group list has expired.
+
+        Args:
+            cache (boolean): Ignore the metadata expiration and fetch from the cluster anyway
+
+        Returns:
+            int: a count of the number of brokers that returned no response or error responses
+        """
+        if (not cache) or (self._last_group_list < (time.time() - self.configuration.metadata_refresh)):
+            error_counter = self._update_groups_from_lists(self._send_all_brokers(ListGroupsV0Request({})))
+            self._last_group_list = time.time()
+            return error_counter
+        return 0
 
     def _update_groups_from_describe(self, response):
         """
@@ -408,14 +532,15 @@ class Client:
             response (DescribeGroupsV0Response): A response to create or update groups for
         """
         for g in response['groups']:
-            if g['group_id'] not in self.cluster.groups:
-                self.cluster.add_group(Group(g['group_id']))
-            group = self.cluster.topics[g['group_id']]
-            group.protocol_type = g['protocol_type']
-            group.protocol = g['protocol']
-            group.members = [GroupMember(m['member_id'],
-                                         client_id=m['client_id'],
-                                         client_host=m['client_host'],
-                                         member_metadata=m['member_metadata'],
-                                         member_assignment=m['member_assignment']) for m in g['members']]
+            if g['group_id'].value() not in self.cluster.groups:
+                self.cluster.add_group(Group(g['group_id'].value()))
+            group = self.cluster.groups[g['group_id'].value()]
+            group.state = g['state'].value()
+            group.protocol_type = g['protocol_type'].value()
+            group.protocol = g['protocol'].value()
+            group.members = [GroupMember(m['member_id'].value(),
+                                         client_id=m['client_id'].value(),
+                                         client_host=m['client_host'].value(),
+                                         metadata=m['member_metadata'].value(),
+                                         assignment=m['member_assignment'].value()) for m in g['members']]
             group._last_updated = time.time()

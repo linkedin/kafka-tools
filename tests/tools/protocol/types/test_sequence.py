@@ -29,6 +29,9 @@ class SequenceTests(unittest.TestCase):
     def test_validate_schema_entry(self):
         _validate_schema_entry({'name': 'foo', 'type': 'int8'})
 
+    def test_validate_schema_entry_list_type(self):
+        _validate_schema_entry({'name': 'foo', 'type': []})
+
     def test_validate_schema_entry_name_missing(self):
         self.assertRaises(KeyError, _validate_schema_entry, {'type': 'int8'})
 

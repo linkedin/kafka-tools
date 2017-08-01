@@ -47,17 +47,16 @@ def _validate_schema_entry_type(entry_type):
 def _validate_schema_entry(entry):
     if not isinstance(entry, dict):
         raise TypeError('Expected schema entries to be dicts, not {0}'.format(type(entry)))
-    for k in ('name', 'type'):
-        if k not in entry:
-            raise KeyError('Schema entries must have a {0} key'.format(k))
-        if not isinstance(entry[k], six.string_types):
-            raise KeyError('Schema entry {0} must be a string, not {1}'.format(k, type(entry[k])))
+    if not all(k in entry for k in ('name', 'type')):
+        raise KeyError('Schema entries must have both name and type keys')
+    if not isinstance(entry['name'], six.string_types):
+        raise KeyError('Schema entry name must be a string, not {1}'.format(type(entry['name'])))
 
 
 def _validate_schema(schema):
     for entry in schema:
         _validate_schema_entry(entry)
-        if entry['type'].lower() == 'array':
+        if isinstance(entry['type'], six.string_types) and (entry['type'].lower() == 'array'):
             if 'item_type' not in entry:
                 raise KeyError('Array schema entries must have an item_type key')
             _validate_schema_entry_type(entry['item_type'])
@@ -71,9 +70,12 @@ def _evaluate_value(value, schema):
         if entry['name'] not in value:
             raise KeyError('Value is missing an entry with key "{0}"'.format(entry['name']))
         entry_schema = entry['type']
-        if entry['type'].lower() == 'array':
-            entry_schema = entry['item_type']
-        rv[entry['name']] = schema_type_map[entry['type'].lower()](value[entry['name']], entry_schema)
+        if isinstance(entry_schema, six.string_types):
+            if entry_schema.lower() == 'array':
+                entry_schema = entry['item_type']
+            rv[entry['name']] = schema_type_map[entry['type'].lower()](value[entry['name']], entry_schema)
+        else:
+            rv[entry['name']] = Sequence(value[entry['name']], entry_schema)
     return rv
 
 
