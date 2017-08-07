@@ -18,6 +18,7 @@
 import time
 
 from kafka.tools.models import BaseModel
+from kafka.tools.protocol.responses.member_assignment_v0 import MemberAssignmentV0
 
 
 class Group(BaseModel):
@@ -28,6 +29,7 @@ class Group(BaseModel):
         self.cluster = None
         self.coordinator = None
         self.protocol = None
+        self.protocol_type = None
         self.state = None
         self.members = []
         self._last_updated = time.time()
@@ -35,13 +37,46 @@ class Group(BaseModel):
     def updated_since(self, check_time):
         return check_time <= self._last_updated
 
+    def clear_members(self):
+        self.members = []
+
+    def add_member(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
+        new_member = GroupMember(name, client_id, client_host, metadata)
+        new_member.group = self
+        new_member.set_assignment(assignment)
+        self.members.append(new_member)
+
+    def subscribed_topics(self):
+        topics = set()
+        for member in self.members:
+            for topic in member.topics:
+                topics.add(topic)
+        return list(topics)
+
 
 class GroupMember(BaseModel):
     equality_attrs = ['name']
 
-    def __init__(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
+    def __init__(self, name, client_id=None, client_host=None, metadata=None):
         self.name = name
         self.client_id = client_id
         self.client_host = client_host
         self.metadata = metadata
-        self.assignment = assignment
+
+        self.group = None
+        self.assignment_data = None
+        self.user_data = None
+        self.assignment_version = None
+        self.topics = {}
+
+    def set_assignment(self, assignment_data):
+        self.assignment_data = assignment_data
+
+        if (self.group is not None) and (self.group.protocol_type == 'consumer'):
+            assignment = MemberAssignmentV0.from_bytes(0, self.assignment_data)
+            self.assignment_version = assignment['version'].value()
+            self.user_data = assignment['user_data'].value()
+            for partition in assignment['partitions']:
+                if partition['topic'].value() not in self.topics:
+                    self.topics[partition['topic'].value()] = []
+                self.topics[partition['topic'].value()].append(partition['partition'].value())

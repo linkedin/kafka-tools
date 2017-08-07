@@ -21,14 +21,15 @@ def assert_cluster_has_groups(cluster, dg):
 
         for i, gmember in enumerate(dgroup['members']):
             member = group.members[i]
+            assert member.group == group
             assert member.name == gmember['member_id'].value()
             assert member.client_id == gmember['client_id'].value()
             assert member.client_host == gmember['client_host'].value()
             assert member.metadata == gmember['member_metadata'].value()
-            assert member.assignment == gmember['member_assignment'].value()
+            assert member.assignment_data == gmember['member_assignment'].value()
 
 
-class ClientTests(unittest.TestCase):
+class GroupsTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client()
@@ -37,6 +38,14 @@ class ClientTests(unittest.TestCase):
     def test_update_groups_from_describe_create(self):
         self.client._update_groups_from_describe(self.describe_groups)
         assert_cluster_has_groups(self.client.cluster, self.describe_groups)
+
+    def test_update_groups_from_describe_assignment(self):
+        self.client._update_groups_from_describe(self.describe_groups)
+        assert_cluster_has_groups(self.client.cluster, self.describe_groups)
+
+        group = self.client.cluster.groups['testgroup']
+        assert group.members[0].topics == {'topic1': [0]}
+        assert group.members[1].topics == {'topic1': [1]}
 
     def test_update_groups_from_describe_update(self):
         self.client.cluster.add_group(Group('testgroup'))

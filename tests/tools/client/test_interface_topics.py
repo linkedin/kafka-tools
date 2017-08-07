@@ -10,7 +10,7 @@ from kafka.tools.models.topic import Topic
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 
 
-class InterfaceGroupsTests(unittest.TestCase):
+class InterfaceTopicsTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client()

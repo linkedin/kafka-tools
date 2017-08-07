@@ -1,9 +1,10 @@
 import unittest
 from mock import MagicMock
 
-from tests.tools.client.fixtures import describe_groups
+from tests.tools.client.fixtures import describe_groups, describe_groups_error
 
 from kafka.tools.client import Client
+from kafka.tools.exceptions import GroupError
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.group import Group
 from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Request
@@ -23,6 +24,7 @@ class InterfaceGroupsTests(unittest.TestCase):
         self.client.cluster.add_broker(broker)
 
         self.describe_groups = describe_groups()
+        self.describe_groups_error = describe_groups_error()
 
     def test_list_groups(self):
         self.client.cluster.add_group(Group('group2'))
@@ -79,3 +81,21 @@ class InterfaceGroupsTests(unittest.TestCase):
         assert isinstance(val, Group)
         assert val.name == 'testgroup'
         assert val.coordinator == self.client.cluster.brokers[1]
+
+    def test_get_group_error(self):
+        group = Group('badgroup')
+        group.coordinator = self.client.cluster.brokers[1]
+        self.client.cluster.add_group(group)
+
+        self.client._send_group_aware_request = MagicMock()
+        self.client._send_group_aware_request.return_value = self.describe_groups_error
+
+        self.assertRaises(GroupError, self.client.get_group, 'badgroup', cache=False)
+        self.client._send_group_aware_request.assert_called_once()
+
+    def test_get_group_nonexistent(self):
+        self.client._send_group_aware_request = MagicMock()
+        self.client._send_group_aware_request.side_effect = GroupError
+
+        self.assertRaises(GroupError, self.client.get_group, 'nonexistentgroup')
+        self.client._send_group_aware_request.assert_called_once()

@@ -69,6 +69,36 @@ class Partition(BaseModel):
         broker.partitions[position].remove(self)
         self.replicas.remove(broker)
 
+    def delete_replicas(self, target_count):
+        """
+        Assure that the partition has only the specified number of replicas, deleting any extras
+
+        Args:
+            target_count (int): the maximum number of replicas to retain
+        """
+        while len(self.replicas) > target_count:
+            self.remove_replica(self.replicas[-1])
+
+    def add_or_update_replica(self, position, new_broker):
+        """
+        Given a position and a broker, make sure the broker is in the replica
+        set for this partition at the given position.
+
+        Args:
+            position (int): The position in the replica list for the new broker
+            new_broker (Broker): The broker that should now be at that position in the replica set
+        """
+        if len(self.replicas) > position:
+            if self.replicas[position] == new_broker:
+                # No change in the replica at this position
+                return
+            else:
+                # New replica at this position. Swap it in
+                self.swap_replicas(self.replicas[position], new_broker)
+        else:
+            # No replica yet at this position. Add it
+            self.add_replica(new_broker, position=position)
+
     # Remove one broker from the replica list and replace it at the same position with another
     # This just calls add_replica and remove_replica, but we do it a lot
     def swap_replicas(self, remove_broker, add_broker):

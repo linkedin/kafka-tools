@@ -16,6 +16,7 @@
 # under the License.
 
 from random import shuffle
+import six
 import time
 
 from kafka.tools.configuration import ClientConfiguration
@@ -24,15 +25,19 @@ from kafka.tools.protocol.errors import error_short
 from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Request
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
 from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
+from kafka.tools.protocol.requests.list_offset_v0 import ListOffsetV0Request
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.cluster import Cluster
-from kafka.tools.models.group import Group, GroupMember
-from kafka.tools.models.partition import Partition
-from kafka.tools.models.topic import Topic
+from kafka.tools.models.group import Group
+from kafka.tools.models.topic import Topic, TopicOffsets
 
 
 class Client:
+    # Special timestamps for offset requests
+    OFFSET_EARLIEST = -2
+    OFFSET_LATEST = -1
+
     def __init__(self, hostname='localhost', port=9092, zkconnect=None, configuration=None):
         """
         Create a new Kafka client. There are two ways to instantiate the client:
@@ -144,6 +149,7 @@ class Client:
 
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
+            TopicError: If the topic does not exist, or there is a problem getting metadata for it
         """
         try:
             topic = self.cluster.topics[topic_name]
@@ -190,6 +196,7 @@ class Client:
 
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
+            GroupError: If the group does not exist or there is a problem fetching information for it
         """
         try:
             group = self.cluster.groups[group_name]
@@ -206,6 +213,94 @@ class Client:
             self._update_groups_from_describe(group_info)
 
         return self.cluster.groups[group_name]
+
+    def get_offsets_for_topic(self, topic_name, timestamp=OFFSET_LATEST):
+        """
+        Get the offsets for all the partitions in the specified topic. The offsets are requested at the specified
+        timestamp, which defaults to the latest offsets available (defined as the offset of the next message to be
+        produced).
+
+        Args:
+            topic_name (string or list): The name of the topic to fetch offsets for. For multiple topics, a list of
+                topics can be provided
+            timestamp (int): The timestamp (in millis) to fetch offsets at. If not specified, the default is the special
+                timestamp OFFSET_LATEST, which requests the current end of the partitions (tail). You can also specify
+                the special offset OFFSET_EARLIEST, which requests the oldest offset for each partition (head)
+
+        Return:
+            TopicOffsets: A TopicOffsets instance that contain offsets for all the partitions in the topic.
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to a broker
+            TopicError: If the topic does not exist or there is a problem getting information for it
+            OffsetError: If there is a failure retrieving offsets for the specified topic or timestamp
+            TypeError: If the timestamp is not an integer
+        """
+        return self.get_offsets_for_topics([topic_name], timestamp)[topic_name]
+
+    def get_offsets_for_topics(self, topic_list, timestamp=OFFSET_LATEST):
+        """
+        Get the offsets for all the partitions in the specified topics. The offsets are requested at the specified
+        timestamp, which defaults to the latest offsets available (defined as the offset of the next message to be
+        produced).
+
+        Args:
+            topic_list (list): a list of topic name strings to fetch offsets for.
+            timestamp (int): The timestamp (in millis) to fetch offsets at. If not specified, the default is the special
+                timestamp OFFSET_LATEST, which requests the current end of the partitions (tail). You can also specify
+                the special offset OFFSET_EARLIEST, which requests the oldest offset for each partition (head)
+
+        Return:
+            dict (string -> TopicOffsets): A dictionary mapping topic names to TopicOffsets instances that contain
+                offsets for all the partitions in the topic.
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to a broker
+            TopicError: If a topic does not exist or there is a problem getting information for it
+            OffsetError: If there is a failure retrieving offsets for the specified topic or timestamp
+            TypeError: If the timestamp is not an integer
+        """
+        if not isinstance(timestamp, six.integer_types):
+            raise TypeError("timestamp must be a valid integer")
+
+        # Get the topic information, making sure all the leadership info is current
+        self._maybe_update_metadata_for_topics(topic_list)
+
+        # Get a broker to topic-partition mapping
+        broker_to_tp = self._map_topic_partitions_to_brokers(topic_list)
+
+        request_values = {}
+        for broker_id in broker_to_tp:
+            request_values[broker_id] = {'replica_id': -1, 'topics': []}
+            for topic_name in broker_to_tp[broker_id]:
+                request_values[broker_id]['topics'].append({'topic': topic_name,
+                                                            'partitions': [{'partition': i,
+                                                                            'timestamp': timestamp,
+                                                                            'max_num_offsets': 1} for i in broker_to_tp[broker_id][topic_name]]})
+
+        return self._send_list_offsets_to_brokers(request_values)
+
+    def get_offsets_for_group(self, group_name, topic_name=None):
+        """
+        Get the latest offsets committed by the specified group. If a topic_name is specified, only the offsets for that
+        topic are returned. Otherwise, offsets for all topics that the group is subscribed to are returned.
+
+        Args:
+            group_name (string): The name of the group to fetch offsets for
+            topic_name (string or list): The name of the topic to fetch offsets for. For multiple topics, a list of
+                topics can be provided. Defaults to None, which specifies all topics that are subscribed to by the group.
+
+        Return:
+            dict (string -> TopicOffsets): A dictionary mapping topic names to TopicOffsets instances that contain
+                offsets for all the partitions in the topic. The dictionary will contain a single key if the topic_name
+                provided is not None.
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to a broker
+            GroupError: If there is a failure to get information for the specified group
+            OffsetError: If there is a failure retrieving offsets for the topic(s)
+        """
+        pass
 
     # The following interfaces are for future implementation. The names are set, but the interfaces
     # are not yet
@@ -313,6 +408,33 @@ class Client:
         correlation_id, response = self.cluster.groups[group_name].coordinator.send(request)
         return response
 
+    def _send_list_offsets_to_brokers(self, request_values):
+        """
+        Given a mapping of broker IDs to values for ListOffset requests, send the requests to all the brokers and
+        collate the responses into a mapping of topic names to TopicOffsets instances
+
+        Args:
+            request_values (dict): a mapping of broker ID (int) to value dictionaries for ListOffsets requests
+
+        Returns:
+            dict (string -> TopicOffsets): A dictionary mapping topic names to TopicOffsets instances that contain
+                offsets for all the partitions requested.
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to a broker
+            OffsetError: If there is a failure retrieving offsets
+        """
+        rv = {}
+        for broker_id in request_values:
+            correlation_id, response = self.cluster.brokers[broker_id].send(ListOffsetV0Request(request_values[broker_id]))
+            for topic in response['responses']:
+                topic_name = topic['topic'].value()
+                if topic_name not in rv:
+                    rv[topic_name] = TopicOffsets(self.cluster.topics[topic_name])
+                rv[topic_name].set_offsets_from_list(topic['partition_responses'])
+
+        return rv
+
     def _update_brokers_from_metadata(self, metadata):
         """
         Given a Metadata response (either V0 or V1), update the broker information for this
@@ -335,57 +457,6 @@ class Client:
                 self.cluster.add_broker(broker)
             broker.rack = b['rack'].value()
 
-    def _add_or_update_replica(self, partition, position, new_broker):
-        """
-        Given a Partition, a position, and a broker, make sure the broker is in the replica
-        set for the Partition at the given position.
-
-        Args:
-            partition (Partition): The partition for which the replica is being set
-            position (int): The position in the replica list for the new broker
-            new_broker (Broker): The broker that should now be at that position in the replica set
-        """
-        if len(partition.replicas) > position:
-            if partition.replicas[position] == new_broker:
-                # No change in the replica at this position
-                return
-            else:
-                # New replica at this position. Swap it in
-                partition.swap_replicas(partition.replicas[position], new_broker)
-        else:
-            # No replica yet at this position. Add it
-            partition.add_replica(new_broker, position=position)
-
-    def _delete_replicas_from_partition(self, partition, target_count):
-        """
-        Assure that the partition has only the specified number of replicas, deleting any extras
-
-        Args:
-            partition (Partition): the partition to check
-            target_count (int): the maximum number of replicas to retain
-        """
-        while len(partition.replicas) > target_count:
-            partition.remove_replica(partition.replicas[-1])
-
-    def _assure_topic_has_partitions(self, topic, target_count):
-        """
-        Assure that the topic has only the specified number of partitions, adding or deleting as needed
-
-        Args:
-            topic (Topic): the topic to check
-            target_count (int): the number of partitions to have
-        """
-        while len(topic.partitions) < target_count:
-            partition = Partition(topic.name, len(topic.partitions))
-            topic.add_partition(partition)
-
-        # While Kafka doesn't support partition deletion (only topics), it's possible for a topic
-        # to be deleted and recreated with a smaller partition count before we see that it's been
-        # deleted. This would look like partition deletion, so we should support it.
-        while len(topic.partitions) > target_count:
-            partition = topic.partitions.pop()
-            self._delete_replicas_from_partition(partition, 0)
-
     def _maybe_delete_topics_not_in_metadata(self, metadata, delete):
         """
         If delete is True, check each topic in the cluster and delete it if it is not also in the metadata
@@ -406,7 +477,7 @@ class Client:
             if topic_name in topic_list:
                 continue
 
-            self._assure_topic_has_partitions(self.cluster.topics[topic_name], 0)
+            self.cluster.topics[topic_name].assure_has_partitions(0)
             topics_for_deletion.append(topic_name)
 
         for topic_name in topics_for_deletion:
@@ -431,13 +502,13 @@ class Client:
             topic = self.cluster.topics[t['name'].value()]
             topic._last_updated = time.time()
 
-            self._assure_topic_has_partitions(topic, len(t['partitions']))
+            topic.assure_has_partitions(len(t['partitions']))
             for p in t['partitions']:
                 partition = topic.partitions[p['id'].value()]
                 partition.leader = self.cluster.brokers[p['leader'].value()]
                 for i, replica in enumerate(p['replicas']):
-                    self._add_or_update_replica(partition, i, self.cluster.brokers[replica.value()])
-                self._delete_replicas_from_partition(partition, len(p['replicas']))
+                    partition.add_or_update_replica(i, self.cluster.brokers[replica.value()])
+                partition.delete_replicas(len(p['replicas']))
 
         self._maybe_delete_topics_not_in_metadata(metadata, delete)
 
@@ -452,6 +523,28 @@ class Client:
         """
         self._update_brokers_from_metadata(metadata)
         self._update_topics_from_metadata(metadata, delete=delete)
+
+    def _maybe_update_metadata_for_topics(self, topics, cache=True):
+        """
+        Fetch metadata for the topics specified from the cluster if cache is False or if the cached metadata has expired.
+        The cluster brokers and topics are updated with the metadata information.
+
+        Args:
+            cache (boolean): Ignore the metadata expiration and fetch from the cluster anyway
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to all brokers in the cluster
+        """
+        force_update = not cache
+        for topic in topics:
+            try:
+                if not self.cluster.topics[topic].updated_since(time.time() - self.configuration.metadata_refresh):
+                    force_update = True
+            except KeyError:
+                force_update = True
+
+        if force_update:
+            self._update_from_metadata(self._send_any_broker(TopicMetadataV1Request({'topics': topics})), delete=False)
 
     def _maybe_update_full_metadata(self, cache=True):
         """
@@ -490,7 +583,7 @@ class Client:
         Given a list of ListGroups responses, make sure that all the groups are in the cluster correctly
 
         Args:
-            responses (list): a list of ListGroupsV0Response instances from each broker
+            responses (dict): a mapping of broker IDs to ListGroupsV0Response instances from each broker
 
         Returns:
             int: a count of the number of responses that were not present or in error
@@ -538,9 +631,42 @@ class Client:
             group.state = g['state'].value()
             group.protocol_type = g['protocol_type'].value()
             group.protocol = g['protocol'].value()
-            group.members = [GroupMember(m['member_id'].value(),
-                                         client_id=m['client_id'].value(),
-                                         client_host=m['client_host'].value(),
-                                         metadata=m['member_metadata'].value(),
-                                         assignment=m['member_assignment'].value()) for m in g['members']]
+            group.clear_members()
+            for m in g['members']:
+                group.add_member(m['member_id'].value(),
+                                 client_id=m['client_id'].value(),
+                                 client_host=m['client_host'].value(),
+                                 metadata=m['member_metadata'].value(),
+                                 assignment=m['member_assignment'].value())
             group._last_updated = time.time()
+
+    def _map_topic_partitions_to_brokers(self, topic_list):
+        """
+        Given a list of topics, map the topic-partitions to the leader brokers
+
+        Args:
+            topic_list (list): a list of the topic name strings to map
+
+        Returns:
+            dict: a multi-dimensional dictionary where the keys are broker IDs and the values are a dictionary where the
+                keys are topic names and the values are an array of partition IDs
+
+        Raises:
+            TopicError: if any of the topics do not exist in the cluster
+        """
+        broker_to_tp = {}
+        for topic_name in topic_list:
+            try:
+                topic = self.cluster.topics[topic_name]
+            except KeyError:
+                raise TopicError("Topic {0} does not exist in the cluster".format(topic_name))
+
+            for i, partition in enumerate(topic.partitions):
+                broker_id = partition.leader.id
+                if broker_id not in broker_to_tp:
+                    broker_to_tp[broker_id] = {}
+                if topic_name not in broker_to_tp[broker_id]:
+                    broker_to_tp[broker_id][topic_name] = []
+                broker_to_tp[broker_id][topic_name].append(i)
+
+        return broker_to_tp

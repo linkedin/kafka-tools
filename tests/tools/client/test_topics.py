@@ -5,9 +5,9 @@ from mock import MagicMock
 from tests.tools.client.fixtures import topic_metadata
 
 from kafka.tools.client import Client
+from kafka.tools.exceptions import TopicError
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.topic import Topic
-from kafka.tools.models.partition import Partition
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 
 
@@ -38,7 +38,7 @@ def assert_cluster_has_brokers(cluster, metadata):
         assert broker.rack == b['rack'].value()
 
 
-class ClientTests(unittest.TestCase):
+class TopicsTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client()
@@ -79,6 +79,52 @@ class ClientTests(unittest.TestCase):
         self.client._maybe_update_full_metadata(cache=True)
 
         assert self.client._last_full_metadata == fake_last_time
+
+    def test_maybe_update_metadata_for_topics_noupdate(self):
+        self.client._update_from_metadata(self.metadata_response)
+        self.client.cluster.topics['topic1']._last_updated = time.time()
+
+        self.client._update_from_metadata = MagicMock()
+        self.client._send_any_broker = MagicMock()
+        self.client._maybe_update_metadata_for_topics(['topic1'])
+        self.client._update_from_metadata.assert_not_called()
+
+    def test_maybe_update_metadata_for_topics_expired(self):
+        self.client._update_from_metadata(self.metadata_response)
+        self.client.cluster.topics['topic1']._last_updated = 100
+
+        self.client._update_from_metadata = MagicMock()
+        self.client._send_any_broker = MagicMock()
+        self.client._maybe_update_metadata_for_topics(['topic1'])
+        self.client._update_from_metadata.assert_called_once()
+        req = self.client._send_any_broker.call_args[0][0]
+        assert len(req['topics']) == 1
+        assert req['topics'][0].value() == 'topic1'
+
+    def test_maybe_update_metadata_for_topics_forced(self):
+        self.client._update_from_metadata(self.metadata_response)
+        self.client.cluster.topics['topic1']._last_updated = time.time()
+
+        self.client._update_from_metadata = MagicMock()
+        self.client._send_any_broker = MagicMock()
+        self.client._maybe_update_metadata_for_topics(['topic1'], cache=False)
+        self.client._update_from_metadata.assert_called_once()
+        req = self.client._send_any_broker.call_args[0][0]
+        assert len(req['topics']) == 1
+        assert req['topics'][0].value() == 'topic1'
+
+    def test_maybe_update_metadata_for_topics_nonexistent(self):
+        self.client._update_from_metadata(self.metadata_response)
+        self.client.cluster.topics['topic1']._last_updated = time.time()
+
+        self.client._update_from_metadata = MagicMock()
+        self.client._send_any_broker = MagicMock()
+        self.client._maybe_update_metadata_for_topics(['topic1', 'topic2'])
+        self.client._update_from_metadata.assert_called_once()
+        req = self.client._send_any_broker.call_args[0][0]
+        assert len(req['topics']) == 2
+        assert req['topics'][0].value() == 'topic1'
+        assert req['topics'][1].value() == 'topic2'
 
     def test_update_from_metadata(self):
         self.client._update_brokers_from_metadata = MagicMock()
@@ -147,125 +193,6 @@ class ClientTests(unittest.TestCase):
         self.client._update_topics_from_metadata(self.metadata_response)
         assert_cluster_has_topics(self.client.cluster, self.metadata_response)
 
-    def test_add_or_update_replica_nochange(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        partition = Partition('topic1', 0)
-        partition.add_replica(broker1)
-        partition.add_replica(broker2)
-
-        self.client._add_or_update_replica(partition, 0, broker1)
-        assert partition.replicas[0] == broker1
-
-    def test_add_or_update_replica_new(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        partition = Partition('topic1', 0)
-        partition.add_replica(broker1)
-        partition.add_replica(broker2)
-
-        self.client._add_or_update_replica(partition, 2, broker1)
-        assert partition.replicas[2] == broker1
-
-    def test_add_or_update_replica_swap(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        partition = Partition('topic1', 0)
-        partition.add_replica(broker1)
-        partition.add_replica(broker2)
-
-        self.client._add_or_update_replica(partition, 1, broker1)
-        assert partition.replicas[1] == broker1
-
-    def test_assure_topic_has_partitions_nochange(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 2)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-        topic.partitions[1].add_replica(broker2)
-        topic.partitions[1].add_replica(broker1)
-
-        assert len(topic.partitions) == 2
-        self.client._assure_topic_has_partitions(topic, 2)
-        assert len(topic.partitions) == 2
-
-    def test_assure_topic_has_partitions_one(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 2)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-        topic.partitions[1].add_replica(broker2)
-        topic.partitions[1].add_replica(broker1)
-
-        assert len(topic.partitions) == 2
-        self.client._assure_topic_has_partitions(topic, 1)
-        assert len(topic.partitions) == 1
-        assert topic.partitions[0].num == 0
-
-    def test_assure_topic_has_partitions_add_one(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 1)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-
-        assert len(topic.partitions) == 1
-        self.client._assure_topic_has_partitions(topic, 2)
-        assert len(topic.partitions) == 2
-        assert topic.partitions[1].num == 1
-
-    def test_assure_topic_has_partitions_all(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 2)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-        topic.partitions[1].add_replica(broker2)
-        topic.partitions[1].add_replica(broker1)
-
-        assert len(topic.partitions) == 2
-        self.client._assure_topic_has_partitions(topic, 0)
-        assert len(topic.partitions) == 0
-
-    def test_delete_replicas_from_partition_nochange(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 1)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-
-        partition = topic.partitions[0]
-        assert len(partition.replicas) == 2
-        self.client._delete_replicas_from_partition(partition, 2)
-        assert len(partition.replicas) == 2
-
-    def test_delete_replicas_from_partition_one(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 1)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-
-        partition = topic.partitions[0]
-        assert len(partition.replicas) == 2
-        self.client._delete_replicas_from_partition(partition, 1)
-        assert len(partition.replicas) == 1
-        assert partition.replicas[0] == broker1
-
-    def test_delete_replicas_from_partition_all(self):
-        broker1 = Broker('host1.example.com', id=1, port=8031)
-        broker2 = Broker('host2.example.com', id=101, port=8032)
-        topic = Topic('topic1', 1)
-        topic.partitions[0].add_replica(broker1)
-        topic.partitions[0].add_replica(broker2)
-
-        partition = topic.partitions[0]
-        assert len(partition.replicas) == 2
-        self.client._delete_replicas_from_partition(partition, 0)
-        assert len(partition.replicas) == 0
-
     def test_update_brokers_from_metadata(self):
         self.client._update_brokers_from_metadata(self.metadata_response)
         assert_cluster_has_brokers(self.client.cluster, self.metadata_response)
@@ -286,3 +213,12 @@ class ClientTests(unittest.TestCase):
         self.client._update_brokers_from_metadata(self.metadata_response)
         assert_cluster_has_brokers(self.client.cluster, self.metadata_response)
         broker1.close.assert_called_once()
+
+    def test_map_topic_partitions_to_brokers(self):
+        self.client._update_from_metadata(self.metadata_response)
+        val = self.client._map_topic_partitions_to_brokers(['topic1'])
+        assert val == {1: {'topic1': [0]}, 101: {'topic1': [1]}}
+
+    def test_map_topic_partitions_to_brokers_nonexistent(self):
+        self.client._update_from_metadata(self.metadata_response)
+        self.assertRaises(TopicError, self.client._map_topic_partitions_to_brokers, ['nosuchtopic'])

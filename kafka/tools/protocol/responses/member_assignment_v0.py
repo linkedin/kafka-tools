@@ -15,10 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from kafka.tools.protocol.responses import BaseResponse
 
-class ClientConfiguration:
-    def __init__(self):
-        """
-        Create an empty configuration object with default values for the client
-        """
-        self.metadata_refresh = 60000
+
+class MemberAssignmentV0(BaseResponse):
+    schema = [
+        {'name': 'version', 'type': 'int16'},
+        {'name': 'partitions',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'partition', 'type': 'int32'},
+         ]},
+        {'name': 'user_data', 'type': 'bytes'},
+    ]

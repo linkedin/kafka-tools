@@ -93,3 +93,7 @@ class GroupError(ClientError):
 
 class TopicError(ClientError):
     errstr = "There was an error getting information about a topic"
+
+
+class OffsetError(ClientError):
+    errstr = "There was an error fetching offsets"

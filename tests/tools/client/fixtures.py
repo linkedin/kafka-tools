@@ -1,4 +1,5 @@
 from kafka.tools.protocol.responses.list_groups_v0 import ListGroupsV0Response
+from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
 from kafka.tools.protocol.responses.describe_groups_v0 import DescribeGroupsV0Response
 from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
 from kafka.tools.protocol.responses.group_coordinator_v0 import GroupCoordinatorV0Response
@@ -8,18 +9,30 @@ def describe_groups():
     return DescribeGroupsV0Response.from_dict({'groups': [{'group_id': 'testgroup',
                                                            'error': 0,
                                                            'state': 'Stable',
-                                                           'protocol': 'testprotocol',
-                                                           'protocol_type': 'testprotocoltype',
+                                                           'protocol': 'roundrobin',
+                                                           'protocol_type': 'consumer',
                                                            'members': [{'member_id': 'testmember1',
                                                                         'client_id': 'testclientid1',
                                                                         'client_host': 'host.example.com',
                                                                         'member_metadata': b'\x90\x83\x24\xbc',
-                                                                        'member_assignment': b'\x89\x89\xac\xda'},
+                                                                        'member_assignment': b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x00\xff\xff'},
                                                                        {'member_id': 'testmember2',
                                                                         'client_id': 'testclientid2',
                                                                         'client_host': 'otherhost.example.com',
                                                                         'member_metadata': b'\x89\x34\x78\xad',
-                                                                        'member_assignment': b'\x34\x79\x8f\xbc'}]}]})
+                                                                        'member_assignment': b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\xff\xff'}
+                                                                       ]
+                                                           }]
+                                               })
+
+
+def describe_groups_error():
+    return DescribeGroupsV0Response.from_dict({'groups': [{'group_id': 'testgroup',
+                                                           'error': 16,
+                                                           'state': None,
+                                                           'protocol': None,
+                                                           'protocol_type': None,
+                                                           'members': None}]})
 
 
 def topic_metadata():
@@ -84,3 +97,23 @@ def list_groups():
 
 def list_groups_error():
     return ListGroupsV0Response.from_dict({'error': 1, 'groups': None})
+
+
+def list_offset():
+    return ListOffsetV0Response.from_dict({'responses': [{'topic': 'topic1',
+                                                          'partition_responses': [{'partition': 0,
+                                                                                   'error': 0,
+                                                                                   'offsets': [4829]},
+                                                                                  {'partition': 1,
+                                                                                   'error': 0,
+                                                                                   'offsets': [8904]}]}]})
+
+
+def list_offset_error():
+    return ListOffsetV0Response.from_dict({'responses': [{'topic': 'topic1',
+                                                          'partition_responses': [{'partition': 0,
+                                                                                   'error': 6,
+                                                                                   'offsets': None},
+                                                                                  {'partition': 1,
+                                                                                   'error': 0,
+                                                                                   'offsets': [8904]}]}]})
