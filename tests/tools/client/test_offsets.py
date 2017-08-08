@@ -50,9 +50,9 @@ class OffsetTests(unittest.TestCase):
         assert 'topic1' in val
         assert isinstance(val['topic1'], TopicOffsets)
         assert val['topic1'].topic == self.client.cluster.topics['topic1']
-        assert len(val['topic1'].partition) == 2
-        assert val['topic1'].partition[0] == 4829
-        assert val['topic1'].partition[1] == 8904
+        assert len(val['topic1'].partitions) == 2
+        assert val['topic1'].partitions[0] == 4829
+        assert val['topic1'].partitions[1] == 8904
 
     def test_send_list_offsets_to_brokers_connection_error(self):
         self.client.cluster.brokers[1].send = MagicMock()

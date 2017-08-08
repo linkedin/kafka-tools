@@ -71,11 +71,11 @@ class Topic(BaseModel):
 class TopicOffsets:
     def __init__(self, topic):
         self.topic = topic
-        self.partition = [-1 for i in range(len(topic.partitions))]
+        self.partitions = [-1 for i in range(len(topic.partitions))]
 
     def set_offsets_from_list(self, partitions):
         """
-        Given a  partition_responses object from a ListOffsets response, update the offsets
+        Given a partition_responses object from a ListOffsets response, update the offsets
         with the values in the response
 
         Args:
@@ -88,4 +88,21 @@ class TopicOffsets:
             if partition['error'].value() != 0:
                 raise OffsetError(error_short(partition['error'].value()))
 
-            self.partition[partition['partition'].value()] = partition['offsets'][0].value()
+            self.partitions[partition['partition'].value()] = partition['offsets'][0].value()
+
+    def set_offsets_from_fetch(self, partitions):
+        """
+        Given a partition_responses object from a OffsetFetch response, update the offsets
+        with the values in the response
+
+        Args:
+            partitions (Array): the partition_response object from a OffsetFetch response
+
+        Raises:
+            OffsetError: If there was a failure retrieving any of the offsets
+        """
+        for partition in partitions:
+            if partition['error'].value() != 0:
+                raise OffsetError(error_short(partition['error'].value()))
+
+            self.partitions[partition['partition'].value()] = partition['offset'].value()

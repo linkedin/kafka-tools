@@ -26,6 +26,7 @@ from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Req
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
 from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
 from kafka.tools.protocol.requests.list_offset_v0 import ListOffsetV0Request
+from kafka.tools.protocol.requests.offset_fetch_v1 import OffsetFetchV1Request
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.cluster import Cluster
@@ -280,15 +281,15 @@ class Client:
 
         return self._send_list_offsets_to_brokers(request_values)
 
-    def get_offsets_for_group(self, group_name, topic_name=None):
+    def get_offsets_for_group(self, group_name, topic_list=None):
         """
         Get the latest offsets committed by the specified group. If a topic_name is specified, only the offsets for that
         topic are returned. Otherwise, offsets for all topics that the group is subscribed to are returned.
 
         Args:
             group_name (string): The name of the group to fetch offsets for
-            topic_name (string or list): The name of the topic to fetch offsets for. For multiple topics, a list of
-                topics can be provided. Defaults to None, which specifies all topics that are subscribed to by the group.
+            topic_list (list): A list of string topic names to fetch offsets for. Defaults to None, which specifies all
+                topics that are subscribed to by the group.
 
         Return:
             dict (string -> TopicOffsets): A dictionary mapping topic names to TopicOffsets instances that contain
@@ -296,11 +297,29 @@ class Client:
                 provided is not None.
 
         Raises:
-            ConnectionError: If there is a failure to send the request to a broker
+            ConnectionError: If there is a failure to send requests to brokers
+            TopicError: If the topic does not exist or there is a problem getting information for it
             GroupError: If there is a failure to get information for the specified group
             OffsetError: If there is a failure retrieving offsets for the topic(s)
         """
-        pass
+        # Get the group we're fetching offsets for (potentially updating the group information)
+        group = self.get_group(group_name)
+        fetch_topics = self._get_topics_for_group(group, topic_list)
+
+        # Get the topic information, making sure all the leadership info is current
+        self._maybe_update_metadata_for_topics(fetch_topics)
+
+        request_values = {'group_id': group_name,
+                          'topics': [{'topic': topic, 'partitions': list(range(len(self.cluster.topics[topic].partitions)))} for topic in fetch_topics]}
+        response = self._send_group_aware_request(group_name, OffsetFetchV1Request(request_values))
+
+        rv = {}
+        for topic in response['responses']:
+            topic_name = topic['topic'].value()
+            rv[topic_name] = TopicOffsets(self.cluster.topics[topic_name])
+            rv[topic_name].set_offsets_from_fetch(topic['partition_responses'])
+
+        return rv
 
     # The following interfaces are for future implementation. The names are set, but the interfaces
     # are not yet
@@ -670,3 +689,29 @@ class Client:
                 broker_to_tp[broker_id][topic_name].append(i)
 
         return broker_to_tp
+
+    def _get_topics_for_group(self, group, topic_list):
+        """
+        Given a group and a topic_list, return a list of topics that is either the topic list provided or the list of
+        all topics consumed by the group
+
+        Args:
+            group (Group): the group for which the topic list is being created
+            topic_list (list): A list of string topic names to fetch offsets for. Defaults to None, which specifies all
+                topics that are subscribed to by the group.
+
+        Returns:
+             list: a list of topics to be fetched for the group
+
+        Raises:
+            GroupError: if the topic list is empty
+        """
+        # We'll be nice. If the topic_list is a string, convert it to a list
+        if isinstance(topic_list, six.string_types):
+            topic_list = [topic_list]
+
+        # Create a list of topics to fetch
+        fetch_topics = topic_list or group.subscribed_topics()
+        if len(fetch_topics) == 0:
+            raise GroupError("No topic specified is consumed by the group")
+        return fetch_topics

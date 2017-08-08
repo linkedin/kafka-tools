@@ -1,5 +1,6 @@
 from kafka.tools.protocol.responses.list_groups_v0 import ListGroupsV0Response
 from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
+from kafka.tools.protocol.responses.offset_fetch_v1 import OffsetFetchV1Response
 from kafka.tools.protocol.responses.describe_groups_v0 import DescribeGroupsV0Response
 from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
 from kafka.tools.protocol.responses.group_coordinator_v0 import GroupCoordinatorV0Response
@@ -117,3 +118,27 @@ def list_offset_error():
                                                                                   {'partition': 1,
                                                                                    'error': 0,
                                                                                    'offsets': [8904]}]}]})
+
+
+def offset_fetch():
+    return OffsetFetchV1Response.from_dict({'responses': [{'topic': 'topic1',
+                                                           'partition_responses': [{'partition': 0,
+                                                                                    'metadata': None,
+                                                                                    'error': 0,
+                                                                                    'offset': 4829},
+                                                                                   {'partition': 1,
+                                                                                    'metadata': None,
+                                                                                    'error': 0,
+                                                                                    'offset': 8904}]}]})
+
+
+def offset_fetch_error():
+    return OffsetFetchV1Response.from_dict({'responses': [{'topic': 'topic1',
+                                                           'partition_responses': [{'partition': 0,
+                                                                                    'error': 6,
+                                                                                    'metadata': None,
+                                                                                    'offset': -1},
+                                                                                   {'partition': 1,
+                                                                                    'metadata': None,
+                                                                                    'error': 0,
+                                                                                    'offset': 8904}]}]})

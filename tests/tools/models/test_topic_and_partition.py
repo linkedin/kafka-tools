@@ -1,6 +1,6 @@
 import unittest
 
-from tests.tools.client.fixtures import list_offset, list_offset_error
+from tests.tools.client.fixtures import list_offset, list_offset_error, offset_fetch, offset_fetch_error
 
 from kafka.tools.exceptions import OffsetError
 from kafka.tools.models.cluster import Cluster
@@ -258,8 +258,8 @@ class TopicAndPartitionTests(unittest.TestCase):
         topic = Topic('topic1', 3)
         offsets = TopicOffsets(topic)
         assert offsets.topic == topic
-        assert len(offsets.partition) == 3
-        for partition in offsets.partition:
+        assert len(offsets.partitions) == 3
+        for partition in offsets.partitions:
             assert partition == -1
 
     def test_set_offsets_from_list(self):
@@ -268,8 +268,8 @@ class TopicAndPartitionTests(unittest.TestCase):
         response = list_offset()
 
         offsets.set_offsets_from_list(response['responses'][0]['partition_responses'])
-        assert offsets.partition[0] == 4829
-        assert offsets.partition[1] == 8904
+        assert offsets.partitions[0] == 4829
+        assert offsets.partitions[1] == 8904
 
     def test_set_offsets_from_list_error(self):
         topic = Topic('topic1', 2)
@@ -277,3 +277,19 @@ class TopicAndPartitionTests(unittest.TestCase):
         response = list_offset_error()
 
         self.assertRaises(OffsetError, offsets.set_offsets_from_list, response['responses'][0]['partition_responses'])
+
+    def test_set_offsets_from_fetch(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = offset_fetch()
+
+        offsets.set_offsets_from_fetch(response['responses'][0]['partition_responses'])
+        assert offsets.partitions[0] == 4829
+        assert offsets.partitions[1] == 8904
+
+    def test_set_offsets_from_fetch_error(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = offset_fetch_error()
+
+        self.assertRaises(OffsetError, offsets.set_offsets_from_fetch, response['responses'][0]['partition_responses'])

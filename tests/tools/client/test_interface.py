@@ -1,9 +1,10 @@
 import unittest
-from mock import MagicMock
+from mock import MagicMock, patch
 
 from tests.tools.client.fixtures import topic_metadata
 
 from kafka.tools.client import Client
+from kafka.tools.models.cluster import Cluster
 from kafka.tools.models.broker import Broker
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 
@@ -58,3 +59,12 @@ class GenericInterfaceTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once_with(self.metadata_response)
         for broker_id in self.client.cluster.brokers:
             self.client.cluster.brokers[broker_id].connect.assert_called_once()
+
+    @patch.object(Cluster, 'create_from_zookeeper')
+    def test_create_with_zkconnect(self, mock_create):
+        mock_create.return_value = self.client.cluster
+
+        test_client = Client(zkconnect='zk.example.com:2181/kafka-cluster')
+
+        assert test_client.cluster == self.client.cluster
+        mock_create.assert_called_once_with(zkconnect='zk.example.com:2181/kafka-cluster')
