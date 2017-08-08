@@ -1,5 +1,6 @@
 from kafka.tools.protocol.responses.list_groups_v0 import ListGroupsV0Response
 from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
+from kafka.tools.protocol.responses.offset_commit_v2 import OffsetCommitV2Response
 from kafka.tools.protocol.responses.offset_fetch_v1 import OffsetFetchV1Response
 from kafka.tools.protocol.responses.describe_groups_v0 import DescribeGroupsV0Response
 from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
@@ -142,3 +143,11 @@ def offset_fetch_error():
                                                                                     'metadata': None,
                                                                                     'error': 0,
                                                                                     'offset': 8904}]}]})
+
+
+def offset_commit_response():
+    return OffsetCommitV2Response.from_dict({'responses': [{'topic': 'topic1',
+                                                            'partition_responses': [{'partition': 0,
+                                                                                     'error': 0},
+                                                                                    {'partition': 1,
+                                                                                     'error': 16}]}]})

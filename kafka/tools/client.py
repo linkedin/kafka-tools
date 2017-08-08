@@ -16,6 +16,7 @@
 # under the License.
 
 from random import shuffle
+import collections
 import six
 import time
 
@@ -26,6 +27,7 @@ from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Req
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
 from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
 from kafka.tools.protocol.requests.list_offset_v0 import ListOffsetV0Request
+from kafka.tools.protocol.requests.offset_commit_v2 import OffsetCommitV2Request
 from kafka.tools.protocol.requests.offset_fetch_v1 import OffsetFetchV1Request
 from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Request
 from kafka.tools.models.broker import Broker
@@ -321,6 +323,41 @@ class Client:
 
         return rv
 
+    def set_offsets_for_group(self, group_name, topic_offsets):
+        """
+        Given a group name and a list of topics and offsets, write the offsets as the latest for the group. This can only
+        be done if the consumer is an old consumer (committing to Kafka), or if it is a new consumer in the "Empty"
+        state (i.e. not running)
+
+        Args:
+            group_name (string): the name of the consumer group to set offsets for
+            topic_offsets (list): a list of TopicOffsets objects which describe the topics and offsets to set
+
+        Returns:
+            dict (string -> list): a map of topic names to a list of error code responses for each partition. Error code
+                0 indicates no error.
+
+        Raises:
+            ConnectionError: If there is a failure to send requests to brokers
+            TypeError: if the topic_offsets argument is not properly formatted
+            GroupError: If the group is not in the "Empty" state (if it is a new consumer), or if the group coordinator
+                is unavailable
+        """
+        if isinstance(topic_offsets, six.string_types) or (not isinstance(topic_offsets, collections.Sequence)):
+            raise TypeError("topic_offsets argument is not a list")
+
+        # Get the group we're setting offsets for (potentially updating the group information)
+        group = self.get_group(group_name)
+        if group.state is not None and group.state not in ('Empty', 'Dead'):
+            raise GroupError("The consumer group must be in the 'Empty' or 'Dead' state to set offsets, not '{0}'".format(group.state))
+
+        # Get the topic information, making sure all the leadership info is current
+        fetch_topics = [offsets.topic.name for offsets in topic_offsets]
+        self._maybe_update_metadata_for_topics(fetch_topics)
+
+        response = self._send_set_offset_request(group_name, topic_offsets)
+        return self._parse_set_offset_response(response)
+
     # The following interfaces are for future implementation. The names are set, but the interfaces
     # are not yet
     #
@@ -451,6 +488,33 @@ class Client:
                 if topic_name not in rv:
                     rv[topic_name] = TopicOffsets(self.cluster.topics[topic_name])
                 rv[topic_name].set_offsets_from_list(topic['partition_responses'])
+
+        return rv
+
+    def _send_set_offset_request(self, group_name, topic_offsets):
+        request = {'group_id': group_name,
+                   'group_generation_id': -1,
+                   'member_id': '',
+                   'retention_time': -1,
+                   'topics': []}
+        for offset in topic_offsets:
+            if not (isinstance(offset, TopicOffsets) and isinstance(offset.topic, Topic)):
+                raise TypeError("TopicOffsets objects are not properly formed")
+
+            request['topics'].append({'topic': offset.topic.name,
+                                      'partitions': [{'partition': p_num,
+                                                      'offset': p_offset,
+                                                      'metadata': None} for p_num, p_offset in enumerate(offset.partitions)]})
+
+        return self._send_group_aware_request(group_name, OffsetCommitV2Request(request))
+
+    def _parse_set_offset_response(self, response):
+        rv = {}
+        for topic in response['responses']:
+            topic_name = topic['topic'].value()
+            rv[topic_name] = [-1] * len(topic['partition_responses'])
+            for partition in topic['partition_responses']:
+                rv[topic_name][partition['partition'].value()] = partition['error'].value()
 
         return rv
 
