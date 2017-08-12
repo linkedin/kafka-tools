@@ -21,7 +21,7 @@ import socket
 
 from kafka.tools import log
 from kafka.tools.models import BaseModel
-from kafka.tools.exceptions import ConfigurationException
+from kafka.tools.exceptions import ConfigurationException, ConnectionError
 from kafka.tools.protocol.types.integers import Int16, Int32
 from kafka.tools.protocol.types.string import String
 from kafka.tools.utilities import json_loads
@@ -41,13 +41,9 @@ class Broker(BaseModel):
         self.timestamp = None
         self.cluster = None
         self.partitions = {}
+        self._sock = sock
 
         self._correlation_id = 1
-
-        if sock is None:
-            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        else:
-            self._sock = sock
 
     @classmethod
     def create_from_json(cls, broker_id, jsondata):
@@ -100,9 +96,21 @@ class Broker(BaseModel):
     def num_partitions(self):
         return sum([len(self.partitions[pos]) for pos in self.partitions], 0)
 
-    def connect(self):
-        log.info("Connecting to {0} on port {1} using PLAINTEXT".format(self.hostname, self.port))
-        self._sock.connect((self.hostname, self.port))
+    def _get_socket(self, sslcontext):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if sslcontext is not None:
+            sock = sslcontext.wrap_socket(sock, server_hostname=self.hostname)
+        return sock
+
+    def connect(self, sslcontext=None):
+        protocol = 'SSL' if sslcontext is not None else 'PLAINTEXT'
+        log.info("Connecting to {0} on port {1} using {2}".format(self.hostname, self.port, protocol))
+        try:
+            self._sock = self._sock or self._get_socket(sslcontext)
+            self._sock.connect((self.hostname, self.port))
+        except socket.error as e:
+            log.error("Cannot connect to broker {0}:{1}: {2}".format(self.hostname, self.port, e))
+            raise ConnectionError("Cannot connect to broker {0}:{1}: {2}".format(self.hostname, self.port, e))
 
     def close(self):
         log.info("Disconnecting from {0}".format(self.hostname))
@@ -154,10 +162,11 @@ class Broker(BaseModel):
         while bytes_left:
             try:
                 data = self._sock.recv(min(bytes_left, 4096))
-                if data == b'':
-                    raise socket.error("Not enough data to read message -- did server kill socket?")
             except socket.error:
                 raise socket.error("Unable to receive data from Kafka")
+
+            if data == b'':
+                raise socket.error("Not enough data to read message -- did server kill socket?")
 
             bytes_left -= len(data)
             responses.append(data)

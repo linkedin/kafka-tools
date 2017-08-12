@@ -21,7 +21,7 @@ import six
 import time
 
 from kafka.tools.configuration import ClientConfiguration
-from kafka.tools.exceptions import ConnectionError, GroupError, TopicError
+from kafka.tools.exceptions import ConnectionError, GroupError, TopicError, ConfigurationError
 from kafka.tools.protocol.errors import error_short
 from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Request
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
@@ -41,80 +41,82 @@ class Client:
     OFFSET_EARLIEST = -2
     OFFSET_LATEST = -1
 
-    def __init__(self, hostname='localhost', port=9092, zkconnect=None, configuration=None):
+    def __init__(self, **kwargs):
         """
         Create a new Kafka client. There are two ways to instantiate the client:
-            1) Specify a hostname and port. This will be used as a bootstrap broker, which
-               is connected to in order to fetch metadata for the cluster, which will populate
-               a full list of brokers and topics.
+            1) Provide a ClientConfiguration object with configuration=obj. This specifies all the configuration options
+               for the client, or uses the defaults in ClientConfiguration. If the configuration keyword argument is
+               present, all other arguments are ignored
 
-            2) Specify a zkconnect string. This is the path to the Zookeeper data for the
-               cluster. The data will be crawled to populate the broker and topic list from
-               there.
+            2) Provide keyword arguments that will be passed to create a new ClientConfiguration object. If the
+               configuration keyword argument is not provided, this is the option that is chosen.
 
-        In either case, only the data is populated, and the bootstrap broker and Zookeeper
-        connection are disconnected afterwards. In order to use the client, you must then
-        call the connect method to connect to the discovered brokers.
+        The client will not be connected, either using the broker_list or the zkconnect option, until the connect()
+        method is called
 
         Args:
-            hostname (string): The hostname of a bootstrap broker to connect to
-            port (int): The port number to connect to on the bootstrap broker
-            zkconnect (string): The full hostname, port, and path to the Zookeeper data for
-                the cluster. This should be the same zkconnect string used for the broker
-                configurations.
-            configuration (ClientConfiguration): If provided, gives the settings for the
-                client (such as the refresh interval for metadata). If not provided, the
-                defaults are used.
+            configuration (ClientConfiguration): a ClientConfiguration object to specify client settings
+            kwargs: keyword arguments that are passed to create a new ClientConfiguration object
 
         Returns:
             Client: the Client object, ready for a connect call
         """
-        self.configuration = configuration or ClientConfiguration()
+        if 'configuration' in kwargs:
+            if not isinstance(kwargs['configuration'], ClientConfiguration):
+                raise ConfigurationError("configuration object is not an instance of ClientConfiguration")
+            self.configuration = kwargs['configuration']
+        else:
+            self.configuration = ClientConfiguration(**kwargs)
+
         self._controller_id = None
         self._last_full_metadata = 0.0
         self._last_group_list = 0.0
-
-        if zkconnect is not None:
-            # This will get topic and partition information, as well as a full broker list
-            self.cluster = Cluster.create_from_zookeeper(zkconnect=zkconnect)
-            self._bootstrap_broker = None
-            self._last_full_metadata = time.time()
-        else:
-            self.cluster = Cluster()
-            self._bootstrap_broker = Broker(hostname, port=port)
+        self.cluster = Cluster()
 
     def connect(self):
         """
-        Connect to the all cluster brokers and populate topic and partition information. If
-        the client was created with a zkconnect string, the broker and topic information is
-        already present and all that is done is to connect to the brokers. Otherwise, connect
-        to the bootstrap broker specified and fetch the broker and topic metadata for the
-        cluster.
+        Connect to the all cluster brokers and populate topic and partition information. If the client was created with
+        a zkconnect string, first we connect to Zookeeper to bootstrap the broker and topic information from there,
+        and then the client connects to all brokers in the cluster. Otherwise, connect to the bootstrap broker
+        specified and fetch the broker and topic metadata for the cluster.
 
         Todo:
             * Currently assumes everything works. Need to check for failure to connect to
               ZK or bootstrap.
         """
-        if self._bootstrap_broker is not None:
-            # Connect to the bootstrap broker
-            self._bootstrap_broker.connect()
-
-            # Fetch topic metadata for all topics/brokers
-            req = TopicMetadataV1Request({'topics': None})
-            correlation_id, metadata = self._bootstrap_broker.send(req)
-
-            # Add brokers and topics to cluster
-            self._controller_id = metadata['controller_id'].value()
-            self._update_from_metadata(metadata)
+        if self.configuration.zkconnect is not None:
+            self.cluster = Cluster.create_from_zookeeper(zkconnect=self.configuration.zkconnect)
             self._last_full_metadata = time.time()
+        else:
+            # Connect to bootstrap brokers until we succeed or exhaust the list
+            try_brokers = list(self.configuration.broker_list)
+            while len(try_brokers) > 0:
+                bootstrap_broker = try_brokers.pop()
+                broker = Broker(bootstrap_broker[0], port=bootstrap_broker[1])
 
-            # Don't need the bootstrap broker information anymore
-            self._bootstrap_broker.close()
-            self._bootstrap_broker = None
+                # Connect to the bootstrap broker
+                try:
+                    broker.connect(sslcontext=self.configuration.ssl_context)
+                except ConnectionError:
+                    # Just skip to the next bootstrap broker
+                    continue
+
+                # Fetch topic metadata for all topics/brokers
+                req = TopicMetadataV1Request({'topics': None})
+                correlation_id, metadata = broker.send(req)
+                broker.close()
+
+                # Add brokers and topics to cluster
+                self._controller_id = metadata['controller_id'].value()
+                self._update_from_metadata(metadata)
+                self._last_full_metadata = time.time()
+
+            if len(self.cluster.brokers) == 0:
+                raise ConnectionError("Unable to bootstrap cluster information")
 
         # Connect to all brokers
         for broker_id in self.cluster.brokers:
-            self.cluster.brokers[broker_id].connect()
+            self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
 
     def close(self):
         """
@@ -348,7 +350,7 @@ class Client:
 
         # Get the group we're setting offsets for (potentially updating the group information)
         group = self.get_group(group_name)
-        if group.state is not None and group.state not in ('Empty', 'Dead'):
+        if group.state not in (None, 'Empty', 'Dead'):
             raise GroupError("The consumer group must be in the 'Empty' or 'Dead' state to set offsets, not '{0}'".format(group.state))
 
         # Get the topic information, making sure all the leadership info is current

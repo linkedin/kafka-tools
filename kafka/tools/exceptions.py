@@ -74,7 +74,7 @@ class BalanceException(AssignerException):
 
 
 # Errors for the client
-class ClientError(Exception):
+class ClientError(KafkaToolsException):
     errstr = "Unknown Client error"
 
     def __init__(self, custom_errstr=None):
@@ -97,3 +97,7 @@ class TopicError(ClientError):
 
 class OffsetError(ClientError):
     errstr = "There was an error fetching offsets"
+
+
+class ConfigurationError(ClientError):
+    errstr = "There was an error configuring the client"
