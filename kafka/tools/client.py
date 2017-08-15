@@ -85,8 +85,7 @@ class Client:
               ZK or bootstrap.
         """
         if self.configuration.zkconnect is not None:
-            self.cluster = Cluster.create_from_zookeeper(zkconnect=self.configuration.zkconnect)
-            self._last_full_metadata = time.time()
+            self.cluster = Cluster.create_from_zookeeper(zkconnect=self.configuration.zkconnect, fetch_topics=False)
         else:
             # Connect to bootstrap brokers until we succeed or exhaust the list
             try_brokers = list(self.configuration.broker_list)

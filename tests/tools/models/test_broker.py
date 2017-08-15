@@ -39,7 +39,10 @@ class BrokerTests(unittest.TestCase):
         broker2 = Broker.create_from_json(1, jsonstr)
         assert broker2.jmx_port == -1
         assert broker2.timestamp == "1466985807242"
-        assert broker2.endpoints == ["PLAINTEXT://10.0.0.10:9092"]
+        assert len(broker2.endpoints) == 1
+        assert broker2.endpoints[0].protocol == 'PLAINTEXT'
+        assert broker2.endpoints[0].hostname == '10.0.0.10'
+        assert broker2.endpoints[0].port == 9092
         assert broker2.version == 3
         assert broker2.port == 9092
 
@@ -191,4 +194,8 @@ class BrokerTests(unittest.TestCase):
 
     def test_broker_read_bytes_nodata(self):
         self.mock_sock.recv.return_value = b''
+        self.assertRaises(socket.error, self.broker._read_bytes, 4)
+
+    def test_broker_read_bytes_error(self):
+        self.mock_sock.recv.side_effect = socket.error
         self.assertRaises(socket.error, self.broker._read_bytes, 4)

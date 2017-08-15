@@ -50,7 +50,7 @@ class GenericInterfaceTests(unittest.TestCase):
         mock_create.return_value = Cluster()
         test_client = Client(zkconnect='zk.example.com:2181/kafka-cluster')
         test_client.connect()
-        mock_create.assert_called_once_with(zkconnect='zk.example.com:2181/kafka-cluster')
+        mock_create.assert_called_once_with(zkconnect='zk.example.com:2181/kafka-cluster', fetch_topics=False)
 
     @patch.object(Broker, 'connect')
     @patch.object(Broker, 'send')

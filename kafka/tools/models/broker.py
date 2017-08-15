@@ -17,6 +17,7 @@
 
 from __future__ import division
 
+import re
 import socket
 
 from kafka.tools import log
@@ -27,20 +28,45 @@ from kafka.tools.protocol.types.string import String
 from kafka.tools.utilities import json_loads
 
 
+class Endpoint(BaseModel):
+    equality_attrs = ['protocol', 'hostname', 'port']
+
+    def __init__(self, protocol, hostname, port):
+        self.protocol = protocol
+        self.hostname = hostname
+        self.port = port
+
+
 class Broker(BaseModel):
     equality_attrs = ['hostname', 'id']
 
+    @property
+    def hostname(self):
+        return self.endpoint.hostname
+
+    @hostname.setter
+    def hostname(self, value):
+        self.endpoint.hostname = value
+
+    @property
+    def port(self):
+        return self.endpoint.port
+
+    @port.setter
+    def port(self, value):
+        self.endpoint.port = value
+
     def __init__(self, hostname, id=0, port=9092, sock=None):
         self.id = id
-        self.hostname = hostname
+        self.endpoint = Endpoint('', hostname, port)
         self.jmx_port = -1
-        self.port = port
         self.rack = None
         self.version = None
         self.endpoints = None
         self.timestamp = None
         self.cluster = None
         self.partitions = {}
+        self.endpoints = []
         self._sock = sock
 
         self._correlation_id = 1
@@ -51,18 +77,28 @@ class Broker(BaseModel):
 
         # These things are required, and we can't proceed if they're not there
         try:
-            newbroker = cls(data['host'], id=broker_id)
+            newbroker = cls(data['host'], id=broker_id, port=data['port'])
         except KeyError:
             raise ConfigurationException("Cannot parse broker data in zookeeper. This version of Kafka may not be supported.")
 
         # These things are optional, and are pulled in for convenience or extra features
-        for attr in ['jmx_port', 'port', 'rack', 'version', 'endpoints', 'timestamp']:
+        for attr in ['jmx_port', 'rack', 'version', 'timestamp']:
             try:
                 setattr(newbroker, attr, data[attr])
             except KeyError:
                 pass
 
+        # if the broker defines multiple endpoints,
+        newbroker._set_endpoints(data.get('endpoints', []))
+
         return newbroker
+
+    def _set_endpoints(self, endpoints):
+        endpoint_re = re.compile("(.*)://(.*):([0-9]+)", re.I)
+        for endpoint in endpoints:
+            m = endpoint_re.match(endpoint)
+            if m is not None:
+                self.endpoints.append(Endpoint(m.group(1), m.group(2), int(m.group(3))))
 
     # Shallow copy - do not copy partitions map over
     def copy(self):
@@ -96,6 +132,12 @@ class Broker(BaseModel):
     def num_partitions(self):
         return sum([len(self.partitions[pos]) for pos in self.partitions], 0)
 
+    def get_endpoint(self, protocol):
+        for endpoint in self.endpoints:
+            if endpoint.protocol == protocol:
+                return endpoint
+        return self.endpoint
+
     def _get_socket(self, sslcontext):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if sslcontext is not None:
@@ -104,13 +146,15 @@ class Broker(BaseModel):
 
     def connect(self, sslcontext=None):
         protocol = 'SSL' if sslcontext is not None else 'PLAINTEXT'
+        endpoint = self.get_endpoint(protocol)
+
         log.info("Connecting to {0} on port {1} using {2}".format(self.hostname, self.port, protocol))
         try:
             self._sock = self._sock or self._get_socket(sslcontext)
-            self._sock.connect((self.hostname, self.port))
+            self._sock.connect((endpoint.hostname, endpoint.port))
         except socket.error as e:
-            log.error("Cannot connect to broker {0}:{1}: {2}".format(self.hostname, self.port, e))
-            raise ConnectionError("Cannot connect to broker {0}:{1}: {2}".format(self.hostname, self.port, e))
+            log.error("Cannot connect to broker {0}:{1}: {2}".format(endpoint.hostname, endpoint.port, e))
+            raise ConnectionError("Cannot connect to broker {0}:{1}: {2}".format(endpoint.hostname, endpoint.port, e))
 
     def close(self):
         log.info("Disconnecting from {0}".format(self.hostname))
