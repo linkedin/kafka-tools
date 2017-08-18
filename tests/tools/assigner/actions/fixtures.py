@@ -81,6 +81,71 @@ def set_up_cluster_4broker():
     return cluster
 
 
+def set_up_cluster_big():
+    cluster = Cluster()
+    cluster.retention = 100000
+
+    cluster.add_broker(Broker("broker100.example.com", id=10100))
+    cluster.add_broker(Broker("broker101.example.com", id=10101))
+    cluster.add_broker(Broker("broker102.example.com", id=10102))
+    cluster.add_broker(Broker("broker113.example.com", id=10113))
+    cluster.add_broker(Broker("broker114.example.com", id=10114))
+    cluster.add_broker(Broker("broker115.example.com", id=10115))
+    cluster.add_broker(Broker("broker128.example.com", id=10128))
+    cluster.add_broker(Broker("broker129.example.com", id=10129))
+    cluster.add_broker(Broker("broker130.example.com", id=10130))
+
+    cluster.brokers[10100].rack = "115"
+    cluster.brokers[10101].rack = "115"
+    cluster.brokers[10102].rack = "115"
+    cluster.brokers[10113].rack = "113"
+    cluster.brokers[10114].rack = "113"
+    cluster.brokers[10115].rack = "113"
+    cluster.brokers[10128].rack = "114"
+    cluster.brokers[10129].rack = "114"
+    cluster.brokers[10130].rack = "114"
+
+    cluster.add_topic(Topic("myTopic1", 9))
+    partition = cluster.topics["myTopic1"].partitions[0]
+    partition.add_replica(cluster.brokers[10130], 0)
+    partition.add_replica(cluster.brokers[10115], 1)
+    partition.add_replica(cluster.brokers[10100], 2)
+    partition = cluster.topics["myTopic1"].partitions[1]
+    partition.add_replica(cluster.brokers[10128], 0)
+    partition.add_replica(cluster.brokers[10101], 1)
+    partition.add_replica(cluster.brokers[10114], 2)
+    partition = cluster.topics["myTopic1"].partitions[2]
+    partition.add_replica(cluster.brokers[10100], 0)
+    partition.add_replica(cluster.brokers[10130], 1)
+    partition.add_replica(cluster.brokers[10115], 2)
+    partition = cluster.topics["myTopic1"].partitions[3]
+    partition.add_replica(cluster.brokers[10130], 0)
+    partition.add_replica(cluster.brokers[10102], 1)
+    partition.add_replica(cluster.brokers[10113], 2)
+    partition = cluster.topics["myTopic1"].partitions[4]
+    partition.add_replica(cluster.brokers[10101], 0)
+    partition.add_replica(cluster.brokers[10113], 1)
+    partition.add_replica(cluster.brokers[10128], 2)
+    partition = cluster.topics["myTopic1"].partitions[5]
+    partition.add_replica(cluster.brokers[10113], 0)
+    partition.add_replica(cluster.brokers[10128], 1)
+    partition.add_replica(cluster.brokers[10102], 2)
+    partition = cluster.topics["myTopic1"].partitions[6]
+    partition.add_replica(cluster.brokers[10129], 0)
+    partition.add_replica(cluster.brokers[10115], 1)
+    partition.add_replica(cluster.brokers[10101], 2)
+    partition = cluster.topics["myTopic1"].partitions[7]
+    partition.add_replica(cluster.brokers[10102], 0)
+    partition.add_replica(cluster.brokers[10114], 1)
+    partition.add_replica(cluster.brokers[10129], 2)
+    partition = cluster.topics["myTopic1"].partitions[8]
+    partition.add_replica(cluster.brokers[10100], 0)
+    partition.add_replica(cluster.brokers[10115], 1)
+    partition.add_replica(cluster.brokers[10130], 2)
+
+    return cluster
+
+
 def set_up_subparser():
     aparser = argparse.ArgumentParser(prog='kafka-assigner', description='Rejigger Kafka cluster partitions')
     subparsers = aparser.add_subparsers(help='Select manipulation module to use')
