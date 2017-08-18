@@ -72,6 +72,7 @@ class Client:
         self._last_full_metadata = 0.0
         self._last_group_list = 0.0
         self.cluster = Cluster()
+        self._connected = False
 
     def connect(self):
         """
@@ -116,14 +117,16 @@ class Client:
         # Connect to all brokers
         for broker_id in self.cluster.brokers:
             self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
+        self._connected = True
 
     def close(self):
         """
-        Close connections to all brokers. The broker and topic information is retained, so
-        calling connect() again will reconnect to all brokers.
+        Close connections to all brokers. The configuration information is retained, so calling connect() again will
+        reconnect to all brokers.
         """
         for broker_id in self.cluster.brokers:
             self.cluster.brokers[broker_id].close()
+        self._connected = False
 
     def list_topics(self, cache=True):
         """
@@ -135,6 +138,7 @@ class Client:
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
+        self._raise_if_not_connected()
         self._maybe_update_full_metadata(cache)
         return list(self.cluster.topics.keys())
 
@@ -155,6 +159,7 @@ class Client:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
             TopicError: If the topic does not exist, or there is a problem getting metadata for it
         """
+        self._raise_if_not_connected()
         try:
             topic = self.cluster.topics[topic_name]
             force_update = (not cache) or (not topic.updated_since(time.time() - self.configuration.metadata_refresh))
@@ -183,6 +188,7 @@ class Client:
             list (string): a list of valid group names in the cluster
             int: the number of brokers that failed to response
         """
+        self._raise_if_not_connected()
         error_counter = self._maybe_update_groups_list(cache)
         return list(self.cluster.groups.keys()), error_counter
 
@@ -202,6 +208,7 @@ class Client:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
             GroupError: If the group does not exist or there is a problem fetching information for it
         """
+        self._raise_if_not_connected()
         try:
             group = self.cluster.groups[group_name]
             force_update = (not cache) or (not group.updated_since(time.time() - self.configuration.metadata_refresh))
@@ -264,6 +271,7 @@ class Client:
             OffsetError: If there is a failure retrieving offsets for the specified topic or timestamp
             TypeError: If the timestamp is not an integer
         """
+        self._raise_if_not_connected()
         if not isinstance(timestamp, six.integer_types):
             raise TypeError("timestamp must be a valid integer")
 
@@ -305,6 +313,8 @@ class Client:
             GroupError: If there is a failure to get information for the specified group
             OffsetError: If there is a failure retrieving offsets for the topic(s)
         """
+        self._raise_if_not_connected()
+
         # Get the group we're fetching offsets for (potentially updating the group information)
         group = self.get_group(group_name)
         fetch_topics = self._get_topics_for_group(group, topic_list)
@@ -344,6 +354,7 @@ class Client:
             GroupError: If the group is not in the "Empty" state (if it is a new consumer), or if the group coordinator
                 is unavailable
         """
+        self._raise_if_not_connected()
         if isinstance(topic_offsets, six.string_types) or (not isinstance(topic_offsets, collections.Sequence)):
             raise TypeError("topic_offsets argument is not a list")
 
@@ -374,6 +385,10 @@ class Client:
     # Everything below this point is methods that are not exposed, and are helpers for the
     # actual exposed interfaces.
     ##########################################################################
+
+    def _raise_if_not_connected(self):
+        if not self._connected:
+            raise ConnectionError("The client is not yet connected")
 
     def _send_any_broker(self, request):
         """

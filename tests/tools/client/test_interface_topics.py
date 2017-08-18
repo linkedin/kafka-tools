@@ -14,6 +14,7 @@ class InterfaceTopicsTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client()
+        self.client._connected = True
 
         # Two brokers for the client
         broker = Broker('host1.example.com', id=1, port=8031)

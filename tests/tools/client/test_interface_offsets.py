@@ -14,6 +14,7 @@ class InterfaceOffsetsTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client()
+        self.client._connected = True
 
         # Get the broker and topic from a metadata update
         self.client._update_from_metadata(topic_metadata())

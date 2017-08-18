@@ -14,6 +14,7 @@ class GenericInterfaceTests(unittest.TestCase):
     def setUp(self):
         # Dummy client for testing - we're not going to connect that bootstrap broker
         self.client = Client(broker_list='broker1.example.com:9091,broker2.example.com:9092')
+        self.client._connected = True
         self.metadata_response = topic_metadata()
 
     def test_close(self):
