@@ -77,10 +77,6 @@ class ActionBalanceEven(ActionBalanceModule):
                     partition = topic.partitions[pnum]
 
                     for pos in range(len(partition.replicas)):
-                        # Current placement is fine (or low). Leave the replica where it is
-                        if pmap[pos][partition.replicas[pos].id] <= target:
-                            continue
-
                         # Find a new replica for the partition at this position
                         for bid in pmap[pos]:
                             if pmap[pos][bid] >= target:
