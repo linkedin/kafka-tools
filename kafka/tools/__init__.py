@@ -27,7 +27,7 @@ bulletproof. Currently, we only setup logging, since it's used by everything.
 
 formatter = logging.Formatter('[%(levelname)s] %(message)s')
 
-ch = logging.StreamHandler(sys.stdout)
+ch = logging.StreamHandler(sys.stderr)
 ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 
