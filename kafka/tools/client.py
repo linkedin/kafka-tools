@@ -16,6 +16,7 @@
 # under the License.
 
 from random import shuffle
+from threading import RLock
 import collections
 import six
 import time
@@ -34,6 +35,7 @@ from kafka.tools.models.broker import Broker
 from kafka.tools.models.cluster import Cluster
 from kafka.tools.models.group import Group
 from kafka.tools.models.topic import Topic, TopicOffsets
+from kafka.tools.utilities import synchronized
 
 
 class Client:
@@ -73,7 +75,9 @@ class Client:
         self._last_group_list = 0.0
         self.cluster = Cluster()
         self._connected = False
+        self._lock = RLock()
 
+    @synchronized
     def connect(self):
         """
         Connect to the all cluster brokers and populate topic and partition information. If the client was created with
@@ -119,6 +123,7 @@ class Client:
             self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
         self._connected = True
 
+    @synchronized
     def close(self):
         """
         Close connections to all brokers. The configuration information is retained, so calling connect() again will
@@ -128,6 +133,7 @@ class Client:
             self.cluster.brokers[broker_id].close()
         self._connected = False
 
+    @synchronized
     def list_topics(self, cache=True):
         """
         Get a list of all topics in the cluster
@@ -142,6 +148,7 @@ class Client:
         self._maybe_update_full_metadata(cache)
         return list(self.cluster.topics.keys())
 
+    @synchronized
     def get_topic(self, topic_name, cache=True):
         """
         Get information on a topic in the cluster. If cache is True, used cached topic metadata
@@ -176,6 +183,7 @@ class Client:
 
         return self.cluster.topics[topic_name]
 
+    @synchronized
     def list_groups(self, cache=True):
         """
         Get a list of all topics in the cluster. This is done by sending a ListGroups request to
@@ -192,6 +200,7 @@ class Client:
         error_counter = self._maybe_update_groups_list(cache)
         return list(self.cluster.groups.keys()), error_counter
 
+    @synchronized
     def get_group(self, group_name, cache=True):
         """
         Get information on a group in the cluster. If cache is True, used cached group information
@@ -225,6 +234,7 @@ class Client:
 
         return self.cluster.groups[group_name]
 
+    @synchronized
     def get_offsets_for_topic(self, topic_name, timestamp=OFFSET_LATEST):
         """
         Get the offsets for all the partitions in the specified topic. The offsets are requested at the specified
@@ -249,6 +259,7 @@ class Client:
         """
         return self.get_offsets_for_topics([topic_name], timestamp)[topic_name]
 
+    @synchronized
     def get_offsets_for_topics(self, topic_list, timestamp=OFFSET_LATEST):
         """
         Get the offsets for all the partitions in the specified topics. The offsets are requested at the specified
@@ -292,6 +303,7 @@ class Client:
 
         return self._send_list_offsets_to_brokers(request_values)
 
+    @synchronized
     def get_offsets_for_group(self, group_name, topic_list=None):
         """
         Get the latest offsets committed by the specified group. If a topic_name is specified, only the offsets for that
@@ -334,6 +346,7 @@ class Client:
 
         return rv
 
+    @synchronized
     def set_offsets_for_group(self, group_name, topic_offsets):
         """
         Given a group name and a list of topics and offsets, write the offsets as the latest for the group. This can only
@@ -419,6 +432,32 @@ class Client:
         # If we exhausted all the brokers, we have a serious problem
         raise ConnectionError("Failed to send request to any broker")
 
+    def _send_some_brokers(self, requests, ignore_errors=True):
+        """
+        Sends a request to one or more brokers. The responses are returned mapped to the broker that
+        they were retrieved from
+
+        Args:
+            request (int -> BaseRequest): A dictionary, where keys are integer broker IDs and the values are valid
+                request objects that inherit from BaseRequest.
+
+        Returns:
+            dict (int -> BaseResponse): A map of broker IDs to response instances (inherited from
+                BaseResponse). Failed requests are represented with a value of None
+        """
+        responses = {}
+        for broker_id in requests:
+            try:
+                correlation_id, response = self.cluster.brokers[broker_id].send(requests[broker_id])
+            except ConnectionError:
+                if ignore_errors:
+                    # Individual broker failures are OK, as we'll represent them with a None value
+                    response = None
+                else:
+                    raise
+            responses[broker_id] = response
+        return responses
+
     def _send_all_brokers(self, request):
         """
         Sends a request to all brokers. The responses are returned mapped to the broker that
@@ -431,15 +470,10 @@ class Client:
             dict (int -> BaseResponse): A map of broker IDs to response instances (inherited from
                 BaseResponse). Failed requests are represented with a value of None
         """
-        responses = {}
+        requests = {}
         for broker_id in self.cluster.brokers:
-            try:
-                correlation_id, response = self.cluster.brokers[broker_id].send(request)
-            except ConnectionError:
-                # Individual broker failures are OK, as we'll represent them with a None value
-                response = None
-            responses[broker_id] = response
-        return responses
+            requests[broker_id] = request
+        return self._send_some_brokers(requests)
 
     def _send_group_aware_request(self, group_name, request):
         """
@@ -496,9 +530,14 @@ class Client:
             ConnectionError: If there is a failure to send the request to a broker
             OffsetError: If there is a failure retrieving offsets
         """
-        rv = {}
+        requests = {}
         for broker_id in request_values:
-            correlation_id, response = self.cluster.brokers[broker_id].send(ListOffsetV0Request(request_values[broker_id]))
+            requests[broker_id] = ListOffsetV0Request(request_values[broker_id])
+        responses = self._send_some_brokers(requests, ignore_errors=False)
+
+        rv = {}
+        for broker_id in responses:
+            response = responses[broker_id]
             for topic in response['responses']:
                 topic_name = topic['topic'].value()
                 if topic_name not in rv:
