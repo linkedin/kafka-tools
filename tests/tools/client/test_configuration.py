@@ -39,6 +39,12 @@ class ConfigurationTests(unittest.TestCase):
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh='foo')
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh=-1)
 
+    def test_broker_threads(self):
+        config = ClientConfiguration(broker_threads=31)
+        assert config.broker_threads == 31
+        self.assertRaises(TypeError, ClientConfiguration, broker_threads='foo')
+        self.assertRaises(TypeError, ClientConfiguration, broker_threads=-1)
+
     def test_broker_list(self):
         config = ClientConfiguration(broker_list='broker1.example.com:9091,broker2.example.com:9092')
         assert config.broker_list == [('broker1.example.com', 9091), ('broker2.example.com', 9092)]

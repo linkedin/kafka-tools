@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from multiprocessing.pool import ThreadPool
 from random import shuffle
 from threading import RLock
 import collections
@@ -403,6 +404,23 @@ class Client:
         if not self._connected:
             raise ConnectionError("The client is not yet connected")
 
+    def _send_to_broker(self, broker_id, request):
+        """
+        Given a broker ID and a request, send the request to that broker and return the response
+
+        Args:
+            broker_id (int): The ID of a broker in the cluster
+            request (BaseRequest): A valid request object that inherits from BaseRequest
+
+        Returns:
+            BaseResponse: An instance of the response class associated with the request
+
+        Raises:
+            ConnectionError: If there is a failure to send the request to all brokers in the cluster
+        """
+        correlation_id, response = self.cluster.brokers[broker_id].send(request)
+        return response
+
     def _send_any_broker(self, request):
         """
         Sends a request to any broker. This can be used for requests that do not require a
@@ -419,12 +437,10 @@ class Client:
         """
         broker_ids = list(self.cluster.brokers.keys())
         shuffle(broker_ids)
-        response = None
         while len(broker_ids) > 0:
             broker_id = broker_ids.pop()
             try:
-                correlation_id, response = self.cluster.brokers[broker_id].send(request)
-                return response
+                return self._send_to_broker(broker_id, request)
             except ConnectionError:
                 # We're going to ignore failures unless we exhaust brokers
                 pass
@@ -435,7 +451,7 @@ class Client:
     def _send_some_brokers(self, requests, ignore_errors=True):
         """
         Sends a request to one or more brokers. The responses are returned mapped to the broker that
-        they were retrieved from
+        they were retrieved from. This method uses a thread pool to parallelize sends.
 
         Args:
             request (int -> BaseRequest): A dictionary, where keys are integer broker IDs and the values are valid
@@ -445,17 +461,23 @@ class Client:
             dict (int -> BaseResponse): A map of broker IDs to response instances (inherited from
                 BaseResponse). Failed requests are represented with a value of None
         """
-        responses = {}
+        results = {}
+        pool = ThreadPool(processes=self.configuration.broker_threads)
         for broker_id in requests:
+            results[broker_id] = pool.apply_async(self._send_to_broker, (broker_id, requests[broker_id]))
+        pool.close()
+        pool.join()
+
+        responses = {}
+        for broker_id in results:
             try:
-                correlation_id, response = self.cluster.brokers[broker_id].send(requests[broker_id])
+                responses[broker_id] = results[broker_id].get()
             except ConnectionError:
                 if ignore_errors:
                     # Individual broker failures are OK, as we'll represent them with a None value
-                    response = None
+                    responses[broker_id] = None
                 else:
                     raise
-            responses[broker_id] = response
         return responses
 
     def _send_all_brokers(self, request):

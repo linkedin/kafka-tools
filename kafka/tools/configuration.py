@@ -180,6 +180,17 @@ class ClientConfiguration(object):
             raise TypeError("metadata_refresh must be a positive integer")
         self._metadata_refresh = value
 
+    @property
+    def broker_threads(self):
+        """How many threads to use in a pool for broker connections"""
+        return getattr(self, '_broker_threads', 20)
+
+    @broker_threads.setter
+    def broker_threads(self, value):
+        if not (isinstance(value, six.integer_types) and (value > 0)):
+            raise TypeError("broker_threads must be a positive integer")
+        self._broker_threads = value
+
     def __init__(self, **kwargs):
         """
         Create a configuration object, setting any provided options. Either broker_list or zkconnect (but not both)
