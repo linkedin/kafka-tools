@@ -72,11 +72,6 @@ class BalanceException(AssignerException):
 class ClientError(KafkaToolsException):
     errstr = "Unknown Client error"
 
-    def __init__(self, custom_errstr=None):
-        super(ClientError, self).__init__()
-        if custom_errstr is not None:
-            self.errstr = custom_errstr
-
 
 class ConnectionError(ClientError):
     errstr = "There was an error connecting to a Kafka broker"
