@@ -4,6 +4,7 @@ from kafka.tools.protocol.responses.offset_commit_v2 import OffsetCommitV2Respon
 from kafka.tools.protocol.responses.offset_fetch_v1 import OffsetFetchV1Response
 from kafka.tools.protocol.responses.describe_groups_v0 import DescribeGroupsV0Response
 from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.responses.metadata_v0 import MetadataV0Response
 from kafka.tools.protocol.responses.group_coordinator_v0 import GroupCoordinatorV0Response
 
 
@@ -39,6 +40,31 @@ def describe_groups_error():
 
 def topic_metadata():
     return MetadataV1Response.from_dict({'brokers': [{'node_id': 1,
+                                                      'host': 'host1.example.com',
+                                                      'port': 8031,
+                                                      'rack': 'rack1'},
+                                                     {'node_id': 101,
+                                                      'host': 'host2.example.com',
+                                                      'port': 8032,
+                                                      'rack': 'rack2'}],
+                                         'controller_id': 1,
+                                         'topics': [{'error': 0,
+                                                     'name': 'topic1',
+                                                     'internal': False,
+                                                     'partitions': [{'error': 0,
+                                                                     'id': 0,
+                                                                     'leader': 1,
+                                                                     'replicas': [101, 1],
+                                                                     'isrs': [101, 1]},
+                                                                    {'error': 0,
+                                                                     'id': 1,
+                                                                     'leader': 101,
+                                                                     'replicas': [101, 1],
+                                                                     'isrs': [1, 101]}]}]})
+
+
+def topic_metadata_v0():
+    return MetadataV0Response.from_dict({'brokers': [{'node_id': 1,
                                                       'host': 'host1.example.com',
                                                       'port': 8031,
                                                       'rack': 'rack1'},

@@ -176,8 +176,7 @@ class ClientConfiguration(object):
 
     @metadata_refresh.setter
     def metadata_refresh(self, value):
-        if not (isinstance(value, six.integer_types) and (value > 0)):
-            raise TypeError("metadata_refresh must be a positive integer")
+        raise_if_not_positive_integer("metadata_refresh", value)
         self._metadata_refresh = value
 
     @property
@@ -187,9 +186,14 @@ class ClientConfiguration(object):
 
     @broker_threads.setter
     def broker_threads(self, value):
-        if not (isinstance(value, six.integer_types) and (value > 0)):
-            raise TypeError("broker_threads must be a positive integer")
+        raise_if_not_positive_integer("broker_threads", value)
         self._broker_threads = value
+
+    def _set_attributes(self, **kwargs):
+        for key in kwargs:
+            if not hasattr(self, key):
+                raise ConfigurationError("Invalid configuration specified: {0}".format(key))
+            setattr(self, key, kwargs[key])
 
     def __init__(self, **kwargs):
         """
@@ -202,11 +206,7 @@ class ClientConfiguration(object):
         """
         if ('zkconnect' in kwargs) and ('broker_list' in kwargs):
             raise ConfigurationError("Only one of zkconnect and broker_list may be provided")
-
-        for key in kwargs:
-            if not hasattr(self, key):
-                raise ConfigurationError("Invalid configuration specified: {0}".format(key))
-            setattr(self, key, kwargs[key])
+        self._set_attributes(**kwargs)
 
         # Create the SSL context if we are going to enable TLS
         self.ssl_context = self._create_ssl_context() if self.enable_tls else None
@@ -236,3 +236,8 @@ class ClientConfiguration(object):
             raise ConfigurationError("Unable to configure SSL Context: {0}".format(e))
 
         return context
+
+
+def raise_if_not_positive_integer(attr_name, value):
+    if not (isinstance(value, six.integer_types) and (value > 0)):
+        raise TypeError("{0} must be a positive integer".format(attr_name))

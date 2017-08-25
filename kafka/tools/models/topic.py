@@ -20,7 +20,7 @@ import time
 from kafka.tools.exceptions import OffsetError
 from kafka.tools.models import BaseModel
 from kafka.tools.models.partition import Partition
-from kafka.tools.protocol.errors import error_short
+from kafka.tools.utilities import raise_if_error
 
 
 class Topic(BaseModel):
@@ -85,9 +85,7 @@ class TopicOffsets:
             OffsetError: If there was a failure retrieving any of the offsets
         """
         for partition in partitions:
-            if partition['error'].value() != 0:
-                raise OffsetError(error_short(partition['error'].value()))
-
+            raise_if_error(OffsetError, partition['error'])
             self.partitions[partition['partition'].value()] = partition['offsets'][0].value()
 
     def set_offsets_from_fetch(self, partitions):
@@ -102,7 +100,5 @@ class TopicOffsets:
             OffsetError: If there was a failure retrieving any of the offsets
         """
         for partition in partitions:
-            if partition['error'].value() != 0:
-                raise OffsetError(error_short(partition['error'].value()))
-
+            raise_if_error(OffsetError, partition['error'])
             self.partitions[partition['partition'].value()] = partition['offset'].value()

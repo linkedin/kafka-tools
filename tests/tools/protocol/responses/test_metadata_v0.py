@@ -1,11 +1,11 @@
 import unittest
 
-from tests.tools.client.fixtures import topic_metadata
+from tests.tools.client.fixtures import topic_metadata_v0
 
 
-class MetadataV1ResponseTest(unittest.TestCase):
+class MetadataV0ResponseTest(unittest.TestCase):
     def setUp(self):
-        self.metadata = topic_metadata()
+        self.metadata = topic_metadata_v0()
 
     def test_topic_names(self):
         val = self.metadata.topic_names()

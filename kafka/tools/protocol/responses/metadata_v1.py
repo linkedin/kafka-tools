@@ -15,10 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses import BaseResponse
+from kafka.tools.protocol.responses.metadata_v0 import MetadataV0Response
 
 
-class MetadataV1Response(BaseResponse):
+class MetadataV1Response(MetadataV0Response):
     schema = [
         {'name': 'brokers',
          'type': 'array',
@@ -46,9 +46,3 @@ class MetadataV1Response(BaseResponse):
               ]},
          ]},
     ]
-
-    def topic_names(self):
-        return [t['name'].value() for t in self._response['topics']]
-
-    def broker_ids(self):
-        return [b['node_id'].value() for b in self._response['brokers']]

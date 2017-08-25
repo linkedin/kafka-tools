@@ -50,7 +50,7 @@ def _validate_schema_entry(entry):
     if not all(k in entry for k in ('name', 'type')):
         raise KeyError('Schema entries must have both name and type keys')
     if not isinstance(entry['name'], six.string_types):
-        raise KeyError('Schema entry name must be a string, not {1}'.format(type(entry['name'])))
+        raise TypeError('Schema entry name must be a string, not {0}'.format(type(entry['name'])))
 
 
 def _validate_schema(schema):

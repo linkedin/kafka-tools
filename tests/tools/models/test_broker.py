@@ -34,6 +34,15 @@ class BrokerTests(unittest.TestCase):
         assert broker2.hostname == '10.0.0.10'
         assert broker2.partitions == {}
 
+    def test_broker_get_endpoint(self):
+        jsonstr = ('{"jmx_port":-1,"timestamp":"1466985807242","endpoints":["PLAINTEXT://10.0.0.10:9092", "SSL://10.0.0.10:2834"],'
+                   '"host":"10.0.0.10","version":3,"port":9092}')
+        broker = Broker.create_from_json(1, jsonstr)
+        endpoint = broker.get_endpoint("SSL")
+        assert endpoint.protocol == "SSL"
+        assert endpoint.hostname == "10.0.0.10"
+        assert endpoint.port == 2834
+
     def test_broker_create_from_json_extended(self):
         jsonstr = '{"jmx_port":-1,"timestamp":"1466985807242","endpoints":["PLAINTEXT://10.0.0.10:9092"],"host":"10.0.0.10","version":3,"port":9092}'
         broker2 = Broker.create_from_json(1, jsonstr)

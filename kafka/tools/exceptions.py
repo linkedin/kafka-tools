@@ -31,11 +31,6 @@ class KafkaToolsException(Exception):
 class AssignerException(KafkaToolsException):
     errstr = "Unknown Assigner Exception"
 
-    def __init__(self, custom_errstr=None):
-        super(AssignerException, self).__init__()
-        if custom_errstr is not None:
-            self.errstr = custom_errstr
-
 
 class ReplicaNotFoundException(AssignerException):
     errstr = "The specified replica is not present in the partition"

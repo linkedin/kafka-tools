@@ -25,6 +25,7 @@ class SequenceTests(unittest.TestCase):
 
     def test_validate_schema_entry_type_badtype(self):
         self.assertRaises(TypeError, _validate_schema_entry_type, 'nonexistant_type')
+        self.assertRaises(TypeError, _validate_schema_entry_type, 1)
 
     def test_validate_schema_entry(self):
         _validate_schema_entry({'name': 'foo', 'type': 'int8'})
@@ -34,6 +35,9 @@ class SequenceTests(unittest.TestCase):
 
     def test_validate_schema_entry_name_missing(self):
         self.assertRaises(KeyError, _validate_schema_entry, {'type': 'int8'})
+
+    def test_validate_schema_entry_bad_name(self):
+        self.assertRaises(TypeError, _validate_schema_entry, {'name': 1, 'type': 'int8'})
 
     def test_validate_schema_entry_type_missing(self):
         self.assertRaises(KeyError, _validate_schema_entry, {'name': 'foo'})
@@ -77,6 +81,13 @@ class SequenceTests(unittest.TestCase):
         assert isinstance(val['foo'], Array)
         assert len(val['foo']) == 1
         assert val['foo'][0].value() == 3
+
+    def test_evaluate_value_sequence(self):
+        val = _evaluate_value({'foo': {'bar': 3}}, [{'name': 'foo', 'type': [{'name': 'bar', 'type': 'int8'}]}])
+        assert 'foo' in val
+        assert len(val['foo']) == 1
+        assert 'bar' in val['foo']
+        assert val['foo']['bar'].value() == 3
 
     def test_evaluate_value_novalue(self):
         self.assertRaises(KeyError, _evaluate_value, {'bar': 3}, [{'name': 'foo', 'type': 'int8'}])
@@ -133,6 +144,13 @@ class SequenceTests(unittest.TestCase):
         assert obj['bar'][0].value() == 123
         assert isinstance(obj['bar'][1], Int8)
         assert obj['bar'][1].value() == 91
+
+    def test_encode(self):
+        obj, remaining_bytes = Sequence.decode(b'{', [{'name': 'foo', 'type': 'int8'}])
+        assert remaining_bytes == b''
+
+        val = obj.encode()
+        assert val == b'{'
 
     def test_iterator(self):
         value_dict = {}

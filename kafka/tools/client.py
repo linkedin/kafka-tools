@@ -24,7 +24,6 @@ import time
 
 from kafka.tools.configuration import ClientConfiguration
 from kafka.tools.exceptions import ConnectionError, GroupError, TopicError, ConfigurationError
-from kafka.tools.protocol.errors import error_short
 from kafka.tools.protocol.requests.describe_groups_v0 import DescribeGroupsV0Request
 from kafka.tools.protocol.requests.group_coordinator_v0 import GroupCoordinatorV0Request
 from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
@@ -36,7 +35,7 @@ from kafka.tools.models.broker import Broker
 from kafka.tools.models.cluster import Cluster
 from kafka.tools.models.group import Group
 from kafka.tools.models.topic import Topic, TopicOffsets
-from kafka.tools.utilities import synchronized
+from kafka.tools.utilities import synchronized, raise_if_error
 
 
 class Client:
@@ -92,37 +91,19 @@ class Client:
         """
         if self.configuration.zkconnect is not None:
             self.cluster = Cluster.create_from_zookeeper(zkconnect=self.configuration.zkconnect, fetch_topics=False)
+            self._connected = True
         else:
             # Connect to bootstrap brokers until we succeed or exhaust the list
             try_brokers = list(self.configuration.broker_list)
-            while len(try_brokers) > 0:
-                bootstrap_broker = try_brokers.pop()
-                broker = Broker(bootstrap_broker[0], port=bootstrap_broker[1])
+            self._connected = False
+            while (len(try_brokers) > 0) and not self._connected:
+                self._connected = self._maybe_bootstrap_cluster(try_brokers.pop())
 
-                # Connect to the bootstrap broker
-                try:
-                    broker.connect(sslcontext=self.configuration.ssl_context)
-                except ConnectionError:
-                    # Just skip to the next bootstrap broker
-                    continue
-
-                # Fetch topic metadata for all topics/brokers
-                req = TopicMetadataV1Request({'topics': None})
-                correlation_id, metadata = broker.send(req)
-                broker.close()
-
-                # Add brokers and topics to cluster
-                self._controller_id = metadata['controller_id'].value()
-                self._update_from_metadata(metadata)
-                self._last_full_metadata = time.time()
-
-            if len(self.cluster.brokers) == 0:
+            if not self._connected:
                 raise ConnectionError("Unable to bootstrap cluster information")
 
         # Connect to all brokers
-        for broker_id in self.cluster.brokers:
-            self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
-        self._connected = True
+        self._connect_all_brokers()
 
     @synchronized
     def close(self):
@@ -177,8 +158,7 @@ class Client:
         if force_update:
             # It doesn't matter what broker we fetch topic metadata from
             metadata = self._send_any_broker(TopicMetadataV1Request({'topics': [topic_name]}))
-            if metadata['topics'][0]['error'].value() != 0:
-                raise TopicError(error_short(metadata['topics'][0]['error'].value()))
+            raise_if_error(TopicError, metadata['topics'][0]['error'])
 
             self._update_from_metadata(metadata)
 
@@ -228,8 +208,7 @@ class Client:
         if force_update:
             # Group detail must come from the coordinator broker
             group_info = self._send_group_aware_request(group_name, DescribeGroupsV0Request({'group_ids': [group_name]}))
-            if group_info['groups'][0]['error'].value() != 0:
-                raise GroupError(error_short(group_info['groups'][0]['error'].value()))
+            raise_if_error(GroupError, group_info['groups'][0]['error'])
 
             self._update_groups_from_describe(group_info)
 
@@ -404,6 +383,31 @@ class Client:
         if not self._connected:
             raise ConnectionError("The client is not yet connected")
 
+    def _maybe_bootstrap_cluster(self, broker_port):
+        """Attempt to bootstrap the cluster information using the given broker"""
+        broker = Broker(broker_port[0], port=broker_port[1])
+
+        try:
+            broker.connect(sslcontext=self.configuration.ssl_context)
+        except ConnectionError:
+            # Just skip to the next bootstrap broker
+            return False
+
+        # Fetch topic metadata for all topics/brokers
+        req = TopicMetadataV1Request({'topics': None})
+        correlation_id, metadata = broker.send(req)
+        broker.close()
+
+        # Add brokers and topics to cluster
+        self._controller_id = metadata['controller_id'].value()
+        self._update_from_metadata(metadata)
+        self._last_full_metadata = time.time()
+        return True
+
+    def _connect_all_brokers(self):
+        for broker_id in self.cluster.brokers:
+            self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
+
     def _send_to_broker(self, broker_id, request):
         """
         Given a broker ID and a request, send the request to that broker and return the response
@@ -521,8 +525,7 @@ class Client:
             GroupError: If an error is returned when fetching coordinator information
         """
         response = self._send_any_broker(GroupCoordinatorV0Request({'group_id': group_name}))
-        if response['error'].value() != 0:
-            raise GroupError(error_short(response['error'].value()))
+        raise_if_error(GroupError, response['error'])
 
         if group_name not in self.cluster.groups:
             self.cluster.add_group(Group(group_name))
@@ -822,12 +825,7 @@ class Client:
                 raise TopicError("Topic {0} does not exist in the cluster".format(topic_name))
 
             for i, partition in enumerate(topic.partitions):
-                broker_id = partition.leader.id
-                if broker_id not in broker_to_tp:
-                    broker_to_tp[broker_id] = {}
-                if topic_name not in broker_to_tp[broker_id]:
-                    broker_to_tp[broker_id][topic_name] = []
-                broker_to_tp[broker_id][topic_name].append(i)
+                broker_to_tp.setdefault(partition.leader.id, {}).setdefault(topic_name, []).append(i)
 
         return broker_to_tp
 

@@ -22,6 +22,7 @@ import os
 from functools import wraps
 
 from kafka.tools.exceptions import ConfigurationException
+from kafka.tools.protocol.errors import error_short
 
 
 def is_exec_file(fname):
@@ -105,3 +106,8 @@ def synchronized(item):
         with self._lock:
             return item(self, *args, **kwargs)
     return wrapper
+
+
+def raise_if_error(klass, errnum):
+    if errnum.value() != 0:
+        raise klass(error_short(errnum.value()))

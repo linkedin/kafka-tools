@@ -55,7 +55,7 @@ class OffsetFetchV0Request(BaseRequest):
     @classmethod
     def process_arguments(cls, cmd_args):
         if len(cmd_args) < 2:
-            raise ArgumentError("OffsetFetchV0 requires at least 2 arguments")
+            raise ArgumentError("OffsetFetchV{0} requires at least 2 arguments".format(cls.api_version))
         values = {'group_id': cmd_args[0], 'topics': []}
 
         for topic_set in cmd_args[1:]:
