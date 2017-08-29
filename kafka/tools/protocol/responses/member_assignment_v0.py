@@ -18,10 +18,14 @@
 from kafka.tools.protocol.responses import BaseResponse
 
 
-class GroupCoordinatorV0Response(BaseResponse):
+class MemberAssignmentV0(BaseResponse):
     schema = [
-        {'name': 'error', 'type': 'int16'},
-        {'name': 'node_id', 'type': 'int32'},
-        {'name': 'host', 'type': 'string'},
-        {'name': 'port', 'type': 'int32'},
+        {'name': 'version', 'type': 'int16'},
+        {'name': 'partitions',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'partition', 'type': 'int32'},
+         ]},
+        {'name': 'user_data', 'type': 'bytes'},
     ]

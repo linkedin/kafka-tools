@@ -29,7 +29,7 @@ class Bytes(BaseType):
         if self._value is None:
             return
         if not isinstance(self._value, six.binary_type):
-            raise TypeError('Expected {1}, got: {2}'.format(six.binary_type, type(self._value)))
+            raise TypeError('Expected {0}, got: {1}'.format(six.binary_type, type(self._value)))
 
     @classmethod
     def decode(cls, byte_array, schema=None):

@@ -1,9 +1,11 @@
 import os
+import threading
+import time
 import unittest
 
 from mock import patch
 
-from kafka.tools.utilities import is_exec_file, get_tools_path, check_java_home, find_path_containing, json_loads
+from kafka.tools.utilities import is_exec_file, get_tools_path, check_java_home, find_path_containing, json_loads, synchronized
 from kafka.tools.exceptions import ConfigurationException
 
 
@@ -85,3 +87,44 @@ class ToolsTests(unittest.TestCase):
 
     def test_json_loads_bytes(self):
         assert json_loads(b'1') == 1
+
+    def test_synchronized(self):
+        class TestSyncClass:
+            def __init__(self):
+                self.calls = []
+                self._lock = threading.RLock()
+
+            @synchronized
+            def m1(self):
+                self.calls.append('m1')
+                time.sleep(1)
+                self.m2()
+                self.calls.append('m1-finish')
+
+            @synchronized
+            def m2(self):
+                self.calls.append('m2')
+                time.sleep(1)
+                self.calls.append('m2-finish')
+
+            @synchronized
+            def m3(self):
+                self.calls.append('m3')
+                time.sleep(1)
+                self.calls.append('m3-finish')
+
+        def t1(obj):
+            obj.m1()
+
+        def t2(obj):
+            obj.m3()
+
+        obj = TestSyncClass()
+        thread1 = threading.Thread(target=t1, args=(obj,))
+        thread2 = threading.Thread(target=t2, args=(obj,))
+        thread1.start()
+        thread2.start()
+        thread1.join(timeout=10.0)
+        thread2.join(timeout=10.0)
+
+        assert obj.calls == ['m1', 'm2', 'm2-finish', 'm1-finish', 'm3', 'm3-finish']

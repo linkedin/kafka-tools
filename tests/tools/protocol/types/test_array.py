@@ -29,6 +29,9 @@ class ArrayTests(unittest.TestCase):
         assert val.value()[0].value() == 123
         assert rest == b''
 
+    def test_decode_bad_type(self):
+        self.assertRaises(TypeError, Array.decode, b'\x00\x00\x00\x01{', schema='nonexistant_type')
+
     def test_decode_two(self):
         (val, rest) = Array.decode(b'\x00\x00\x00\x02{[', schema='int8')
         assert isinstance(val, Array)
