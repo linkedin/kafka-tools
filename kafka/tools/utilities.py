@@ -19,8 +19,10 @@ from __future__ import division
 
 import json
 import os
+from functools import wraps
 
 from kafka.tools.exceptions import ConfigurationException
+from kafka.tools.protocol.errors import error_short
 
 
 def is_exec_file(fname):
@@ -92,3 +94,20 @@ def json_loads(json_str):
         return json.loads(json_str)
     except TypeError:
         return json.loads(json_str.decode('utf-8'))
+
+
+def synchronized(item):
+    """
+    Decorator that synchronizes access to the instance method it decorates using a preexisting lock in the _lock
+    attribute of the instance
+    """
+    @wraps(item)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return item(self, *args, **kwargs)
+    return wrapper
+
+
+def raise_if_error(klass, errnum):
+    if errnum.value() != 0:
+        raise klass(error_short(errnum.value()))

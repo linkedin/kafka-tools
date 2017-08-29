@@ -25,6 +25,7 @@ class DescribeGroupsV0Response(BaseResponse):
          'item_type': [
              {'name': 'error', 'type': 'int16'},
              {'name': 'group_id', 'type': 'string'},
+             {'name': 'state', 'type': 'string'},
              {'name': 'protocol_type', 'type': 'string'},
              {'name': 'protocol', 'type': 'string'},
              {'name': 'members',

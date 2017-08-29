@@ -25,7 +25,7 @@ def _parse_topic_set(topic_set):
         raise ArgumentError("Each topic must have at least one partition")
 
     try:
-        return {'topic': tparts[0], 'partitions': [{'partition': int(p)} for p in tparts[1:]]}
+        return {'topic': tparts[0], 'partitions': [int(p) for p in tparts[1:]]}
     except ValueError:
         raise ArgumentError("partitions must be integers")
 
@@ -49,16 +49,13 @@ class OffsetFetchV0Request(BaseRequest):
              {'name': 'topic', 'type': 'string'},
              {'name': 'partitions',
               'type': 'array',
-              'item_type': [
-                  {'name': 'partition', 'type': 'int32'},
-              ]},
-         ]},
+              'item_type': 'int32'}]},
     ]
 
     @classmethod
     def process_arguments(cls, cmd_args):
         if len(cmd_args) < 2:
-            raise ArgumentError("OffsetFetchV0 requires at least 2 arguments")
+            raise ArgumentError("OffsetFetchV{0} requires at least 2 arguments".format(cls.api_version))
         values = {'group_id': cmd_args[0], 'topics': []}
 
         for topic_set in cmd_args[1:]:
