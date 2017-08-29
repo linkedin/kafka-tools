@@ -46,6 +46,12 @@ class Topic(BaseModel):
     def add_partition(self, partition):
         self.partitions.append(partition)
 
+    def to_dict(self):
+        data = {'partitions': {}, 'retention': self.retention}
+        for partition in self.partitions:
+            data['partitions'][partition.num] = partition.to_dict()
+        return data
+
     def updated_since(self, check_time):
         return check_time <= self._last_updated
 

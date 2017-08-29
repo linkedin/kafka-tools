@@ -176,3 +176,17 @@ class Cluster(BaseModel):
                                                                                   broker.num_partitions(),
                                                                                   broker.percent_leaders(),
                                                                                   broker.total_size()))
+
+    def to_dict(self):
+        """
+        Return cluster information as JSON
+        """
+        brokers = {}
+        for broker in self.brokers.values():
+            brokers[broker.id] = broker.to_dict()
+
+        topics = {}
+        for topic in self.topics.values():
+            topics[topic.name] = topic.to_dict()
+
+        return {'brokers': brokers, 'topics': topics}

@@ -215,3 +215,13 @@ class Broker(BaseModel):
             bytes_left -= len(data)
             responses.append(data)
         return b''.join(responses)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'hostname': self.hostname,
+            'jmx_port': self.jmx_port,
+            'port': self.port,
+            'rack': self.rack,
+            'version': self.version
+        }

@@ -18,6 +18,7 @@
 import os
 import sys
 import time
+import json
 
 import kafka.tools.assigner.actions
 import kafka.tools.assigner.plugins
@@ -143,6 +144,13 @@ def main():
         run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'finished')
+
+    if args.output_json:
+        data = {
+            'before': cluster.to_dict(),
+            'after': action_to_run.cluster.to_dict()
+        }
+        sys.stdout.write(json.dumps(data, indent=4, sort_keys=True))
 
     return os.EX_OK
 
