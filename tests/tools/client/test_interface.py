@@ -4,6 +4,7 @@ from mock import MagicMock, patch, call
 from tests.tools.client.fixtures import topic_metadata
 
 from kafka.tools.client import Client
+from kafka.tools.configuration import ClientConfiguration
 from kafka.tools.exceptions import ConfigurationError, ConnectionError
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.cluster import Cluster
@@ -35,6 +36,11 @@ class GenericInterfaceTests(unittest.TestCase):
 
     def test_create(self):
         assert self.client.configuration.broker_list == [('broker1.example.com', 9091), ('broker2.example.com', 9092)]
+
+    def test_create_with_configuration(self):
+        config = ClientConfiguration(zkconnect='zk.example.com:2181/kafka-cluster')
+        client = Client(configuration=config)
+        assert client.configuration == config
 
     def test_create_config_zkconnect(self):
         test_client = Client(zkconnect='zk.example.com:2181/kafka-cluster')
@@ -77,3 +83,8 @@ class GenericInterfaceTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once_with(self.metadata_response)
         for broker_id in self.client.cluster.brokers:
             self.client.cluster.brokers[broker_id].connect.assert_called_once()
+
+    def test_connect_broker_list_exhausted(self):
+        self.client._maybe_bootstrap_cluster = MagicMock()
+        self.client._maybe_bootstrap_cluster.return_value = False
+        self.assertRaises(ConnectionError, self.client.connect)

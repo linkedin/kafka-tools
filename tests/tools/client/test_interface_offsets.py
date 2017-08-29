@@ -74,7 +74,7 @@ class InterfaceOffsetsTests(unittest.TestCase):
         self.group.subscribed_topics.assert_called_once_with()
         assert val == ['topica']
 
-    def get_offsets_for_group(self):
+    def test_get_offsets_for_group(self):
         self.client.get_group = MagicMock()
         self.client.get_group.return_value = self.group
         self.client._get_topics_for_group = MagicMock()
@@ -93,22 +93,24 @@ class InterfaceOffsetsTests(unittest.TestCase):
         assert self.client._send_group_aware_request.call_args[0][0] == 'testgroup'
         req = self.client._send_group_aware_request.call_args[0][1]
         assert isinstance(req, OffsetFetchV1Request)
-        assert req['group_id'] == 'testgroup'
+        assert req['group_id'].value() == 'testgroup'
         assert len(req['topics']) == 1
-        assert req['topics'][0]['topic'] == 'topic1'
-        assert req['topics'][0]['partitions'] == [0, 1]
+        assert req['topics'][0]['topic'].value() == 'topic1'
+        assert len(req['topics'][0]['partitions']) == 2
+        assert req['topics'][0]['partitions'][0].value() == 0
+        assert req['topics'][0]['partitions'][1].value() == 1
 
         assert 'topic1' in val
         assert isinstance(val['topic1'], TopicOffsets)
         assert val['topic1'].partitions == [4829, 8904]
 
-    def set_offsets_for_group_bad_offsets(self):
-        self.assertRaises(self.client.set_offsets_for_group, 'testgroup', 'notalist')
+    def test_set_offsets_for_group_bad_offsets(self):
+        self.assertRaises(TypeError, self.client.set_offsets_for_group, 'testgroup', 'notalist')
 
-    def set_offsets_for_group_offsets_none(self):
-        self.assertRaises(self.client.set_offsets_for_group, 'testgroup', None)
+    def test_set_offsets_for_group_offsets_none(self):
+        self.assertRaises(TypeError, self.client.set_offsets_for_group, 'testgroup', None)
 
-    def set_offsets_for_group_not_empty(self):
+    def test_set_offsets_for_group_not_empty(self):
         self.group.state = 'Stable'
 
         self.client.get_group = MagicMock()
@@ -117,15 +119,15 @@ class InterfaceOffsetsTests(unittest.TestCase):
         self.assertRaises(GroupError, self.client.set_offsets_for_group, 'testgroup', [])
         self.client.get_group.assert_called_once_with('testgroup')
 
-    def set_offsets_for_group(self):
+    def test_set_offsets_for_group(self):
         self.client.get_group = MagicMock()
         self.client.get_group.return_value = self.group
         self.client._send_set_offset_request = MagicMock()
         self.client._send_set_offset_request.return_value = 'sendresponse'
         self.client._parse_set_offset_response = MagicMock()
-        self.client._send_set_offset_request.return_value = {'topic1': [0, 0]}
+        self.client._parse_set_offset_response.return_value = {'topic1': [0, 0]}
 
-        offsets = TopicOffsets(self.cluster.topics['topic1'])
+        offsets = TopicOffsets(self.client.cluster.topics['topic1'])
         offsets.partitions[0] = 2342
         offsets.partitions[1] = 8793
         val = self.client.set_offsets_for_group('testgroup', [offsets])
@@ -133,4 +135,4 @@ class InterfaceOffsetsTests(unittest.TestCase):
         assert val == {'topic1': [0, 0]}
         self.client.get_group.assert_called_once_with('testgroup')
         self.client._send_set_offset_request.assert_called_once_with('testgroup', [offsets])
-        self.client._send_set_offset_request.assert_called_once_with('sendresponse')
+        self.client._parse_set_offset_response.assert_called_once_with('sendresponse')

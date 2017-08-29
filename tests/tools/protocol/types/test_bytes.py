@@ -22,6 +22,9 @@ class BytesTests(unittest.TestCase):
     def test_from_string_bad_length(self):
         self.assertRaises(ValueError, Bytes.from_string, "87349DB")
 
+    def test_create_bad_type(self):
+        self.assertRaises(TypeError, Bytes, 123)
+
     def test_decode(self):
         (val, rest) = Bytes.decode(b'\x00\x04\x87\x34\x9d\xbc')
         assert isinstance(val, Bytes)
