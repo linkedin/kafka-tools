@@ -83,7 +83,7 @@ def run_plugins_at_step(plugins, step_name, *args):
 
 def print_leadership(type_str, cluster, dont_skip):
     if dont_skip:
-        log.info("Cluster Leadership Balance (before):")
+        log.info("Cluster Leadership Balance ({0}):".format(type_str))
         cluster.log_broker_summary()
 
 
