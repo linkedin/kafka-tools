@@ -1,3 +1,4 @@
+import json
 import unittest
 from testfixtures import LogCapture
 
@@ -77,3 +78,61 @@ class SimpleClusterTests(unittest.TestCase):
             self.cluster.log_broker_summary()
             l.check(('kafka-tools', 'INFO', 'Broker 1: partitions=0/0 (0.00%), size=0'),
                     ('kafka-tools', 'INFO', 'Broker 2: partitions=0/0 (0.00%), size=0'))
+
+    def test_cluster_output_json(self):
+        self.add_topics(2)
+        self.add_brokers(2)
+        self.cluster.topics['testTopic1'].partitions[0].add_replica(self.cluster.brokers[1], 0)
+        self.cluster.topics['testTopic1'].partitions[0].add_replica(self.cluster.brokers[2], 1)
+        self.cluster.topics['testTopic1'].partitions[1].add_replica(self.cluster.brokers[1], 1)
+        self.cluster.topics['testTopic1'].partitions[1].add_replica(self.cluster.brokers[2], 0)
+        cluster = self.cluster.to_dict()
+        cluster_json = json.dumps(cluster, sort_keys=True)
+        assert cluster_json == json.dumps({
+            'brokers': {
+                '1': {
+                    'hostname': 'brokerhost1.example.com',
+                    'id': 1,
+                    'jmx_port': -1,
+                    'port': 9092,
+                    'rack': None,
+                    'version': None
+                },
+                '2': {
+                    'hostname': 'brokerhost2.example.com',
+                    'id': 2,
+                    'jmx_port': -1,
+                    'port': 9092,
+                    'rack': None,
+                    'version': None
+                }
+            },
+            'topics': {
+                'testTopic1': {
+                    'partitions': {
+                        '0': {
+                            'replicas': [1, 2],
+                            'size': 0
+                        },
+                        '1': {
+                            'replicas': [2, 1],
+                            'size': 0
+                        }
+                    },
+                    'retention': 1
+                },
+                'testTopic2': {
+                    'partitions': {
+                        '0': {
+                            'replicas': [],
+                            'size': 0
+                        },
+                        '1': {
+                            'replicas': [],
+                            'size': 0
+                        }
+                    },
+                    'retention': 1
+                }
+            }
+        }, sort_keys=True)

@@ -15,10 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses import BaseResponse
+from kafka.tools.protocol.responses.metadata_v0 import MetadataV0Response
 
 
-class MetadataV1Response(BaseResponse):
+class MetadataV1Response(MetadataV0Response):
     schema = [
         {'name': 'brokers',
          'type': 'array',

@@ -62,10 +62,11 @@ class Cluster(BaseModel):
     def __init__(self, retention=1):
         self.brokers = {}
         self.topics = {}
+        self.groups = {}
         self.retention = retention
 
     @classmethod
-    def create_from_zookeeper(cls, zkconnect, default_retention=1):
+    def create_from_zookeeper(cls, zkconnect, default_retention=1, fetch_topics=True):
         log.info("Connecting to zookeeper {0}".format(zkconnect))
         try:
             zk = KazooClient(zkconnect)
@@ -78,14 +79,15 @@ class Cluster(BaseModel):
         add_brokers_from_zk(cluster, zk)
 
         # Get current partition state
-        log.info("Getting partition list from Zookeeper")
-        for topic in zk.get_children("/brokers/topics"):
-            zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
-            add_topic_with_replicas(cluster, topic, json_loads(zdata))
-            set_topic_retention(cluster.topics[topic], zk)
+        if fetch_topics:
+            log.info("Getting partition list from Zookeeper")
+            for topic in zk.get_children("/brokers/topics"):
+                zdata, zstat = zk.get("/brokers/topics/{0}".format(topic))
+                add_topic_with_replicas(cluster, topic, json_loads(zdata))
+                set_topic_retention(cluster.topics[topic], zk)
 
-        if cluster.num_topics() == 0:
-            raise ZookeeperException("The cluster specified does not have any topics")
+            if cluster.num_topics() == 0:
+                raise ZookeeperException("The cluster specified does not have any topics")
 
         log.info("Closing connection to zookeeper")
         zk.stop()
@@ -124,6 +126,10 @@ class Cluster(BaseModel):
         topic.cluster = self
         topic.retention = self.retention
         self.topics[topic.name] = topic
+
+    def add_group(self, group):
+        group.cluster = self
+        self.groups[group.name] = group
 
     # Iterate over all the partitions in this cluster
     # Order is alphabetical by topic, numeric by partition
@@ -170,3 +176,17 @@ class Cluster(BaseModel):
                                                                                   broker.num_partitions(),
                                                                                   broker.percent_leaders(),
                                                                                   broker.total_size()))
+
+    def to_dict(self):
+        """
+        Return cluster information as JSON
+        """
+        brokers = {}
+        for broker in self.brokers.values():
+            brokers[broker.id] = broker.to_dict()
+
+        topics = {}
+        for topic in self.topics.values():
+            topics[topic.name] = topic.to_dict()
+
+        return {'brokers': brokers, 'topics': topics}

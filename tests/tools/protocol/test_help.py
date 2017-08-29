@@ -22,13 +22,13 @@ class HelpTests(unittest.TestCase):
 
     def test_help_general(self):
         # As this is only designed to output, we just want to make sure it doesn't fail
-        show_help(self.request_classes, self.request_cmds, ['help'])
+        show_help(self.request_classes, self.request_cmds, [])
         assert True
 
     def test_help_show_cmd(self):
-        show_help(self.request_classes, self.request_cmds, ['help', 'fakerequest'])
+        show_help(self.request_classes, self.request_cmds, ['fakerequest'])
         assert True
 
     def test_help_bad_cmd(self):
-        show_help(self.request_classes, self.request_cmds, ['help', 'badrequest'])
+        show_help(self.request_classes, self.request_cmds, ['badrequest'])
         assert True

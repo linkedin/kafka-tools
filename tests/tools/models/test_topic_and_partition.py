@@ -1,8 +1,11 @@
 import unittest
 
+from tests.tools.client.fixtures import list_offset, list_offset_error, offset_fetch, offset_fetch_error
+
+from kafka.tools.exceptions import OffsetError
 from kafka.tools.models.cluster import Cluster
 from kafka.tools.models.broker import Broker
-from kafka.tools.models.topic import Topic
+from kafka.tools.models.topic import Topic, TopicOffsets
 from kafka.tools.models.partition import Partition
 
 
@@ -24,6 +27,10 @@ class TopicAndPartitionTests(unittest.TestCase):
         assert self.topic.partitions[0].num == 0
         assert self.topic.partitions[0].replicas == []
         assert self.topic.partitions[0].size == 0
+
+    def test_updated_since(self):
+        self.topic._last_updated = 100
+        assert self.topic.updated_since(99)
 
     def test_topic_equality(self):
         topic2 = Topic('testTopic', 1)
@@ -127,3 +134,162 @@ class TopicAndPartitionTests(unittest.TestCase):
     def test_partition_dict_for_replica_election(self):
         expected = {"topic": 'testTopic', "partition": 0}
         assert self.topic.partitions[0].dict_for_replica_election() == expected
+
+    def test_add_or_update_replica_nochange(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        partition = Partition('topic1', 0)
+        partition.add_replica(broker1)
+        partition.add_replica(broker2)
+
+        partition.add_or_update_replica(0, broker1)
+        assert partition.replicas[0] == broker1
+
+    def test_add_or_update_replica_new(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        partition = Partition('topic1', 0)
+        partition.add_replica(broker1)
+        partition.add_replica(broker2)
+
+        partition.add_or_update_replica(2, broker1)
+        assert partition.replicas[2] == broker1
+
+    def test_add_or_update_replica_swap(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        partition = Partition('topic1', 0)
+        partition.add_replica(broker1)
+        partition.add_replica(broker2)
+
+        partition.add_or_update_replica(1, broker1)
+        assert partition.replicas[1] == broker1
+
+    def test_assure_topic_has_partitions_nochange(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 2)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+        topic.partitions[1].add_replica(broker2)
+        topic.partitions[1].add_replica(broker1)
+
+        assert len(topic.partitions) == 2
+        topic.assure_has_partitions(2)
+        assert len(topic.partitions) == 2
+
+    def test_assure_topic_has_partitions_one(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 2)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+        topic.partitions[1].add_replica(broker2)
+        topic.partitions[1].add_replica(broker1)
+
+        assert len(topic.partitions) == 2
+        topic.assure_has_partitions(1)
+        assert len(topic.partitions) == 1
+        assert topic.partitions[0].num == 0
+
+    def test_assure_topic_has_partitions_add_one(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+
+        assert len(topic.partitions) == 1
+        topic.assure_has_partitions(2)
+        assert len(topic.partitions) == 2
+        assert topic.partitions[1].num == 1
+
+    def test_assure_topic_has_partitions_all(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 2)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+        topic.partitions[1].add_replica(broker2)
+        topic.partitions[1].add_replica(broker1)
+
+        assert len(topic.partitions) == 2
+        topic.assure_has_partitions(0)
+        assert len(topic.partitions) == 0
+
+    def test_delete_replicas_from_partition_nochange(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+
+        partition = topic.partitions[0]
+        assert len(partition.replicas) == 2
+        partition.delete_replicas(2)
+        assert len(partition.replicas) == 2
+
+    def test_delete_replicas_from_partition_one(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+
+        partition = topic.partitions[0]
+        assert len(partition.replicas) == 2
+        partition.delete_replicas(1)
+        assert len(partition.replicas) == 1
+        assert partition.replicas[0] == broker1
+
+    def test_delete_replicas_from_partition_all(self):
+        broker1 = Broker('host1.example.com', id=1, port=8031)
+        broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        topic.partitions[0].add_replica(broker1)
+        topic.partitions[0].add_replica(broker2)
+
+        partition = topic.partitions[0]
+        assert len(partition.replicas) == 2
+        partition.delete_replicas(0)
+        assert len(partition.replicas) == 0
+
+    def test_topic_offsets_create(self):
+        topic = Topic('topic1', 3)
+        offsets = TopicOffsets(topic)
+        assert offsets.topic == topic
+        assert len(offsets.partitions) == 3
+        for partition in offsets.partitions:
+            assert partition == -1
+
+    def test_set_offsets_from_list(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = list_offset()
+
+        offsets.set_offsets_from_list(response['responses'][0]['partition_responses'])
+        assert offsets.partitions[0] == 4829
+        assert offsets.partitions[1] == 8904
+
+    def test_set_offsets_from_list_error(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = list_offset_error()
+
+        self.assertRaises(OffsetError, offsets.set_offsets_from_list, response['responses'][0]['partition_responses'])
+
+    def test_set_offsets_from_fetch(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = offset_fetch()
+
+        offsets.set_offsets_from_fetch(response['responses'][0]['partition_responses'])
+        assert offsets.partitions[0] == 4829
+        assert offsets.partitions[1] == 8904
+
+    def test_set_offsets_from_fetch_error(self):
+        topic = Topic('topic1', 2)
+        offsets = TopicOffsets(topic)
+        response = offset_fetch_error()
+
+        self.assertRaises(OffsetError, offsets.set_offsets_from_fetch, response['responses'][0]['partition_responses'])

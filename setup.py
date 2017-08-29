@@ -138,6 +138,7 @@ setup(
         'coverage',
         'mock',
         'nose',
+        'nose-capturestderr',
         'testfixtures',
         'timeout-decorator',
     ],

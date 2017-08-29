@@ -1,5 +1,3 @@
-# Copyright 2016 LinkedIn Corp.
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -17,20 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
-import sys
+from kafka.tools.protocol.responses import BaseResponse
 
-"""
-This file is run before ever load. We need to keep it lightweight and
-bulletproof. Currently, we only setup logging, since it's used by everything.
-"""
 
-formatter = logging.Formatter('[%(levelname)s] %(message)s')
-
-ch = logging.StreamHandler(sys.stderr)
-ch.setLevel(logging.INFO)
-ch.setFormatter(formatter)
-
-log = logging.getLogger('kafka-tools')
-log.setLevel(logging.INFO)
-log.addHandler(ch)
+class MemberAssignmentV0(BaseResponse):
+    schema = [
+        {'name': 'version', 'type': 'int16'},
+        {'name': 'partitions',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'partition', 'type': 'int32'},
+         ]},
+        {'name': 'user_data', 'type': 'bytes'},
+    ]

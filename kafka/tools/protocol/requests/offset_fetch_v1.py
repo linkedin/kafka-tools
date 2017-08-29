@@ -15,53 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest, ArgumentError
+from kafka.tools.protocol.requests.offset_fetch_v0 import OffsetFetchV0Request
 from kafka.tools.protocol.responses.offset_fetch_v1 import OffsetFetchV1Response
 
 
-def _parse_topic_set(topic_set):
-    tparts = topic_set.split(',')
-    if len(tparts) < 2:
-        raise ArgumentError("Each topic must have at least one partition")
-
-    try:
-        return {'topic': tparts[0], 'partitions': [{'partition': int(p)} for p in tparts[1:]]}
-    except ValueError:
-        raise ArgumentError("partitions must be integers")
-
-
-class OffsetFetchV1Request(BaseRequest):
-    api_key = 9
+class OffsetFetchV1Request(OffsetFetchV0Request):
     api_version = 1
-    cmd = "OffsetFetch"
     response = OffsetFetchV1Response
-
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} group_id (topic(,partition ...) ...)\n".format(cmd, api_version) +
-                   "Description: Commit offsets for the specified consumer group\n" +
-                   "Example:     {0}V{1} ExampleGroup ExampleTopic,0,1,2 ExampleTopic2,0\n".format(cmd, api_version))
-
-    schema = [
-        {'name': 'group_id', 'type': 'string'},
-        {'name': 'topics',
-         'type': 'array',
-         'item_type': [
-             {'name': 'topic', 'type': 'string'},
-             {'name': 'partitions',
-              'type': 'array',
-              'item_type': [
-                  {'name': 'partition', 'type': 'int32'},
-              ]},
-         ]},
-    ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        if len(cmd_args) < 2:
-            raise ArgumentError("OffsetFetchV1 requires at least 2 arguments")
-        values = {'group_id': cmd_args[0], 'topics': []}
-
-        for topic_set in cmd_args[1:]:
-            values['topics'].append(_parse_topic_set(topic_set))
-
-        return values
