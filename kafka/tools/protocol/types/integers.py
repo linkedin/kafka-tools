@@ -125,3 +125,12 @@ class Int64(BaseIntegerType):
     _maximum_value = 9223372036854775807
     _num_bytes = 8
     _format_character = 'q'
+
+
+def decode_length(byte_array, length_cls=Int32):
+    if len(byte_array) < length_cls._num_bytes:
+        raise ValueError('Expected at least {0} bytes, only got {1}'.format(length_cls._num_bytes, len(byte_array)))
+    val_len, val_data = length_cls.decode(byte_array)
+    if val_len.value() > len(val_data):
+        raise ValueError('Expected {0} bytes, only got {1}'.format(val_len.value() + length_cls._num_bytes, len(byte_array)))
+    return val_len, val_data
