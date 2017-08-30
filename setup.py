@@ -144,7 +144,7 @@ setup(
     ],
     setup_requires=[
         'nose>=1.3.4',
-        'flake8==3.3.0',
+        'flake8==3.4.1',
     ],
     test_suite="nose.collector",
     extras_require={
