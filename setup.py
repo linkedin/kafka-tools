@@ -105,7 +105,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.0',
+    version='0.1.1',
 
     author='Todd Palino',
     author_email='tpalino@linkedin.com',
@@ -143,7 +143,7 @@ setup(
     ],
     setup_requires=[
         'nose>=1.3.4',
-        'flake8==3.3.0',
+        'flake8==3.4.1',
     ],
     test_suite="nose.collector",
     extras_require={
