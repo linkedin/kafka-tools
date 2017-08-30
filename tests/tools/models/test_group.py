@@ -32,10 +32,10 @@ class GroupTests(unittest.TestCase):
     def test_set_assignment(self):
         group = Group('testgroup')
         group.protocol_type = 'consumer'
-        member = GroupMember('membername')
+        member = GroupMember('membername', assignment=b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x65\xbd')
         member.group = group
 
-        member.set_assignment(b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x65\xbd')
+        member.set_assignment()
         assert member.assignment_version == 0
         assert member.assignment_data == b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x65\xbd'
         assert member.user_data == b'\x65\xbd'

@@ -39,9 +39,10 @@ class Group(BaseModel):
         self.members = []
 
     def add_member(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
-        new_member = GroupMember(name, client_id, client_host, metadata)
+        new_member = GroupMember(name, client_id, client_host, metadata, assignment)
         new_member.group = self
-        new_member.set_assignment(assignment)
+        if (self.protocol_type == 'consumer') and (assignment is not None):
+            new_member.set_assignment()
         self.members.append(new_member)
 
     def subscribed_topics(self):
@@ -55,27 +56,24 @@ class Group(BaseModel):
 class GroupMember(BaseModel):
     equality_attrs = ['name']
 
-    def __init__(self, name, client_id=None, client_host=None, metadata=None):
+    def __init__(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
         self.name = name
         self.client_id = client_id
         self.client_host = client_host
         self.metadata = metadata
+        self.assignment_data = assignment
 
         self.group = None
-        self.assignment_data = None
         self.user_data = None
         self.assignment_version = None
         self.topics = {}
 
-    def set_assignment(self, assignment_data):
-        self.assignment_data = assignment_data
-
-        if (self.group is not None) and (self.group.protocol_type == 'consumer'):
-            assignment = MemberAssignmentV0.from_bytes(0, self.assignment_data)
-            self.assignment_version = assignment['version'].value()
-            self.user_data = assignment['user_data'].value()
-            for tp in assignment['partitions']:
-                if tp['topic'].value() not in self.topics:
-                    self.topics[tp['topic'].value()] = []
-                for partition in tp['partitions']:
-                    self.topics[tp['topic'].value()].append(partition.value())
+    def set_assignment(self):
+        assignment = MemberAssignmentV0.from_bytes(0, self.assignment_data)
+        self.assignment_version = assignment['version'].value()
+        self.user_data = assignment['user_data'].value()
+        for tp in assignment['partitions']:
+            if tp['topic'].value() not in self.topics:
+                self.topics[tp['topic'].value()] = []
+            for partition in tp['partitions']:
+                self.topics[tp['topic'].value()].append(partition.value())
