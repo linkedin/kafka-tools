@@ -21,7 +21,7 @@ from kafka.tools.protocol.types import BaseType
 from kafka.tools.protocol.types.integers import Int16
 
 
-def _decode_length(cls, byte_array):
+def _decode_length(byte_array):
     if len(byte_array) < 2:
         raise ValueError('Expected at least 2 bytes, only got {0}'.format(len(byte_array)))
     str_len, str_data = Int16.decode(byte_array)
@@ -45,7 +45,7 @@ class String(BaseType):
 
     @classmethod
     def decode(cls, byte_array, schema=None):
-        str_len, str_data = _decode_length(cls, byte_array)
+        str_len, str_data = _decode_length(byte_array)
         if str_len == -1:
             return cls(None, schema=cls._type), str_data
         return cls(str_data[0:str_len.value()].decode("utf-8"), schema=cls._type), str_data[str_len.value():]

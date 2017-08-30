@@ -18,8 +18,16 @@
 import binascii
 import six
 from kafka.tools.protocol.types import BaseType
-from kafka.tools.protocol.types.integers import Int16
-from kafka.tools.protocol.types.string import _decode_length
+from kafka.tools.protocol.types.integers import Int32
+
+
+def _decode_length(byte_array):
+    if len(byte_array) < 4:
+        raise ValueError('Expected at least 4 bytes, only got {0}'.format(len(byte_array)))
+    str_len, str_data = Int32.decode(byte_array)
+    if str_len.value() > len(str_data):
+        raise ValueError('Expected {0} bytes, only got {1}'.format(str_len.value() + 4, len(byte_array)))
+    return str_len, str_data
 
 
 class Bytes(BaseType):
@@ -33,7 +41,7 @@ class Bytes(BaseType):
 
     @classmethod
     def decode(cls, byte_array, schema=None):
-        str_len, str_data = _decode_length(cls, byte_array)
+        str_len, str_data = _decode_length(byte_array)
         if str_len.value() == -1:
             return cls(None, schema=cls._type), str_data
         return cls(str_data[0:str_len.value()], schema=cls._type), str_data[str_len.value():]
@@ -50,8 +58,8 @@ class Bytes(BaseType):
 
     def encode(self):
         if self._value is None:
-            return Int16(-1).encode()
-        str_len = Int16(len(self._value))
+            return Int32(-1).encode()
+        str_len = Int32(len(self._value))
         return str_len.encode() + self._value
 
     def __str__(self):
