@@ -15,8 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import time
-
 from kafka.tools.models import BaseModel
 from kafka.tools.protocol.responses.member_assignment_v0 import MemberAssignmentV0
 
@@ -32,7 +30,7 @@ class Group(BaseModel):
         self.protocol_type = None
         self.state = None
         self.members = []
-        self._last_updated = time.time()
+        self._last_updated = 0.0
 
     def updated_since(self, check_time):
         return check_time <= self._last_updated
@@ -76,7 +74,8 @@ class GroupMember(BaseModel):
             assignment = MemberAssignmentV0.from_bytes(0, self.assignment_data)
             self.assignment_version = assignment['version'].value()
             self.user_data = assignment['user_data'].value()
-            for partition in assignment['partitions']:
-                if partition['topic'].value() not in self.topics:
-                    self.topics[partition['topic'].value()] = []
-                self.topics[partition['topic'].value()].append(partition['partition'].value())
+            for tp in assignment['partitions']:
+                if tp['topic'].value() not in self.topics:
+                    self.topics[tp['topic'].value()] = []
+                for partition in tp['partitions']:
+                    self.topics[tp['topic'].value()].append(partition.value())

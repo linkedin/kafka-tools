@@ -25,7 +25,7 @@ class MemberAssignmentV0(BaseResponse):
          'type': 'array',
          'item_type': [
              {'name': 'topic', 'type': 'string'},
-             {'name': 'partition', 'type': 'int32'},
+             {'name': 'partitions', 'type': 'array', 'item_type': 'int32'},
          ]},
         {'name': 'user_data', 'type': 'bytes'},
     ]
