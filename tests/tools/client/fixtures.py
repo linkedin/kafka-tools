@@ -9,6 +9,8 @@ from kafka.tools.protocol.responses.group_coordinator_v0 import GroupCoordinator
 
 
 def describe_groups():
+    ma_1 = b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\x00\x00\x00\x00\xff\xff\xff\xff'
+    ma_2 = b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\x00\x00\x00\x01\xff\xff\xff\xff'
     return DescribeGroupsV0Response.from_dict({'groups': [{'group_id': 'testgroup',
                                                            'error': 0,
                                                            'state': 'Stable',
@@ -18,12 +20,12 @@ def describe_groups():
                                                                         'client_id': 'testclientid1',
                                                                         'client_host': 'host.example.com',
                                                                         'member_metadata': b'\x90\x83\x24\xbc',
-                                                                        'member_assignment': b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x00\xff\xff'},
+                                                                        'member_assignment': ma_1},
                                                                        {'member_id': 'testmember2',
                                                                         'client_id': 'testclientid2',
                                                                         'client_host': 'otherhost.example.com',
                                                                         'member_metadata': b'\x89\x34\x78\xad',
-                                                                        'member_assignment': b'\x00\x00\x00\x00\x00\x01\x00\x06topic1\x00\x00\x00\x01\xff\xff'}
+                                                                        'member_assignment': ma_2}
                                                                        ]
                                                            }]
                                                })

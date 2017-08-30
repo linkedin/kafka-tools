@@ -1,3 +1,4 @@
+import time
 import unittest
 from mock import MagicMock
 
@@ -69,6 +70,7 @@ class InterfaceGroupsTests(unittest.TestCase):
     def test_get_group_existing_cached(self):
         group = Group('testgroup')
         group.coordinator = self.client.cluster.brokers[1]
+        group._last_updated = time.time()
         self.client.cluster.add_group(group)
 
         self.client._send_group_aware_request = MagicMock()
