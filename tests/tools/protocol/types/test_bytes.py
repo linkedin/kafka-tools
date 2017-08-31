@@ -26,35 +26,35 @@ class BytesTests(unittest.TestCase):
         self.assertRaises(TypeError, Bytes, 123)
 
     def test_decode(self):
-        (val, rest) = Bytes.decode(b'\x00\x04\x87\x34\x9d\xbc')
+        (val, rest) = Bytes.decode(b'\x00\x00\x00\x04\x87\x34\x9d\xbc')
         assert isinstance(val, Bytes)
         assert val.value() == b'\x87\x34\x9d\xbc'
         assert rest == b''
 
     def test_decode_null(self):
-        (val, rest) = Bytes.decode(b'\xff\xff')
+        (val, rest) = Bytes.decode(b'\xff\xff\xff\xff')
         assert isinstance(val, Bytes)
         assert val.value() is None
         assert rest == b''
 
     def test_decode_remainder(self):
-        (val, rest) = Bytes.decode(b'\x00\x04\x87\x34\x9d\xbcabc')
+        (val, rest) = Bytes.decode(b'\x00\x00\x00\x04\x87\x34\x9d\xbcabc')
         assert rest == b'abc'
 
     def test_decode_nosize(self):
         self.assertRaises(ValueError, Bytes.decode, b'')
 
     def test_decode_underflow(self):
-        self.assertRaises(ValueError, Bytes.decode, b'\x00\x04\x874\x9d')
+        self.assertRaises(ValueError, Bytes.decode, b'\x00\x00\x00\x04\x874\x9d')
 
     def test_encode(self):
         val = Bytes(b'\x87\x34\x9d\xbc')
         print(repr(val.encode()))
-        assert val.encode() == b'\x00\x04\x87\x34\x9d\xbc'
+        assert val.encode() == b'\x00\x00\x00\x04\x87\x34\x9d\xbc'
 
     def test_encode_null(self):
         val = Bytes(None)
-        assert val.encode() == b'\xff\xff'
+        assert val.encode() == b'\xff\xff\xff\xff'
 
     def test_str(self):
         val = Bytes(b'\x87\x34\x9d\xbc')
