@@ -15,6 +15,7 @@ install:
   - pip install coveralls
   - pip install codeclimate-test-reporter
   - pip install sphinx
+  - pip install 'setuptools>30'
 script:
   - tox
   - pip install kazoo # Only for building docs
