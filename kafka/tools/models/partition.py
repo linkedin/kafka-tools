@@ -144,3 +144,9 @@ class Partition(BaseModel):
     def _remove_broker_partition(self, broker):
         pos = self.replicas.index(broker)
         broker.partitions[pos].remove(self)
+
+    def to_dict(self):
+        return {
+            'size': self.size,
+            'replicas': [r.id for r in self.replicas]
+        }
