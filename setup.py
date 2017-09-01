@@ -137,8 +137,8 @@ setup(
     tests_require=[
         'coverage',
         'mock',
-        'pytest',
         'pytest-cov',
+        'pytest',
         'testfixtures',
         'timeout-decorator',
     ],
