@@ -137,16 +137,15 @@ setup(
     tests_require=[
         'coverage',
         'mock',
-        'nose',
-        'nose-capturestderr',
+        'pytest-cov',
+        'pytest',
         'testfixtures',
         'timeout-decorator',
     ],
     setup_requires=[
-        'nose>=1.3.4',
+        'pytest-runner',
         'flake8==3.4.1',
     ],
-    test_suite="nose.collector",
     extras_require={
         'dev': ['check-manifest'],
         'test': ['coverage'],
