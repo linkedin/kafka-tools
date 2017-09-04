@@ -2,7 +2,7 @@ import sys
 import unittest
 
 from argparse import Namespace
-from ..fixtures import set_up_cluster, set_up_subparser, set_up_cluster_4broker
+from ..fixtures import set_up_cluster, set_up_subparser, set_up_cluster_4broker, set_up_cluster_big
 
 from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.actions.balance import ActionBalance
@@ -143,3 +143,9 @@ class ActionBalanceEvenTests(unittest.TestCase):
         action = ActionBalanceEven(self.args, self.cluster)
         action.process_cluster()
         assert self.is_cluster_even(skip_topics=['testTopic3'])
+
+    def test_process_cluster_big(self):
+        self.cluster = set_up_cluster_big()
+
+        action = ActionBalanceEven(self.args, self.cluster)
+        action.process_cluster()
