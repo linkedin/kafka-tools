@@ -1,5 +1,6 @@
 import unittest
 from mock import patch
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.create_topics_v0 import _parse_partition, _parse_kv_args, _parse_remaining_args, CreateTopicsV0Request
@@ -77,3 +78,6 @@ class CreateTopicsV0RequestTests(unittest.TestCase):
 
     def test_process_arguments_notopic(self):
         self.assertRaises(ArgumentError, CreateTopicsV0Request.process_arguments, ['3296'])
+
+    def test_schema(self):
+        validate_schema(CreateTopicsV0Request.schema)

@@ -1,4 +1,5 @@
 import unittest
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.offset_commit_v0 import OffsetCommitV0Request
@@ -13,3 +14,6 @@ class OffsetCommitV0RequestTests(unittest.TestCase):
 
     def test_process_arguments_notenough(self):
         self.assertRaises(ArgumentError, OffsetCommitV0Request.process_arguments, ['groupname', 'topicname'])
+
+    def test_schema(self):
+        validate_schema(OffsetCommitV0Request.schema)

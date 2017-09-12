@@ -1,4 +1,5 @@
 import unittest
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.stop_replica_v0 import _parse_partition, StopReplicaV0Request
@@ -43,3 +44,6 @@ class StopReplicaV0RequestTests(unittest.TestCase):
     def test_process_arguments_nonnumeric(self):
         self.assertRaises(ArgumentError, StopReplicaV0Request.process_arguments, ['foo', '53', 'no', 'topicname,3'])
         self.assertRaises(ArgumentError, StopReplicaV0Request.process_arguments, ['3', 'foo', 'no', 'topicname,3'])
+
+    def test_schema(self):
+        validate_schema(StopReplicaV0Request.schema)

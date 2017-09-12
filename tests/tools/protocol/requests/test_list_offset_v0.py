@@ -1,4 +1,5 @@
 import unittest
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.list_offset_v0 import _parse_next_topic, ListOffsetV0Request
@@ -46,3 +47,6 @@ class ListOffsetV0RequestTest(unittest.TestCase):
 
     def test_process_arguments_notenough(self):
         self.assertRaises(ArgumentError, ListOffsetV0Request.process_arguments, ['-1', 'topicname'])
+
+    def test_schema(self):
+        validate_schema(ListOffsetV0Request.schema)

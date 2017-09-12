@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.produce_v0 import ProduceV0Response
+from kafka.tools.protocol.responses.fetch_v1 import FetchV1Response
 
 
-class ProduceV1Response(ProduceV0Response):
+class FetchV2Response(FetchV1Response):
     pass

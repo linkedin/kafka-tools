@@ -1,5 +1,6 @@
 import unittest
 from mock import patch
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.join_group_v0 import _parse_group_protocol, JoinGroupV0Request
@@ -43,3 +44,6 @@ class JoinGroupV0RequestTests(unittest.TestCase):
 
     def test_process_arguments_nonnumeric(self):
         self.assertRaises(ArgumentError, JoinGroupV0Request.process_arguments, ['groupname', 'foo', 'membername', 'protocolname', 'somegroupprotocols'])
+
+    def test_schema(self):
+        validate_schema(JoinGroupV0Request.schema)
