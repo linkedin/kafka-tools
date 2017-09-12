@@ -7,11 +7,7 @@ kafka.tools
    arguments
    errors
    help
-   types/boolean
-   types/bytes
-   types/integers
-   types/sequences
-   types/string
+   types/bytebuffer
    requests/api_versions_v0
    requests/controlled_shutdown_v1
    requests/create_topics_v0
