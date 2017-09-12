@@ -395,7 +395,9 @@ class Client:
 
         # Fetch topic metadata for all topics/brokers
         req = TopicMetadataV1Request({'topics': None})
-        correlation_id, metadata = broker.send(req)
+        correlation_id, metadata = broker.send(req,
+                                               request_size=self.configuration.max_request_size,
+                                               client_id=self.configuration.client_id)
         broker.close()
 
         # Add brokers and topics to cluster
@@ -422,7 +424,9 @@ class Client:
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
-        correlation_id, response = self.cluster.brokers[broker_id].send(request)
+        correlation_id, response = self.cluster.brokers[broker_id].send(request,
+                                                                        request_size=self.configuration.max_request_size,
+                                                                        client_id=self.configuration.client_id)
         return response
 
     def _send_any_broker(self, request):
@@ -536,7 +540,9 @@ class Client:
             self.cluster.add_broker(broker)
             self.cluster.groups[group_name].coordinator = broker
 
-        correlation_id, response = self.cluster.groups[group_name].coordinator.send(request)
+        correlation_id, response = self.cluster.groups[group_name].coordinator.send(request,
+                                                                                    request_size=self.configuration.max_request_size,
+                                                                                    client_id=self.configuration.client_id)
         return response
 
     def _send_list_offsets_to_brokers(self, request_values):

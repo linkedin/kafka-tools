@@ -169,7 +169,7 @@ class BrokerTests(unittest.TestCase):
         (correlation_id, response) = self.broker.send(request)
 
         # Check that the request was encoded properly
-        self.mock_sock.send.assert_called_once_with(b'\x00\x00\x00\x15\x00\x12\x00\x00\x00\x00\x00\x01\x00\x0bkafka-tools')
+        self.mock_sock.send.assert_called_once_with(bytearray(b'\x00\x00\x00\x15\x00\x12\x00\x00\x00\x00\x00\x01\x00\x0bkafka-tools'))
         self.mock_sock.recv.assert_called_once_with(4)
         mock_read_bytes.assert_called_once_with(16)
 

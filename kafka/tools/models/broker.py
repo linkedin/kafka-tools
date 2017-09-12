@@ -19,14 +19,13 @@ from __future__ import division
 
 import re
 import socket
+import struct
 import time
 
 from kafka.tools import log
 from kafka.tools.models import BaseModel
 from kafka.tools.exceptions import ConfigurationException, ConnectionError
 from kafka.tools.protocol.types.bytebuffer import ByteBuffer
-from kafka.tools.protocol.types.integers import Int16, Int32
-from kafka.tools.protocol.types.string import String
 from kafka.tools.utilities import json_loads
 
 
@@ -169,24 +168,30 @@ class Broker(BaseModel):
 
         self._sock.close()
 
-    def send(self, request):
-        # Build the payload based on the request passed in
-        payload = b''
-        payload += Int16(request.api_key).encode()
-        payload += Int16(request.api_version).encode()
-        payload += Int32(self._correlation_id).encode()
-        payload += String('kafka-tools').encode()
-        payload += request.encode()
+    def send(self, request, request_size=200000, client_id="kafka-tools"):
+        # Build the payload based on the request passed in. We'll fill in the size at the end
+        log.info("Start encode {0}".format(time.time()))
+        buf = ByteBuffer(request_size)
+        buf.putInt32(0)
+        buf.putInt16(request.api_key)
+        buf.putInt16(request.api_version)
+        buf.putInt32(self._correlation_id)
+        buf.putInt16(len(client_id))
+        buf.put(struct.pack('{0}s'.format(len(client_id)), client_id.encode("utf-8")))
+        request.encode(buf)
 
-        # Add the size to the payload
-        payload_len = len(payload)
-        payload = Int32(payload_len).encode() + payload
+        # Close the payload and write the size (payload size without the size field itself)
+        buf.limit = buf.position - 1
+        payload_len = buf.capacity - 4
+        buf.rewind()
+        buf.putInt32(payload_len)
+        buf.rewind()
 
         # Increment the correlation ID for the next request
         self._correlation_id += 1
 
         # Send the payload bytes to the broker
-        self._sock.send(payload)
+        self._sock.send(buf.get(buf.capacity))
         log.info("Start decode {0}".format(time.time()))
 
         # Read the first 4 bytes so we know the size

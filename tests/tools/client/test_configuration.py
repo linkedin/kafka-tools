@@ -33,6 +33,12 @@ class ConfigurationTests(unittest.TestCase):
     def test_create_invalid_name(self):
         self.assertRaises(ConfigurationError, ClientConfiguration, invalidconfig='foo')
 
+    def test_client_id(self):
+        config = ClientConfiguration(client_id="testid")
+        assert config.client_id == "testid"
+        self.assertRaises(TypeError, ClientConfiguration, client_id=1)
+        self.assertRaises(TypeError, ClientConfiguration, client_id=None)
+
     def test_metadata_refresh(self):
         config = ClientConfiguration(metadata_refresh=2345)
         assert config.metadata_refresh == 2345

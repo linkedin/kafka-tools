@@ -57,7 +57,7 @@ class TopicsTests(unittest.TestCase):
         self.client._send_any_broker.assert_called_once()
         arg = self.client._send_any_broker.call_args[0][0]
         assert isinstance(arg, TopicMetadataV1Request)
-        assert arg['topics'].value() is None
+        assert arg['topics'] is None
         self.client._update_from_metadata.assert_called_once_with('metadata_response', delete=True)
 
     def test_maybe_update_full_metadata_nocache(self):
@@ -99,7 +99,7 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 1
-        assert req['topics'][0].value() == 'topic1'
+        assert req['topics'][0] == 'topic1'
 
     def test_maybe_update_metadata_for_topics_forced(self):
         self.client._update_from_metadata(self.metadata_response)
@@ -111,7 +111,7 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 1
-        assert req['topics'][0].value() == 'topic1'
+        assert req['topics'][0] == 'topic1'
 
     def test_maybe_update_metadata_for_topics_nonexistent(self):
         self.client._update_from_metadata(self.metadata_response)
@@ -123,8 +123,8 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 2
-        assert req['topics'][0].value() == 'topic1'
-        assert req['topics'][1].value() == 'topic2'
+        assert req['topics'][0] == 'topic1'
+        assert req['topics'][1] == 'topic2'
 
     def test_update_from_metadata(self):
         self.client._update_brokers_from_metadata = MagicMock()
