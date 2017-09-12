@@ -13,16 +13,16 @@ from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Reque
 
 def assert_cluster_has_topics(cluster, metadata):
     for mtopic in metadata['topics']:
-        assert mtopic['name'].value() in cluster.topics
-        topic = cluster.topics[mtopic['name'].value()]
-        assert topic.name == mtopic['name'].value()
-        assert topic.internal == mtopic['internal'].value()
+        assert mtopic['name'] in cluster.topics
+        topic = cluster.topics[mtopic['name']]
+        assert topic.name == mtopic['name']
+        assert topic.internal == mtopic['internal']
         assert len(topic.partitions) == len(mtopic['partitions'])
 
         for i, tp in enumerate(mtopic['partitions']):
             partition = topic.partitions[i]
-            assert partition.num == tp['id'].value()
-            assert partition.leader.id == tp['leader'].value()
+            assert partition.num == tp['id']
+            assert partition.leader.id == tp['leader']
             assert len(partition.replicas) == len(tp['replicas'])
 
             for j, tp_replica in enumerate(tp['replicas']):
@@ -31,11 +31,11 @@ def assert_cluster_has_topics(cluster, metadata):
 
 def assert_cluster_has_brokers(cluster, metadata):
     for b in metadata['brokers']:
-        assert b['node_id'].value() in cluster.brokers
-        broker = cluster.brokers[b['node_id'].value()]
-        assert broker.hostname == b['host'].value()
-        assert broker.port == b['port'].value()
-        assert broker.rack == b['rack'].value()
+        assert b['node_id'] in cluster.brokers
+        broker = cluster.brokers[b['node_id']]
+        assert broker.hostname == b['host']
+        assert broker.port == b['port']
+        assert broker.rack == b['rack']
 
 
 class TopicsTests(unittest.TestCase):
@@ -57,7 +57,7 @@ class TopicsTests(unittest.TestCase):
         self.client._send_any_broker.assert_called_once()
         arg = self.client._send_any_broker.call_args[0][0]
         assert isinstance(arg, TopicMetadataV1Request)
-        assert arg['topics'].value() is None
+        assert arg['topics'] is None
         self.client._update_from_metadata.assert_called_once_with('metadata_response', delete=True)
 
     def test_maybe_update_full_metadata_nocache(self):
@@ -99,7 +99,7 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 1
-        assert req['topics'][0].value() == 'topic1'
+        assert req['topics'][0] == 'topic1'
 
     def test_maybe_update_metadata_for_topics_forced(self):
         self.client._update_from_metadata(self.metadata_response)
@@ -111,7 +111,7 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 1
-        assert req['topics'][0].value() == 'topic1'
+        assert req['topics'][0] == 'topic1'
 
     def test_maybe_update_metadata_for_topics_nonexistent(self):
         self.client._update_from_metadata(self.metadata_response)
@@ -123,8 +123,8 @@ class TopicsTests(unittest.TestCase):
         self.client._update_from_metadata.assert_called_once()
         req = self.client._send_any_broker.call_args[0][0]
         assert len(req['topics']) == 2
-        assert req['topics'][0].value() == 'topic1'
-        assert req['topics'][1].value() == 'topic2'
+        assert req['topics'][0] == 'topic1'
+        assert req['topics'][1] == 'topic2'
 
     def test_update_from_metadata(self):
         self.client._update_brokers_from_metadata = MagicMock()
@@ -146,6 +146,12 @@ class TopicsTests(unittest.TestCase):
         # Don't want to test the broker update code here
         broker1 = Broker('host1.example.com', id=1, port=8031)
         broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        self.client.cluster.add_broker(broker1)
+        self.client.cluster.add_broker(broker2)
+        self.client.cluster.add_topic(topic)
+        topic.partitions[0].add_replica(broker2)
+        topic.partitions[0].add_replica(broker1)
         topic = Topic('topic2', 1)
         self.client.cluster.add_broker(broker1)
         self.client.cluster.add_broker(broker2)
@@ -155,6 +161,7 @@ class TopicsTests(unittest.TestCase):
 
         self.client._maybe_delete_topics_not_in_metadata(self.metadata_response, delete=True)
         assert 'topic2' not in self.client.cluster.topics
+        assert 'topic1' in self.client.cluster.topics
 
     def test_update_topics_from_metadata_update_replicas(self):
         # Don't want to test the broker update code here

@@ -170,6 +170,16 @@ class ClientConfiguration(object):
     # The rest of these configurations are used for controlling the behavior of the client
 
     @property
+    def client_id(self):
+        """The client ID string to use when talking to the brokers"""
+        return getattr(self, '_client_id', "kafka-tools")
+
+    @client_id.setter
+    def client_id(self, value):
+        raise_if_not_string("client_id", value)
+        self._client_id = value
+
+    @property
     def metadata_refresh(self):
         """How long topic and group metadata can be cached"""
         return getattr(self, '_metadata_refresh', 60000)
@@ -178,6 +188,16 @@ class ClientConfiguration(object):
     def metadata_refresh(self, value):
         raise_if_not_positive_integer("metadata_refresh", value)
         self._metadata_refresh = value
+
+    @property
+    def max_request_size(self):
+        """The largest size for outgoing Kafka requests. Used to allocate the request buffer"""
+        return getattr(self, '_max_request_size', 200000)
+
+    @max_request_size.setter
+    def max_request_size(self, value):
+        raise_if_not_positive_integer("max_request_size", value)
+        self._max_request_size = value
 
     @property
     def broker_threads(self):
@@ -241,3 +261,8 @@ class ClientConfiguration(object):
 def raise_if_not_positive_integer(attr_name, value):
     if not (isinstance(value, six.integer_types) and (value > 0)):
         raise TypeError("{0} must be a positive integer".format(attr_name))
+
+
+def raise_if_not_string(attr_name, value):
+    if not isinstance(value, six.string_types):
+        raise TypeError("{0} must be a string".format(attr_name))

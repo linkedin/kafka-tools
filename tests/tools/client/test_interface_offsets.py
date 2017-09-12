@@ -93,12 +93,12 @@ class InterfaceOffsetsTests(unittest.TestCase):
         assert self.client._send_group_aware_request.call_args[0][0] == 'testgroup'
         req = self.client._send_group_aware_request.call_args[0][1]
         assert isinstance(req, OffsetFetchV1Request)
-        assert req['group_id'].value() == 'testgroup'
+        assert req['group_id'] == 'testgroup'
         assert len(req['topics']) == 1
-        assert req['topics'][0]['topic'].value() == 'topic1'
+        assert req['topics'][0]['topic'] == 'topic1'
         assert len(req['topics'][0]['partitions']) == 2
-        assert req['topics'][0]['partitions'][0].value() == 0
-        assert req['topics'][0]['partitions'][1].value() == 1
+        assert req['topics'][0]['partitions'][0] == 0
+        assert req['topics'][0]['partitions'][1] == 1
 
         assert 'topic1' in val
         assert isinstance(val['topic1'], TopicOffsets)

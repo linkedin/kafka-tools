@@ -33,11 +33,23 @@ class ConfigurationTests(unittest.TestCase):
     def test_create_invalid_name(self):
         self.assertRaises(ConfigurationError, ClientConfiguration, invalidconfig='foo')
 
+    def test_client_id(self):
+        config = ClientConfiguration(client_id="testid")
+        assert config.client_id == "testid"
+        self.assertRaises(TypeError, ClientConfiguration, client_id=1)
+        self.assertRaises(TypeError, ClientConfiguration, client_id=None)
+
     def test_metadata_refresh(self):
         config = ClientConfiguration(metadata_refresh=2345)
         assert config.metadata_refresh == 2345
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh='foo')
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh=-1)
+
+    def test_max_request_size(self):
+        config = ClientConfiguration(max_request_size=2345)
+        assert config.max_request_size == 2345
+        self.assertRaises(TypeError, ClientConfiguration, max_request_size='foo')
+        self.assertRaises(TypeError, ClientConfiguration, max_request_size=-1)
 
     def test_broker_threads(self):
         config = ClientConfiguration(broker_threads=31)

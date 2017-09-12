@@ -109,5 +109,5 @@ def synchronized(item):
 
 
 def raise_if_error(klass, errnum):
-    if errnum.value() != 0:
-        raise klass(error_short(errnum.value()))
+    if errnum != 0:
+        raise klass(error_short(errnum))

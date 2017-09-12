@@ -45,7 +45,7 @@ class MetadataV0Response(BaseResponse):
     ]
 
     def topic_names(self):
-        return [t['name'].value() for t in self._response['topics']]
+        return [t['name'] for t in self._response['topics']]
 
     def broker_ids(self):
-        return [b['node_id'].value() for b in self._response['brokers']]
+        return [b['node_id'] for b in self._response['brokers']]

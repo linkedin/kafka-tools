@@ -1,7 +1,48 @@
 import abc
+import pprint
 import six
 
-from kafka.tools.protocol.types.sequences import Sequence
+
+def _decode_plain_type(value_type, buf):
+    if value_type == 'int8':
+        return buf.getInt8()
+    elif value_type == 'int16':
+        return buf.getInt16()
+    elif value_type == 'int32':
+        return buf.getInt32()
+    elif value_type == 'int64':
+        return buf.getInt64()
+    elif value_type == 'string':
+        val_len = buf.getInt16()
+        return None if val_len == -1 else buf.get(val_len).decode("utf-8")
+    elif value_type == 'bytes':
+        val_len = buf.getInt32()
+        return None if val_len == -1 else buf.get(val_len)
+    elif value_type == 'boolean':
+        return buf.getInt8() == 1
+    else:
+        raise NotImplementedError("Reference to non-implemented type in schema: {0}".format(value_type))
+
+
+def _decode_array(array_schema, buf):
+    array_len = buf.getInt32()
+    if array_len == -1:
+        return None
+
+    if isinstance(array_schema, six.string_types):
+        return [_decode_plain_type(array_schema, buf) for i in range(array_len)]
+    else:
+        return [_decode_sequence(array_schema, buf) for i in range(array_len)]
+
+
+def _decode_sequence(sequence_schema, buf):
+    val = {}
+    for entry in sequence_schema:
+        if entry['type'].lower() == 'array':
+            val[entry['name']] = _decode_array(entry['item_type'], buf)
+        else:
+            val[entry['name']] = _decode_plain_type(entry['type'].lower(), buf)
+    return val
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -11,12 +52,8 @@ class BaseResponse():  # pragma: no cover
         pass
 
     @classmethod
-    def from_dict(cls, value_dict):
-        return cls(Sequence(value_dict, cls.schema))
-
-    @classmethod
-    def from_bytes(cls, correlation_id, byte_array):
-        seq_obj, byte_array = Sequence.decode(byte_array, schema=cls.schema)
+    def from_bytebuffer(cls, correlation_id, buf):
+        seq_obj = _decode_sequence(cls.schema, buf)
         rv = cls(seq_obj)
         rv.correlation_id = correlation_id
         return rv
@@ -28,7 +65,8 @@ class BaseResponse():  # pragma: no cover
         return id(self)
 
     def __str__(self):
-        return str(self._response)
+        pp = pprint.PrettyPrinter(indent=4)
+        return pp.pformat(self._response)
 
     def __len__(self):
         return len(self._response)

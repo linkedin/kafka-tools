@@ -320,7 +320,7 @@ class Client:
 
         rv = {}
         for topic in response['responses']:
-            topic_name = topic['topic'].value()
+            topic_name = topic['topic']
             rv[topic_name] = TopicOffsets(self.cluster.topics[topic_name])
             rv[topic_name].set_offsets_from_fetch(topic['partition_responses'])
 
@@ -395,18 +395,23 @@ class Client:
 
         # Fetch topic metadata for all topics/brokers
         req = TopicMetadataV1Request({'topics': None})
-        correlation_id, metadata = broker.send(req)
+        correlation_id, metadata = broker.send(req,
+                                               request_size=self.configuration.max_request_size,
+                                               client_id=self.configuration.client_id)
         broker.close()
 
         # Add brokers and topics to cluster
-        self._controller_id = metadata['controller_id'].value()
+        self._controller_id = metadata['controller_id']
         self._update_from_metadata(metadata)
         self._last_full_metadata = time.time()
         return True
 
     def _connect_all_brokers(self):
+        pool = ThreadPool(processes=self.configuration.broker_threads)
         for broker_id in self.cluster.brokers:
-            self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
+            pool.apply_async(self.cluster.brokers[broker_id].connect, (self.configuration.ssl_context,))
+        pool.close()
+        pool.join()
 
     def _send_to_broker(self, broker_id, request):
         """
@@ -422,7 +427,9 @@ class Client:
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
-        correlation_id, response = self.cluster.brokers[broker_id].send(request)
+        correlation_id, response = self.cluster.brokers[broker_id].send(request,
+                                                                        request_size=self.configuration.max_request_size,
+                                                                        client_id=self.configuration.client_id)
         return response
 
     def _send_any_broker(self, request):
@@ -530,13 +537,15 @@ class Client:
         if group_name not in self.cluster.groups:
             self.cluster.add_group(Group(group_name))
         try:
-            self.cluster.groups[group_name].coordinator = self.cluster.brokers[response['node_id'].value()]
+            self.cluster.groups[group_name].coordinator = self.cluster.brokers[response['node_id']]
         except KeyError:
-            broker = Broker(response['host'].value(), id=response['node_id'].value(), port=response['port'].value())
+            broker = Broker(response['host'], id=response['node_id'], port=response['port'])
             self.cluster.add_broker(broker)
             self.cluster.groups[group_name].coordinator = broker
 
-        correlation_id, response = self.cluster.groups[group_name].coordinator.send(request)
+        correlation_id, response = self.cluster.groups[group_name].coordinator.send(request,
+                                                                                    request_size=self.configuration.max_request_size,
+                                                                                    client_id=self.configuration.client_id)
         return response
 
     def _send_list_offsets_to_brokers(self, request_values):
@@ -564,7 +573,7 @@ class Client:
         for broker_id in responses:
             response = responses[broker_id]
             for topic in response['responses']:
-                topic_name = topic['topic'].value()
+                topic_name = topic['topic']
                 if topic_name not in rv:
                     rv[topic_name] = TopicOffsets(self.cluster.topics[topic_name])
                 rv[topic_name].set_offsets_from_list(topic['partition_responses'])
@@ -591,10 +600,10 @@ class Client:
     def _parse_set_offset_response(self, response):
         rv = {}
         for topic in response['responses']:
-            topic_name = topic['topic'].value()
+            topic_name = topic['topic']
             rv[topic_name] = [-1] * len(topic['partition_responses'])
             for partition in topic['partition_responses']:
-                rv[topic_name][partition['partition'].value()] = partition['error'].value()
+                rv[topic_name][partition['partition']] = partition['error']
 
         return rv
 
@@ -609,16 +618,16 @@ class Client:
         """
         for b in metadata['brokers']:
             try:
-                broker = self.cluster.brokers[b['node_id'].value()]
-                if (broker.hostname != b['host'].value()) or (broker.port != b['port'].value()):
+                broker = self.cluster.brokers[b['node_id']]
+                if (broker.hostname != b['host']) or (broker.port != b['port']):
                     # if the hostname or port changes, close the existing connection
                     broker.close()
-                    broker.hostname = b['host'].value()
-                    broker.port = b['port'].value()
+                    broker.hostname = b['host']
+                    broker.port = b['port']
             except KeyError:
-                broker = Broker(b['host'].value(), id=b['node_id'].value(), port=b['port'].value())
+                broker = Broker(b['host'], id=b['node_id'], port=b['port'])
                 self.cluster.add_broker(broker)
-            broker.rack = b['rack'].value()
+            broker.rack = b['rack']
 
     def _maybe_delete_topics_not_in_metadata(self, metadata, delete):
         """
@@ -660,17 +669,17 @@ class Client:
             IndexError: If the brokers in the metadata object are not defined in the cluster
         """
         for t in metadata['topics']:
-            if t['name'].value() not in self.cluster.topics:
-                self.cluster.add_topic(Topic(t['name'].value(), len(t['partitions'])))
-            topic = self.cluster.topics[t['name'].value()]
+            if t['name'] not in self.cluster.topics:
+                self.cluster.add_topic(Topic(t['name'], len(t['partitions'])))
+            topic = self.cluster.topics[t['name']]
             topic._last_updated = time.time()
 
             topic.assure_has_partitions(len(t['partitions']))
             for p in t['partitions']:
-                partition = topic.partitions[p['id'].value()]
-                partition.leader = self.cluster.brokers[p['leader'].value()]
+                partition = topic.partitions[p['id']]
+                partition.leader = self.cluster.brokers[p['leader']]
                 for i, replica in enumerate(p['replicas']):
-                    partition.add_or_update_replica(i, self.cluster.brokers[replica.value()])
+                    partition.add_or_update_replica(i, self.cluster.brokers[replica])
                 partition.delete_replicas(len(p['replicas']))
 
         self._maybe_delete_topics_not_in_metadata(metadata, delete)
@@ -732,14 +741,14 @@ class Client:
             group_info (dict): A group from a ListGroups response, which contains group_id and protocol_type keys
             coordinator (int): The ID of the group coordinator broker
         """
-        group_name = group_info['group_id'].value()
+        group_name = group_info['group_id']
         try:
             group = self.cluster.groups[group_name]
         except KeyError:
             group = Group(group_name)
             self.cluster.add_group(group)
         group.coordinator = self.cluster.brokers[coordinator]
-        group.protocol_type = group_info['protocol_type'].value()
+        group.protocol_type = group_info['protocol_type']
 
     def _update_groups_from_lists(self, responses):
         """
@@ -753,7 +762,7 @@ class Client:
         """
         error_counter = 0
         for broker_id, response in responses.items():
-            if (response is None) or (response['error'].value() != 0):
+            if (response is None) or (response['error'] != 0):
                 error_counter += 1
                 continue
 
@@ -788,19 +797,19 @@ class Client:
             response (DescribeGroupsV0Response): A response to create or update groups for
         """
         for g in response['groups']:
-            if g['group_id'].value() not in self.cluster.groups:
-                self.cluster.add_group(Group(g['group_id'].value()))
-            group = self.cluster.groups[g['group_id'].value()]
-            group.state = g['state'].value()
-            group.protocol_type = g['protocol_type'].value()
-            group.protocol = g['protocol'].value()
+            if g['group_id'] not in self.cluster.groups:
+                self.cluster.add_group(Group(g['group_id']))
+            group = self.cluster.groups[g['group_id']]
+            group.state = g['state']
+            group.protocol_type = g['protocol_type']
+            group.protocol = g['protocol']
             group.clear_members()
             for m in g['members']:
-                group.add_member(m['member_id'].value(),
-                                 client_id=m['client_id'].value(),
-                                 client_host=m['client_host'].value(),
-                                 metadata=m['member_metadata'].value(),
-                                 assignment=m['member_assignment'].value())
+                group.add_member(m['member_id'],
+                                 client_id=m['client_id'],
+                                 client_host=m['client_host'],
+                                 metadata=m['member_metadata'],
+                                 assignment=m['member_assignment'])
             group._last_updated = time.time()
 
     def _map_topic_partitions_to_brokers(self, topic_list):

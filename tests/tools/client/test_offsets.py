@@ -38,7 +38,7 @@ class OffsetTests(unittest.TestCase):
         req = self.client.cluster.brokers[1].send.call_args[0][0]
         assert req['replica_id'] == -1
         assert len(req['topics']) == 1
-        assert req['topics'][0]['topic'].value() == 'topic1'
+        assert req['topics'][0]['topic'] == 'topic1'
         assert len(req['topics'][0]['partitions']) == 2
         assert req['topics'][0]['partitions'][0]['partition'] == 0
         assert req['topics'][0]['partitions'][0]['timestamp'] == Client.OFFSET_LATEST
@@ -87,19 +87,19 @@ class OffsetTests(unittest.TestCase):
         assert self.client._send_group_aware_request.call_args[0][0] == 'testgroup'
         req = self.client._send_group_aware_request.call_args[0][1]
         assert isinstance(req, OffsetCommitV2Request)
-        assert req['group_id'].value() == 'testgroup'
-        assert req['group_generation_id'].value() == -1
-        assert req['member_id'].value() == ''
-        assert req['retention_time'].value() == -1
+        assert req['group_id'] == 'testgroup'
+        assert req['group_generation_id'] == -1
+        assert req['member_id'] == ''
+        assert req['retention_time'] == -1
         assert len(req['topics']) == 1
-        assert req['topics'][0]['topic'].value() == 'topic1'
+        assert req['topics'][0]['topic'] == 'topic1'
         assert len(req['topics'][0]['partitions']) == 2
-        assert req['topics'][0]['partitions'][0]['partition'].value() == 0
-        assert req['topics'][0]['partitions'][0]['offset'].value() == 2342
-        assert req['topics'][0]['partitions'][0]['metadata'].value() is None
-        assert req['topics'][0]['partitions'][1]['partition'].value() == 1
-        assert req['topics'][0]['partitions'][1]['offset'].value() == 8793
-        assert req['topics'][0]['partitions'][1]['metadata'].value() is None
+        assert req['topics'][0]['partitions'][0]['partition'] == 0
+        assert req['topics'][0]['partitions'][0]['offset'] == 2342
+        assert req['topics'][0]['partitions'][0]['metadata'] is None
+        assert req['topics'][0]['partitions'][1]['partition'] == 1
+        assert req['topics'][0]['partitions'][1]['offset'] == 8793
+        assert req['topics'][0]['partitions'][1]['metadata'] is None
 
     def test_parse_set_offset_response(self):
         response = offset_commit_response()

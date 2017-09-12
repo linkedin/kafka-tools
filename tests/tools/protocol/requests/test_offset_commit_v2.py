@@ -1,4 +1,5 @@
 import unittest
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.offset_commit_v2 import _get_partition_map, _parse_next_topic, OffsetCommitV2Request
@@ -57,3 +58,6 @@ class OffsetCommitV2RequestTests(unittest.TestCase):
     def test_process_arguments_nonnumeric(self):
         self.assertRaises(ArgumentError, OffsetCommitV2Request.process_arguments, ['groupname', 'foo', 'membername', '76', 'topicname', '4,2'])
         self.assertRaises(ArgumentError, OffsetCommitV2Request.process_arguments, ['groupname', '16', 'membername', 'foo', 'topicname', '4,2'])
+
+    def test_schema(self):
+        validate_schema(OffsetCommitV2Request.schema)

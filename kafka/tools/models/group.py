@@ -17,6 +17,7 @@
 
 from kafka.tools.models import BaseModel
 from kafka.tools.protocol.responses.member_assignment_v0 import MemberAssignmentV0
+from kafka.tools.protocol.types.bytebuffer import ByteBuffer
 
 
 class Group(BaseModel):
@@ -69,11 +70,11 @@ class GroupMember(BaseModel):
         self.topics = {}
 
     def set_assignment(self):
-        assignment = MemberAssignmentV0.from_bytes(0, self.assignment_data)
-        self.assignment_version = assignment['version'].value()
-        self.user_data = assignment['user_data'].value()
+        assignment = MemberAssignmentV0.from_bytebuffer(0, ByteBuffer(self.assignment_data))
+        self.assignment_version = assignment['version']
+        self.user_data = assignment['user_data']
         for tp in assignment['partitions']:
-            if tp['topic'].value() not in self.topics:
-                self.topics[tp['topic'].value()] = []
+            if tp['topic'] not in self.topics:
+                self.topics[tp['topic']] = []
             for partition in tp['partitions']:
-                self.topics[tp['topic'].value()].append(partition.value())
+                self.topics[tp['topic']].append(partition)

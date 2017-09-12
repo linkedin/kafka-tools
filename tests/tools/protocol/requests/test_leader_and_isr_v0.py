@@ -1,5 +1,6 @@
 import unittest
 from mock import patch
+from tests.tools.protocol.utilities import validate_schema
 
 from kafka.tools.protocol.requests import ArgumentError
 from kafka.tools.protocol.requests.leader_and_isr_v0 import _parse_argument, _process_arguments, LeaderAndIsrV0Request
@@ -85,3 +86,6 @@ class LeaderAndIsrV0RequestTests(unittest.TestCase):
         val = LeaderAndIsrV0Request.process_arguments(['fake_arguments'])
         mock_process.assert_called_once_with("LeaderAndIsrV0", ['fake_arguments'])
         assert val == 'fake_return_value'
+
+    def test_schema(self):
+        validate_schema(LeaderAndIsrV0Request.schema)
