@@ -84,6 +84,8 @@ def _encode_plain_value(value, value_type, buf):
             buf.put(value)
     elif value_type == 'boolean':
         buf.putInt8(1 if value else 0)
+    elif isinstance(value_type, collections.Sequence):
+        _encode_sequence(value, value_type, buf)
     else:
         raise NotImplementedError("Reference to non-implemented type in schema: {0}".format(value_type))
 

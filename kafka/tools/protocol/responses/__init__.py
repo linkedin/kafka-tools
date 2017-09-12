@@ -14,10 +14,10 @@ def _decode_plain_type(value_type, buf):
         return buf.getInt64()
     elif value_type == 'string':
         val_len = buf.getInt16()
-        return buf.get(val_len).decode("utf-8")
+        return None if val_len == -1 else buf.get(val_len).decode("utf-8")
     elif value_type == 'bytes':
         val_len = buf.getInt32()
-        return buf.get(val_len)
+        return None if val_len == -1 else buf.get(val_len)
     elif value_type == 'boolean':
         return buf.getInt8() == 1
     else:

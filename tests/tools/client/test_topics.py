@@ -146,6 +146,12 @@ class TopicsTests(unittest.TestCase):
         # Don't want to test the broker update code here
         broker1 = Broker('host1.example.com', id=1, port=8031)
         broker2 = Broker('host2.example.com', id=101, port=8032)
+        topic = Topic('topic1', 1)
+        self.client.cluster.add_broker(broker1)
+        self.client.cluster.add_broker(broker2)
+        self.client.cluster.add_topic(topic)
+        topic.partitions[0].add_replica(broker2)
+        topic.partitions[0].add_replica(broker1)
         topic = Topic('topic2', 1)
         self.client.cluster.add_broker(broker1)
         self.client.cluster.add_broker(broker2)
@@ -155,6 +161,7 @@ class TopicsTests(unittest.TestCase):
 
         self.client._maybe_delete_topics_not_in_metadata(self.metadata_response, delete=True)
         assert 'topic2' not in self.client.cluster.topics
+        assert 'topic1' in self.client.cluster.topics
 
     def test_update_topics_from_metadata_update_replicas(self):
         # Don't want to test the broker update code here

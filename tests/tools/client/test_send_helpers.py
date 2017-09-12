@@ -140,3 +140,6 @@ class SendHelperTests(unittest.TestCase):
         self.assertRaises(ConnectionError, self.client._send_any_broker, 'fakerequest')
         broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
         broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+
+    def test_raise_if_not_connected(self):
+        self.assertRaises(ConnectionError, self.client._raise_if_not_connected)
