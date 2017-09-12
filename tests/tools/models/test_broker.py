@@ -1,3 +1,4 @@
+import collections
 import unittest
 import socket
 from mock import MagicMock, call, patch
@@ -5,7 +6,6 @@ from mock import MagicMock, call, patch
 from kafka.tools.exceptions import ConfigurationException, ConnectionError
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.topic import Topic
-from kafka.tools.protocol.types.sequences import Array
 from kafka.tools.protocol.requests.api_versions_v0 import ApiVersionsV0Request
 from kafka.tools.protocol.responses.api_versions_v0 import ApiVersionsV0Response
 
@@ -177,7 +177,7 @@ class BrokerTests(unittest.TestCase):
         assert isinstance(response, ApiVersionsV0Response)
         assert response.correlation_id == 1
         assert response['error'] == 0
-        assert isinstance(response['api_versions'], Array)
+        assert isinstance(response['api_versions'], collections.Sequence)
         assert len(response['api_versions']) == 1
         assert len(response['api_versions'][0]) == 3
         assert response['api_versions'][0]['api_key'] == 1

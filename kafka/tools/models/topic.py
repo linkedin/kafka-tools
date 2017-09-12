@@ -92,7 +92,7 @@ class TopicOffsets:
         """
         for partition in partitions:
             raise_if_error(OffsetError, partition['error'])
-            self.partitions[partition['partition'].value()] = partition['offsets'][0].value()
+            self.partitions[partition['partition']] = partition['offsets'][0]
 
     def set_offsets_from_fetch(self, partitions):
         """
@@ -107,4 +107,4 @@ class TopicOffsets:
         """
         for partition in partitions:
             raise_if_error(OffsetError, partition['error'])
-            self.partitions[partition['partition'].value()] = partition['offset'].value()
+            self.partitions[partition['partition']] = partition['offset']

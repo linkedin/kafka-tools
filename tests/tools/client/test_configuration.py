@@ -39,6 +39,12 @@ class ConfigurationTests(unittest.TestCase):
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh='foo')
         self.assertRaises(TypeError, ClientConfiguration, metadata_refresh=-1)
 
+    def test_max_request_size(self):
+        config = ClientConfiguration(max_request_size=2345)
+        assert config.max_request_size == 2345
+        self.assertRaises(TypeError, ClientConfiguration, max_request_size='foo')
+        self.assertRaises(TypeError, ClientConfiguration, max_request_size=-1)
+
     def test_broker_threads(self):
         config = ClientConfiguration(broker_threads=31)
         assert config.broker_threads == 31

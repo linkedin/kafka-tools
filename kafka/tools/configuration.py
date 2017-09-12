@@ -180,6 +180,16 @@ class ClientConfiguration(object):
         self._metadata_refresh = value
 
     @property
+    def max_request_size(self):
+        """The largest size for outgoing Kafka requests. Used to allocate the request buffer"""
+        return getattr(self, '_max_request_size', 200000)
+
+    @max_request_size.setter
+    def max_request_size(self, value):
+        raise_if_not_positive_integer("max_request_size", value)
+        self._max_request_size = value
+
+    @property
     def broker_threads(self):
         """How many threads to use in a pool for broker connections"""
         return getattr(self, '_broker_threads', 20)

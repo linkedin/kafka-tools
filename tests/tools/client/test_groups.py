@@ -12,21 +12,21 @@ from kafka.tools.protocol.requests.list_groups_v0 import ListGroupsV0Request
 
 def assert_cluster_has_groups(cluster, dg):
     for dgroup in dg['groups']:
-        assert dgroup['group_id'].value() in cluster.groups
-        group = cluster.groups[dgroup['group_id'].value()]
-        assert group.name == dgroup['group_id'].value()
-        assert group.protocol == dgroup['protocol'].value()
-        assert group.protocol_type == dgroup['protocol_type'].value()
+        assert dgroup['group_id'] in cluster.groups
+        group = cluster.groups[dgroup['group_id']]
+        assert group.name == dgroup['group_id']
+        assert group.protocol == dgroup['protocol']
+        assert group.protocol_type == dgroup['protocol_type']
         assert len(group.members) == len(dgroup['members'])
 
         for i, gmember in enumerate(dgroup['members']):
             member = group.members[i]
             assert member.group == group
-            assert member.name == gmember['member_id'].value()
-            assert member.client_id == gmember['client_id'].value()
-            assert member.client_host == gmember['client_host'].value()
-            assert member.metadata == gmember['member_metadata'].value()
-            assert member.assignment_data == gmember['member_assignment'].value()
+            assert member.name == gmember['member_id']
+            assert member.client_id == gmember['client_id']
+            assert member.client_host == gmember['client_host']
+            assert member.metadata == gmember['member_metadata']
+            assert member.assignment_data == gmember['member_assignment']
 
 
 class GroupsTests(unittest.TestCase):

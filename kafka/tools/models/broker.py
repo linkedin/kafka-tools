@@ -19,10 +19,12 @@ from __future__ import division
 
 import re
 import socket
+import time
 
 from kafka.tools import log
 from kafka.tools.models import BaseModel
 from kafka.tools.exceptions import ConfigurationException, ConnectionError
+from kafka.tools.protocol.types.bytebuffer import ByteBuffer
 from kafka.tools.protocol.types.integers import Int16, Int32
 from kafka.tools.protocol.types.string import String
 from kafka.tools.utilities import json_loads
@@ -185,19 +187,23 @@ class Broker(BaseModel):
 
         # Send the payload bytes to the broker
         self._sock.send(payload)
+        log.info("Start decode {0}".format(time.time()))
 
         # Read the first 4 bytes so we know the size
-        resp = self._sock.recv(4)
-        size, junk = Int32.decode(resp)
+        size = ByteBuffer(self._sock.recv(4)).getInt32()
 
         # Read the response that we're expecting
-        response_data = self._read_bytes(size.value())
+        response_data = self._read_bytes(size)
+        response = ByteBuffer(response_data)
 
         # Parse off the correlation ID for the response
-        correlation_id, response_data = Int32.decode(response_data)
+        correlation_id = response.getInt32()
 
         # Get the proper response class and parse the response
-        return correlation_id.value(), request.response.from_bytes(correlation_id, response_data)
+        resp = request.response.from_bytebuffer(correlation_id, response.slice())
+        log.info("End decode {0}".format(time.time()))
+        return (correlation_id, resp)
+        # return correlation_id, request.response.from_bytebuffer(correlation_id, response.slice())
 
     def _read_bytes(self, size):
         bytes_left = size

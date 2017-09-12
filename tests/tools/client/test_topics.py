@@ -13,16 +13,16 @@ from kafka.tools.protocol.requests.topic_metadata_v1 import TopicMetadataV1Reque
 
 def assert_cluster_has_topics(cluster, metadata):
     for mtopic in metadata['topics']:
-        assert mtopic['name'].value() in cluster.topics
-        topic = cluster.topics[mtopic['name'].value()]
-        assert topic.name == mtopic['name'].value()
-        assert topic.internal == mtopic['internal'].value()
+        assert mtopic['name'] in cluster.topics
+        topic = cluster.topics[mtopic['name']]
+        assert topic.name == mtopic['name']
+        assert topic.internal == mtopic['internal']
         assert len(topic.partitions) == len(mtopic['partitions'])
 
         for i, tp in enumerate(mtopic['partitions']):
             partition = topic.partitions[i]
-            assert partition.num == tp['id'].value()
-            assert partition.leader.id == tp['leader'].value()
+            assert partition.num == tp['id']
+            assert partition.leader.id == tp['leader']
             assert len(partition.replicas) == len(tp['replicas'])
 
             for j, tp_replica in enumerate(tp['replicas']):
@@ -31,11 +31,11 @@ def assert_cluster_has_topics(cluster, metadata):
 
 def assert_cluster_has_brokers(cluster, metadata):
     for b in metadata['brokers']:
-        assert b['node_id'].value() in cluster.brokers
-        broker = cluster.brokers[b['node_id'].value()]
-        assert broker.hostname == b['host'].value()
-        assert broker.port == b['port'].value()
-        assert broker.rack == b['rack'].value()
+        assert b['node_id'] in cluster.brokers
+        broker = cluster.brokers[b['node_id']]
+        assert broker.hostname == b['host']
+        assert broker.port == b['port']
+        assert broker.rack == b['rack']
 
 
 class TopicsTests(unittest.TestCase):
