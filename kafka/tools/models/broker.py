@@ -20,7 +20,6 @@ from __future__ import division
 import re
 import socket
 import struct
-import time
 
 from kafka.tools import log
 from kafka.tools.models import BaseModel
@@ -170,7 +169,6 @@ class Broker(BaseModel):
 
     def send(self, request, request_size=200000, client_id="kafka-tools"):
         # Build the payload based on the request passed in. We'll fill in the size at the end
-        log.info("Start encode {0}".format(time.time()))
         buf = ByteBuffer(request_size)
         buf.putInt32(0)
         buf.putInt16(request.api_key)
@@ -192,7 +190,6 @@ class Broker(BaseModel):
 
         # Send the payload bytes to the broker
         self._sock.send(buf.get(buf.capacity))
-        log.info("Start decode {0}".format(time.time()))
 
         # Read the first 4 bytes so we know the size
         size = ByteBuffer(self._sock.recv(4)).getInt32()
@@ -205,10 +202,7 @@ class Broker(BaseModel):
         correlation_id = response.getInt32()
 
         # Get the proper response class and parse the response
-        resp = request.response.from_bytebuffer(correlation_id, response.slice())
-        log.info("End decode {0}".format(time.time()))
-        return (correlation_id, resp)
-        # return correlation_id, request.response.from_bytebuffer(correlation_id, response.slice())
+        return correlation_id, request.response.from_bytebuffer(correlation_id, response.slice())
 
     def _read_bytes(self, size):
         bytes_left = size
