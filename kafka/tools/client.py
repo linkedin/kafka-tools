@@ -407,8 +407,11 @@ class Client:
         return True
 
     def _connect_all_brokers(self):
+        pool = ThreadPool(processes=self.configuration.broker_threads)
         for broker_id in self.cluster.brokers:
-            self.cluster.brokers[broker_id].connect(self.configuration.ssl_context)
+            pool.apply_async(self.cluster.brokers[broker_id].connect, (self.configuration.ssl_context,))
+        pool.close()
+        pool.join()
 
     def _send_to_broker(self, broker_id, request):
         """
