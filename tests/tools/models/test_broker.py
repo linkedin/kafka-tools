@@ -3,17 +3,20 @@ import unittest
 import socket
 from mock import MagicMock, call, patch
 
+from kafka.tools.configuration import ClientConfiguration
 from kafka.tools.exceptions import ConfigurationException, ConnectionError
 from kafka.tools.models.broker import Broker
 from kafka.tools.models.topic import Topic
 from kafka.tools.protocol.requests.api_versions_v0 import ApiVersionsV0Request
 from kafka.tools.protocol.responses.api_versions_v0 import ApiVersionsV0Response
+from kafka.tools.protocol.types.bytebuffer import ByteBuffer
 
 
 class BrokerTests(unittest.TestCase):
     def setUp(self):
+        self.configuration = ClientConfiguration(num_retries=3, retry_backoff=0.5)
         self.mock_sock = MagicMock()
-        self.broker = Broker('brokerhost1.example.com', id=1, sock=self.mock_sock)
+        self.broker = Broker('brokerhost1.example.com', id=1, sock=self.mock_sock, configuration=self.configuration)
 
     def add_partitions(self, pos, num):
         topic = Topic('testTopic', num)
@@ -157,7 +160,7 @@ class BrokerTests(unittest.TestCase):
         self.mock_sock.close.assert_called_once()
 
     @patch.object(Broker, '_read_bytes')
-    def test_broker_send(self, mock_read_bytes):
+    def test_broker_single_send(self, mock_read_bytes):
         # recv is called to get the response size (first 4 bytes)
         self.mock_sock.recv.return_value = b'\x00\x00\x00\x10'
 
@@ -166,10 +169,10 @@ class BrokerTests(unittest.TestCase):
         mock_read_bytes.return_value = b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x01\x01\x01\x02\x02'
 
         request = ApiVersionsV0Request({})
-        (correlation_id, response) = self.broker.send(request)
+        (correlation_id, response) = self.broker._single_send(request)
 
         # Check that the request was encoded properly
-        self.mock_sock.send.assert_called_once_with(bytearray(b'\x00\x00\x00\x15\x00\x12\x00\x00\x00\x00\x00\x01\x00\x0bkafka-tools'))
+        self.mock_sock.sendall.assert_called_once_with(bytearray(b'\x00\x00\x00\x15\x00\x12\x00\x00\x00\x00\x00\x01\x00\x0bkafka-tools'))
         self.mock_sock.recv.assert_called_once_with(4)
         mock_read_bytes.assert_called_once_with(16)
 
@@ -186,6 +189,60 @@ class BrokerTests(unittest.TestCase):
 
         # Correlation ID must be incremented after each request
         assert self.broker._correlation_id == 2
+
+    @patch.object(Broker, '_read_bytes')
+    def test_broker_single_send_error(self, mock_read_bytes):
+        self.mock_sock.recv.side_effect = socket.error
+        mock_read_bytes.return_value = b'\x00\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x01\x01\x01\x02\x02'
+
+        request = ApiVersionsV0Request({})
+        self.assertRaises(ConnectionError, self.broker._single_send, request)
+
+    @patch.object(ByteBuffer, 'getInt32')
+    def test_broker_single_send_short(self, mock_getint):
+        self.mock_sock.recv.return_value = b'\x00\x00\x00\x10'
+        mock_getint.side_effect = EOFError
+
+        request = ApiVersionsV0Request({})
+        self.assertRaises(ConnectionError, self.broker._single_send, request)
+
+    @patch.object(Broker, '_single_send')
+    @patch.object(Broker, 'connect')
+    @patch.object(Broker, 'close')
+    def test_broker_send(self, mock_close, mock_connect, mock_send):
+        mock_send.return_value = 'fakeresponse'
+        self.broker.send('fakerequest')
+        mock_connect.assert_not_called()
+        mock_close.assert_not_called()
+        mock_send.assert_called_once_with('fakerequest')
+
+    @patch.object(Broker, '_single_send')
+    @patch.object(Broker, 'connect')
+    @patch.object(Broker, 'close')
+    def test_broker_send_retry(self, mock_close, mock_connect, mock_send):
+        def close_broker():
+            self.broker._sock = None
+
+        mock_send.side_effect = [ConnectionError, 'fakeresponse']
+        mock_close.side_effect = close_broker
+        self.broker.send('fakerequest')
+        mock_close.assert_called_once_with()
+        mock_connect.assert_called_once_with()
+        mock_send.assert_has_calls([call('fakerequest'), call('fakerequest')])
+
+    @patch.object(Broker, '_single_send')
+    @patch.object(Broker, 'connect')
+    @patch.object(Broker, 'close')
+    def test_broker_send_exhaust_retry(self, mock_close, mock_connect, mock_send):
+        def close_broker():
+            self.broker._sock = None
+
+        mock_send.side_effect = ConnectionError
+        mock_close.side_effect = close_broker
+        self.assertRaises(ConnectionError, self.broker.send, 'fakerequest')
+        mock_close.assert_has_calls([call(), call()])
+        mock_connect.assert_has_calls([call(), call()])
+        mock_send.assert_has_calls([call('fakerequest'), call('fakerequest'), call('fakerequest')])
 
     def test_broker_read_bytes(self):
         self.mock_sock.recv.return_value = b'\x01\x02\x03\x04'

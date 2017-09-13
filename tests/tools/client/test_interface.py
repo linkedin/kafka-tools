@@ -74,7 +74,7 @@ class GenericInterfaceTests(unittest.TestCase):
         self.client._update_from_metadata.side_effect = add_brokers_with_mocks
 
         self.client.connect()
-        mock_connect.assert_has_calls([call(sslcontext=None), call(sslcontext=None)])
+        mock_connect.assert_has_calls([call(), call()])
         mock_send.assert_called_once()
         assert isinstance(mock_send.call_args[0][0], TopicMetadataV1Request)
         mock_close.assert_called_once()
