@@ -20,6 +20,11 @@ import struct
 
 
 class ByteBuffer(object):
+    struct = {'b': {'pack': struct.Struct('>b').pack_into, 'unpack': struct.Struct('>b').unpack_from, 'num_bytes': 1},
+              'h': {'pack': struct.Struct('>h').pack_into, 'unpack': struct.Struct('>h').unpack_from, 'num_bytes': 2},
+              'i': {'pack': struct.Struct('>i').pack_into, 'unpack': struct.Struct('>i').unpack_from, 'num_bytes': 4},
+              'q': {'pack': struct.Struct('>q').pack_into, 'unpack': struct.Struct('>q').unpack_from, 'num_bytes': 8}}
+
     def __init__(self, value):
         if isinstance(value, bytearray):
             self._buffer = value
@@ -82,28 +87,28 @@ class ByteBuffer(object):
         return new_bb
 
     def getInt8(self, position=None):
-        return self._read_integer(position, 1, 'b')
+        return self._read_integer(position, 'b')
 
     def putInt8(self, value, position=None):
-        return self._write_integer(value, position, 1, 'b')
+        return self._write_integer(value, position, 'b')
 
     def getInt16(self, position=None):
-        return self._read_integer(position, 2, 'h')
+        return self._read_integer(position, 'h')
 
     def putInt16(self, value, position=None):
-        return self._write_integer(value, position, 2, 'h')
+        return self._write_integer(value, position, 'h')
 
     def getInt32(self, position=None):
-        return self._read_integer(position, 4, 'i')
+        return self._read_integer(position, 'i')
 
     def putInt32(self, value, position=None):
-        return self._write_integer(value, position, 4, 'i')
+        return self._write_integer(value, position, 'i')
 
     def getInt64(self, position=None):
-        return self._read_integer(position, 8, 'q')
+        return self._read_integer(position, 'q')
 
     def putInt64(self, value, position=None):
-        return self._write_integer(value, position, 8, 'q')
+        return self._write_integer(value, position, 'q')
 
     def get(self, num_bytes, position=None):
         pos = self._get_and_check_position(position, num_bytes)
@@ -117,13 +122,14 @@ class ByteBuffer(object):
         pos = self._get_and_check_position(position, num_bytes)
         self._buffer[pos:pos+num_bytes] = byte_str
 
-    def _read_integer(self, position, num_bytes, struct_char):
-        pos = self._get_and_check_position(position, num_bytes)
-        return struct.unpack('>{0}'.format(struct_char), self._buffer[pos:pos+num_bytes])[0]
+    def _read_integer(self, position, struct_char):
+        pos = self._get_and_check_position(position, self.struct[struct_char]['num_bytes'])
+        return self.struct[struct_char]['unpack'](self._buffer, pos)[0]
 
-    def _write_integer(self, value, position, num_bytes, struct_char):
-        pos = self._get_and_check_position(position, num_bytes)
-        self.put(struct.pack('>{0}'.format(struct_char), value), position=pos)
+    def _write_integer(self, value, position, struct_char):
+        pos = self._get_and_check_position(position, self.struct[struct_char]['num_bytes'])
+        # self.put(self.packers[struct_char]['func'](value), position=pos)
+        self.struct[struct_char]['pack'](self._buffer, pos, value)
 
     def _get_and_check_position(self, position, num_bytes):
         if position is None:
