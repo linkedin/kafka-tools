@@ -51,6 +51,18 @@ class ConfigurationTests(unittest.TestCase):
         self.assertRaises(TypeError, ClientConfiguration, max_request_size='foo')
         self.assertRaises(TypeError, ClientConfiguration, max_request_size=-1)
 
+    def test_num_retries(self):
+        config = ClientConfiguration(num_retries=5)
+        assert config.num_retries == 5
+        self.assertRaises(TypeError, ClientConfiguration, num_retries='foo')
+        self.assertRaises(TypeError, ClientConfiguration, num_retries=-1)
+
+    def test_retry_backoff(self):
+        config = ClientConfiguration(retry_backoff=5.4)
+        assert config.retry_backoff == 5.4
+        self.assertRaises(TypeError, ClientConfiguration, retry_backoff='foo')
+        self.assertRaises(TypeError, ClientConfiguration, retry_backoff=-1)
+
     def test_broker_threads(self):
         config = ClientConfiguration(broker_threads=31)
         assert config.broker_threads == 31

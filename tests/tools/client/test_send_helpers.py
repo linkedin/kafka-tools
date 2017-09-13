@@ -28,7 +28,7 @@ class SendHelperTests(unittest.TestCase):
 
         assert 'testgroup' in self.client.cluster.groups
         assert self.client.cluster.groups['testgroup'].coordinator == broker1
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker1.send.assert_called_once_with('fakerequest')
 
     @patch('kafka.tools.client.Broker')
     def test_send_group_aware_request_new_broker(self, mock_broker_class):
@@ -42,11 +42,11 @@ class SendHelperTests(unittest.TestCase):
         self.client._send_any_broker.return_value = self.group_coordinator
         self.client._send_group_aware_request('testgroup', 'fakerequest')
 
-        mock_broker_class.assert_called_once_with('host1.example.com', id=1, port=8031)
+        mock_broker_class.assert_called_once_with('host1.example.com', id=1, port=8031, configuration=self.client.configuration)
         assert 1 in self.client.cluster.brokers
         assert self.client.cluster.brokers[1] == broker1
         assert self.client.cluster.groups['testgroup'].coordinator == broker1
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker1.send.assert_called_once_with('fakerequest')
 
     def test_send_group_aware_request_error(self):
         self.client._send_any_broker = MagicMock()
@@ -66,8 +66,8 @@ class SendHelperTests(unittest.TestCase):
         self.client.cluster.add_broker(broker2)
 
         val = self.client._send_all_brokers('fakerequest')
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
-        broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker1.send.assert_called_once_with('fakerequest')
+        broker2.send.assert_called_once_with('fakerequest')
         assert val[1] == 'fakeresponse'
         assert val[101] == 'otherresponse'
 
@@ -84,8 +84,8 @@ class SendHelperTests(unittest.TestCase):
         self.client.cluster.add_broker(broker2)
 
         val = self.client._send_all_brokers('fakerequest')
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
-        broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker1.send.assert_called_once_with('fakerequest')
+        broker2.send.assert_called_once_with('fakerequest')
         assert val[1] == 'fakeresponse'
         assert val[101] is None
 
@@ -103,7 +103,7 @@ class SendHelperTests(unittest.TestCase):
         self.client.cluster.add_broker(broker2)
 
         val = self.client._send_any_broker('fakerequest')
-        broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker2.send.assert_called_once_with('fakerequest')
         assert val == 'otherresponse'
 
     @patch('kafka.tools.client.shuffle', lambda x: sorted(x))
@@ -120,8 +120,8 @@ class SendHelperTests(unittest.TestCase):
         self.client.cluster.add_broker(broker2)
 
         val = self.client._send_any_broker('fakerequest')
-        broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker2.send.assert_called_once_with('fakerequest')
+        broker1.send.assert_called_once_with('fakerequest')
         assert val == 'fakeresponse'
 
     @patch('kafka.tools.client.shuffle', lambda x: sorted(x))
@@ -138,8 +138,8 @@ class SendHelperTests(unittest.TestCase):
         self.client.cluster.add_broker(broker2)
 
         self.assertRaises(ConnectionError, self.client._send_any_broker, 'fakerequest')
-        broker1.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
-        broker2.send.assert_called_once_with('fakerequest', client_id='kafka-tools', request_size=200000)
+        broker1.send.assert_called_once_with('fakerequest')
+        broker2.send.assert_called_once_with('fakerequest')
 
     def test_raise_if_not_connected(self):
         self.assertRaises(ConnectionError, self.client._raise_if_not_connected)

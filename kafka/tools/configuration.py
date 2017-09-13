@@ -200,6 +200,26 @@ class ClientConfiguration(object):
         self._max_request_size = value
 
     @property
+    def num_retries(self):
+        """The number of times to retry a request when there is a failure"""
+        return getattr(self, '_num_retries', 3)
+
+    @num_retries.setter
+    def num_retries(self, value):
+        raise_if_not_positive_integer("_num_retries", value)
+        self._num_retries = value
+
+    @property
+    def retry_backoff(self):
+        """The number of seconds (float) to wait between request retries"""
+        return getattr(self, '_retry_backoff', 0.5)
+
+    @retry_backoff.setter
+    def retry_backoff(self, value):
+        raise_if_not_positive_float("_retry_backoff", value)
+        self._retry_backoff = value
+
+    @property
     def broker_threads(self):
         """How many threads to use in a pool for broker connections"""
         return getattr(self, '_broker_threads', 20)
@@ -261,6 +281,11 @@ class ClientConfiguration(object):
 def raise_if_not_positive_integer(attr_name, value):
     if not (isinstance(value, six.integer_types) and (value > 0)):
         raise TypeError("{0} must be a positive integer".format(attr_name))
+
+
+def raise_if_not_positive_float(attr_name, value):
+    if not (isinstance(value, float) and (value > 0.0)):
+        raise TypeError("{0} must be a positive float".format(attr_name))
 
 
 def raise_if_not_string(attr_name, value):
