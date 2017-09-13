@@ -20,8 +20,10 @@ from __future__ import division
 import re
 import socket
 import struct
+import time
 
 from kafka.tools import log
+from kafka.tools.configuration import ClientConfiguration
 from kafka.tools.models import BaseModel
 from kafka.tools.exceptions import ConfigurationException, ConnectionError
 from kafka.tools.protocol.types.bytebuffer import ByteBuffer
@@ -56,7 +58,7 @@ class Broker(BaseModel):
     def port(self, value):
         self.endpoint.port = value
 
-    def __init__(self, hostname, id=0, port=9092, sock=None):
+    def __init__(self, hostname, id=0, port=9092, sock=None, configuration=None):
         self.id = id
         self.endpoint = Endpoint('', hostname, port)
         self.jmx_port = -1
@@ -70,6 +72,7 @@ class Broker(BaseModel):
         self._sock = sock
 
         self._correlation_id = 1
+        self._configuration = configuration or ClientConfiguration()
 
     @classmethod
     def create_from_json(cls, broker_id, jsondata):
@@ -144,13 +147,13 @@ class Broker(BaseModel):
             sock = sslcontext.wrap_socket(sock, server_hostname=self.hostname)
         return sock
 
-    def connect(self, sslcontext=None):
-        protocol = 'SSL' if sslcontext is not None else 'PLAINTEXT'
+    def connect(self):
+        protocol = 'SSL' if self._configuration.ssl_context is not None else 'PLAINTEXT'
         endpoint = self.get_endpoint(protocol)
 
         log.info("Connecting to {0} on port {1} using {2}".format(self.hostname, self.port, protocol))
         try:
-            self._sock = self._sock or self._get_socket(sslcontext)
+            self._sock = self._sock or self._get_socket(self._configuration.ssl_context)
             self._sock.connect((endpoint.hostname, endpoint.port))
         except socket.error as e:
             log.error("Cannot connect to broker {0}:{1}: {2}".format(endpoint.hostname, endpoint.port, e))
@@ -166,16 +169,40 @@ class Broker(BaseModel):
             pass
 
         self._sock.close()
+        self._sock = None
 
-    def send(self, request, request_size=200000, client_id="kafka-tools"):
+    def send(self, request):
+        attempts = 0
+        while attempts < self._configuration.num_retries:
+            attempts += 1
+            try:
+                # Connect to the broker if not currently connected
+                if self._sock is None:
+                    self.connect()
+
+                return self._single_send(request)
+            except ConnectionError as e:
+                if attempts >= self._configuration.num_retries:
+                    log.error("Failed communicating with Kafka broker {0}. retries remaining = 0: {1}".format(self.id, e))
+                    raise
+                else:
+                    log.warn("Failed communicating with Kafka broker {0}. retries remaining = {1}: {2}".format(self.id,
+                                                                                                               self._configuration.num_retries - attempts,
+                                                                                                               e))
+
+            # Sleep for the backoff period before retrying the request, and force a reconnect
+            self.close()
+            time.sleep(self._configuration.retry_backoff)
+
+    def _single_send(self, request):
         # Build the payload based on the request passed in. We'll fill in the size at the end
-        buf = ByteBuffer(request_size)
+        buf = ByteBuffer(self._configuration.max_request_size)
         buf.putInt32(0)
         buf.putInt16(request.api_key)
         buf.putInt16(request.api_version)
         buf.putInt32(self._correlation_id)
-        buf.putInt16(len(client_id))
-        buf.put(struct.pack('{0}s'.format(len(client_id)), client_id.encode("utf-8")))
+        buf.putInt16(len(self._configuration.client_id))
+        buf.put(struct.pack('{0}s'.format(len(self._configuration.client_id)), self._configuration.client_id.encode("utf-8")))
         request.encode(buf)
 
         # Close the payload and write the size (payload size without the size field itself)
@@ -188,18 +215,23 @@ class Broker(BaseModel):
         # Increment the correlation ID for the next request
         self._correlation_id += 1
 
-        # Send the payload bytes to the broker
-        self._sock.send(buf.get(buf.capacity))
+        try:
+            # Send the payload bytes to the broker
+            self._sock.sendall(buf.get(buf.capacity))
 
-        # Read the first 4 bytes so we know the size
-        size = ByteBuffer(self._sock.recv(4)).getInt32()
+            # Read the first 4 bytes so we know the size
+            size = ByteBuffer(self._sock.recv(4)).getInt32()
 
-        # Read the response that we're expecting
-        response_data = self._read_bytes(size)
-        response = ByteBuffer(response_data)
+            # Read the response that we're expecting
+            response_data = self._read_bytes(size)
+            response = ByteBuffer(response_data)
 
-        # Parse off the correlation ID for the response
-        correlation_id = response.getInt32()
+            # Parse off the correlation ID for the response
+            correlation_id = response.getInt32()
+        except EOFError:
+            raise ConnectionError("Failed to read enough data from Kafka")
+        except socket.error as e:
+            raise ConnectionError("Failed communicating with Kafka: {0}".format(e))
 
         # Get the proper response class and parse the response
         return correlation_id, request.response.from_bytebuffer(correlation_id, response.slice())

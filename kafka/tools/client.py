@@ -385,19 +385,17 @@ class Client:
 
     def _maybe_bootstrap_cluster(self, broker_port):
         """Attempt to bootstrap the cluster information using the given broker"""
-        broker = Broker(broker_port[0], port=broker_port[1])
+        broker = Broker(broker_port[0], port=broker_port[1], configuration=self.configuration)
 
         try:
-            broker.connect(sslcontext=self.configuration.ssl_context)
+            broker.connect()
         except ConnectionError:
             # Just skip to the next bootstrap broker
             return False
 
         # Fetch topic metadata for all topics/brokers
         req = TopicMetadataV1Request({'topics': None})
-        correlation_id, metadata = broker.send(req,
-                                               request_size=self.configuration.max_request_size,
-                                               client_id=self.configuration.client_id)
+        correlation_id, metadata = broker.send(req)
         broker.close()
 
         # Add brokers and topics to cluster
@@ -409,7 +407,7 @@ class Client:
     def _connect_all_brokers(self):
         pool = ThreadPool(processes=self.configuration.broker_threads)
         for broker_id in self.cluster.brokers:
-            pool.apply_async(self.cluster.brokers[broker_id].connect, (self.configuration.ssl_context,))
+            pool.apply_async(self.cluster.brokers[broker_id].connect)
         pool.close()
         pool.join()
 
@@ -427,9 +425,7 @@ class Client:
         Raises:
             ConnectionError: If there is a failure to send the request to all brokers in the cluster
         """
-        correlation_id, response = self.cluster.brokers[broker_id].send(request,
-                                                                        request_size=self.configuration.max_request_size,
-                                                                        client_id=self.configuration.client_id)
+        correlation_id, response = self.cluster.brokers[broker_id].send(request)
         return response
 
     def _send_any_broker(self, request):
@@ -539,13 +535,11 @@ class Client:
         try:
             self.cluster.groups[group_name].coordinator = self.cluster.brokers[response['node_id']]
         except KeyError:
-            broker = Broker(response['host'], id=response['node_id'], port=response['port'])
+            broker = Broker(response['host'], id=response['node_id'], port=response['port'], configuration=self.configuration)
             self.cluster.add_broker(broker)
             self.cluster.groups[group_name].coordinator = broker
 
-        correlation_id, response = self.cluster.groups[group_name].coordinator.send(request,
-                                                                                    request_size=self.configuration.max_request_size,
-                                                                                    client_id=self.configuration.client_id)
+        response = self._send_to_broker(self.cluster.groups[group_name].coordinator.id, request)
         return response
 
     def _send_list_offsets_to_brokers(self, request_values):
@@ -625,7 +619,7 @@ class Client:
                     broker.hostname = b['host']
                     broker.port = b['port']
             except KeyError:
-                broker = Broker(b['host'], id=b['node_id'], port=b['port'])
+                broker = Broker(b['host'], id=b['node_id'], port=b['port'], configuration=self.configuration)
                 self.cluster.add_broker(broker)
             broker.rack = b['rack']
 
