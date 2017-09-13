@@ -20,14 +20,10 @@ import struct
 
 
 class ByteBuffer(object):
-    packers = {'b': {'func': struct.Struct('>b').pack_into, 'num_bytes': 1},
-               'h': {'func': struct.Struct('>h').pack_into, 'num_bytes': 2},
-               'i': {'func': struct.Struct('>i').pack_into, 'num_bytes': 4},
-               'q': {'func': struct.Struct('>q').pack_into, 'num_bytes': 8}}
-    unpackers = {'b': {'func': struct.Struct('>b').unpack_from, 'num_bytes': 1},
-                 'h': {'func': struct.Struct('>h').unpack_from, 'num_bytes': 2},
-                 'i': {'func': struct.Struct('>i').unpack_from, 'num_bytes': 4},
-                 'q': {'func': struct.Struct('>q').unpack_from, 'num_bytes': 8}}
+    struct = {'b': {'pack': struct.Struct('>b').pack_into, 'unpack': struct.Struct('>b').unpack_from, 'num_bytes': 1},
+              'h': {'pack': struct.Struct('>h').pack_into, 'unpack': struct.Struct('>h').unpack_from, 'num_bytes': 2},
+              'i': {'pack': struct.Struct('>i').pack_into, 'unpack': struct.Struct('>i').unpack_from, 'num_bytes': 4},
+              'q': {'pack': struct.Struct('>q').pack_into, 'unpack': struct.Struct('>q').unpack_from, 'num_bytes': 8}}
 
     def __init__(self, value):
         if isinstance(value, bytearray):
@@ -127,13 +123,13 @@ class ByteBuffer(object):
         self._buffer[pos:pos+num_bytes] = byte_str
 
     def _read_integer(self, position, struct_char):
-        pos = self._get_and_check_position(position, self.unpackers[struct_char]['num_bytes'])
-        return self.unpackers[struct_char]['func'](self._buffer, pos)[0]
+        pos = self._get_and_check_position(position, self.struct[struct_char]['num_bytes'])
+        return self.struct[struct_char]['unpack'](self._buffer, pos)[0]
 
     def _write_integer(self, value, position, struct_char):
-        pos = self._get_and_check_position(position, self.packers[struct_char]['num_bytes'])
+        pos = self._get_and_check_position(position, self.struct[struct_char]['num_bytes'])
         # self.put(self.packers[struct_char]['func'](value), position=pos)
-        self.packers[struct_char]['func'](self._buffer, pos, value)
+        self.struct[struct_char]['pack'](self._buffer, pos, value)
 
     def _get_and_check_position(self, position, num_bytes):
         if position is None:
