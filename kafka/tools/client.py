@@ -504,6 +504,9 @@ class Client:
             requests[broker_id] = request
         return self._send_some_brokers(requests)
 
+    def _make_broker(self, broker_dict):
+        return Broker(broker_dict['host'], id=broker_dict['node_id'], port=broker_dict['port'], configuration=self.configuration)
+
     def _send_group_aware_request(self, group_name, request):
         """
         Sends a request to the broker currently serving as the group coordinator for the specified
@@ -535,7 +538,7 @@ class Client:
         try:
             self.cluster.groups[group_name].coordinator = self.cluster.brokers[response['node_id']]
         except KeyError:
-            broker = Broker(response['host'], id=response['node_id'], port=response['port'], configuration=self.configuration)
+            broker = self._make_broker(response)
             self.cluster.add_broker(broker)
             self.cluster.groups[group_name].coordinator = broker
 
@@ -619,7 +622,7 @@ class Client:
                     broker.hostname = b['host']
                     broker.port = b['port']
             except KeyError:
-                broker = Broker(b['host'], id=b['node_id'], port=b['port'], configuration=self.configuration)
+                broker = self._make_broker(b)
                 self.cluster.add_broker(broker)
             broker.rack = b['rack']
 
