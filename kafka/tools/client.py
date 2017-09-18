@@ -654,6 +654,17 @@ class Client:
         for topic_name in topics_for_deletion:
             del self.cluster.topics[topic_name]
 
+    def _update_or_add_partition(self, partition_metadata, partition):
+        partition.leader = self.cluster.brokers[partition_metadata['leader']]
+        for i, replica in enumerate(partition_metadata['replicas']):
+            if replica not in self.cluster.brokers:
+                # We have a replica ID that is not a known broker. This can happen if a broker is offline, or
+                # if the partition is otherwise assigned to a non-existent broker ID. In this case, we need to
+                # create a broker object for this with no endpoint information as a placeholder.
+                self.cluster.add_broker(Broker(hostname=None, id=replica))
+            partition.add_or_update_replica(i, self.cluster.brokers[replica])
+        partition.delete_replicas(len(partition_metadata['replicas']))
+
     def _update_topics_from_metadata(self, metadata, delete=False):
         """
         Given a Metadata response (either V0 or V1 will work), update the topic information
@@ -675,16 +686,7 @@ class Client:
 
             topic.assure_has_partitions(len(t['partitions']))
             for p in t['partitions']:
-                partition = topic.partitions[p['id']]
-                partition.leader = self.cluster.brokers[p['leader']]
-                for i, replica in enumerate(p['replicas']):
-                    if replica not in self.cluster.brokers:
-                        # We have a replica ID that is not a known broker. This can happen if a broker is offline, or
-                        # if the partition is otherwise assigned to a non-existent broker ID. In this case, we need to
-                        # create a broker object for this with no endpoint information as a placeholder.
-                        self.cluster.add_broker(Broker(hostname=None, id=replica))
-                    partition.add_or_update_replica(i, self.cluster.brokers[replica])
-                partition.delete_replicas(len(p['replicas']))
+                self._update_or_add_partition(p, topic.partitions[p['id']])
 
         self._maybe_delete_topics_not_in_metadata(metadata, delete)
 
