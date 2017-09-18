@@ -142,6 +142,15 @@ class TopicsTests(unittest.TestCase):
         self.client._update_topics_from_metadata(self.metadata_response)
         assert_cluster_has_topics(self.client.cluster, self.metadata_response)
 
+    def test_update_topics_from_metadata_missing_broker(self):
+        # Don't want to test the broker update code here
+        self.client.cluster.add_broker(Broker('host1.example.com', id=1, port=8031))
+
+        self.client._update_topics_from_metadata(self.metadata_response)
+        assert_cluster_has_topics(self.client.cluster, self.metadata_response)
+        assert 101 in self.client.cluster.brokers
+        assert self.client.cluster.brokers[101].endpoint.hostname is None
+
     def test_maybe_delete_topics_not_in_metadata(self):
         # Don't want to test the broker update code here
         broker1 = Broker('host1.example.com', id=1, port=8031)

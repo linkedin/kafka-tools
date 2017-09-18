@@ -447,7 +447,8 @@ class Client:
         while len(broker_ids) > 0:
             broker_id = broker_ids.pop()
             try:
-                return self._send_to_broker(broker_id, request)
+                if self.cluster.brokers[broker_id].hostname is not None:
+                    return self._send_to_broker(broker_id, request)
             except ConnectionError:
                 # We're going to ignore failures unless we exhaust brokers
                 pass
@@ -501,7 +502,8 @@ class Client:
         """
         requests = {}
         for broker_id in self.cluster.brokers:
-            requests[broker_id] = request
+            if self.cluster.brokers[broker_id].hostname is not None:
+                requests[broker_id] = request
         return self._send_some_brokers(requests)
 
     def _make_broker(self, broker_dict):
@@ -676,6 +678,11 @@ class Client:
                 partition = topic.partitions[p['id']]
                 partition.leader = self.cluster.brokers[p['leader']]
                 for i, replica in enumerate(p['replicas']):
+                    if replica not in self.cluster.brokers:
+                        # We have a replica ID that is not a known broker. This can happen if a broker is offline, or
+                        # if the partition is otherwise assigned to a non-existent broker ID. In this case, we need to
+                        # create a broker object for this with no endpoint information as a placeholder.
+                        self.cluster.add_broker(Broker(hostname=None, id=replica))
                     partition.add_or_update_replica(i, self.cluster.brokers[replica])
                 partition.delete_replicas(len(p['replicas']))
 
