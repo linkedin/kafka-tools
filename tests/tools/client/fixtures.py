@@ -139,6 +139,16 @@ def list_offset():
                                                                          'offsets': [8904]}]}]})
 
 
+def list_offset_none():
+    return ListOffsetV0Response({'responses': [{'topic': 'topic1',
+                                                'partition_responses': [{'partition': 0,
+                                                                         'error': 0,
+                                                                         'offsets': [4829]},
+                                                                        {'partition': 1,
+                                                                         'error': 0,
+                                                                         'offsets': []}]}]})
+
+
 def list_offset_error():
     return ListOffsetV0Response({'responses': [{'topic': 'topic1',
                                                 'partition_responses': [{'partition': 0,

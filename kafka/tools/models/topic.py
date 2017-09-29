@@ -92,7 +92,11 @@ class TopicOffsets:
         """
         for partition in partitions:
             raise_if_error(OffsetError, partition['error'])
-            self.partitions[partition['partition']] = partition['offsets'][0]
+            if len(partition['offsets']) > 0:
+                self.partitions[partition['partition']] = partition['offsets'][0]
+            else:
+                # We received no offsets back, so we'll just return -1 to indicate that
+                self.partitions[partition['partition']] = -1
 
     def set_offsets_from_fetch(self, partitions):
         """
