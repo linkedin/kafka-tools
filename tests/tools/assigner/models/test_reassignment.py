@@ -60,7 +60,7 @@ class ReassignmentTests(unittest.TestCase):
         mock_popen.set_default()
         mock_check.side_effect = [10, 5, 0]
 
-        self.reassignment._execute(1, 1, 'zkconnect', '/path/to/tools')
+        self.reassignment._execute(1, 1, 'zkconnect', '/path/to/tools', None)
 
         compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--execute', '--zookeeper', 'zkconnect', '--reassignment-json-file', ANY],
                             stderr=ANY, stdout=ANY),
