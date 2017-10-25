@@ -42,16 +42,16 @@ class ReassignmentTests(unittest.TestCase):
     @patch.object(Reassignment, '_execute')
     def test_reassignment_execute_real(self, mock_exec):
         self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False)
-        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools')
-
-    @patch.object(Reassignment, '_execute')
-    def test_reassignment_execute_dryrun(self, mock_exec):
-        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=True)
-        mock_exec.assert_not_called()
+        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', None)
 
     @patch.object(Reassignment, '_execute')
     def test_reassignment_execute_threshold(self, mock_exec):
         self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False, threshold=1000)
+        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', 1000)
+
+    @patch.object(Reassignment, '_execute')
+    def test_reassignment_execute_dryrun(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=True)
         mock_exec.assert_not_called()
 
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
