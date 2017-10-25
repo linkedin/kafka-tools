@@ -45,8 +45,8 @@ class ReassignmentTests(unittest.TestCase):
         mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', None)
 
     @patch.object(Reassignment, '_execute')
-    def test_reassignment_execute_threshold(self, mock_exec):
-        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False, threshold=1000)
+    def test_reassignment_execute_throttle(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False, throttle=1000)
         mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', 1000)
 
     @patch.object(Reassignment, '_execute')

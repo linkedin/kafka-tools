@@ -72,7 +72,7 @@ class MainTests(unittest.TestCase):
                                                          tools_path='/path/to/tools',
                                                          property=['datadir=/path/to/data'],
                                                          moves=10,
-                                                         threshold=1000,
+                                                         throttle=1000,
                                                          execute=False,
                                                          exclude_topics=[],
                                                          generate=False,
