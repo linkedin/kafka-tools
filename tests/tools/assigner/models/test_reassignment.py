@@ -49,6 +49,11 @@ class ReassignmentTests(unittest.TestCase):
         self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=True)
         mock_exec.assert_not_called()
 
+    @patch.object(Reassignment, '_execute')
+    def test_reassignment_execute_threshold(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False, threshold=1000)
+        mock_exec.assert_not_called()
+
     @patch('kafka.tools.assigner.models.reassignment.subprocess.Popen', new_callable=MockPopen)
     @patch.object(Reassignment, 'check_completion')
     def test_reassignment_internal_execute(self, mock_check, mock_popen):
