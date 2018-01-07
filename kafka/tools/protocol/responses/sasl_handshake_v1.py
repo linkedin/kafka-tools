@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses.sasl_handshake_v0 import SaslHandshakeV0Response
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
+class SaslHandshakeV1Response(SaslHandshakeV0Response):
     pass

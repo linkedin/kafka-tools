@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses.metadata_v3 import MetadataV3Response
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
+class MetadataV4Response(MetadataV3Response):
     pass

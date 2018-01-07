@@ -15,8 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses import BaseResponse
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
-    pass
+class OffsetFetchV2Response(BaseResponse):
+    schema = [
+        {'name': 'responses',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'partition_responses',
+              'type': 'array',
+              'item_type': [
+                  {'name': 'partition', 'type': 'int32'},
+                  {'name': 'offset', 'type': 'int64'},
+                  {'name': 'metadata', 'type': 'string'},
+                  {'name': 'error', 'type': 'int16'},
+              ]},
+         ]},
+        {'name': 'error', 'type': 'int16'},
+    ]

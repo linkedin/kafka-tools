@@ -15,8 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses import BaseResponse
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
-    pass
+class ApiVersionsV1Response(BaseResponse):
+    schema = [
+        {'name': 'error', 'type': 'int16'},
+        {'name': 'api_versions',
+         'type': 'array',
+         'item_type': [
+             {'name': 'api_key', 'type': 'int16'},
+             {'name': 'min_version', 'type': 'int16'},
+             {'name': 'max_version', 'type': 'int16'},
+         ]},
+        {'name': 'throttle_time_ms', 'type': 'int32'},
+    ]

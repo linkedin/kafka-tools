@@ -15,8 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses import BaseResponse
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
-    pass
+class SaslAuthenticateV0Response(BaseResponse):
+    schema = [
+        {'name': 'error', 'type': 'int16'},
+        {'name': 'error_message', 'type': 'string'},
+        {'name': 'sasl_auth_bytes', 'type': 'bytes'},
+    ]

@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
+from kafka.tools.protocol.responses.leader_and_isr_v0 import LeaderAndIsrV0Response
 
 
-class ControlledShutdownV1Response(ControlledShutdownV0Response):
+class LeaderAndIsrV1Response(LeaderAndIsrV0Response):
     pass
