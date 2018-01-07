@@ -30,7 +30,7 @@ def _parse_group_protocol(protocol):
     else:
         try:
             return {'protocol_name': pparts[0], 'protocol_metadata': binascii.unhexlify(pparts[1])}
-        except:
+        except (binascii.Error, TypeError):
             raise ArgumentError("group_protocol_metadata must be empty or a hex string")
 
 

@@ -45,7 +45,7 @@ class SyncGroupV0Request(BaseRequest):
 
         try:
             member_assignments = binascii.unhexlify(cmd_args[3])
-        except:
+        except (binascii.Error, TypeError):
             raise ArgumentError("member_assignments must be a hex string")
 
         try:
