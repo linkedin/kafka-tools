@@ -16,8 +16,36 @@
 # under the License.
 
 from kafka.tools.protocol.requests import BaseRequest, ArgumentError
-from kafka.tools.protocol.requests.offset_commit_v2 import _parse_next_topic
 from kafka.tools.protocol.responses.offset_commit_v0 import OffsetCommitV0Response
+
+
+def _get_partition_map(partition):
+    if (len(partition) < 2) or (len(partition) > 3):
+        raise ArgumentError("Partition tuple must have 3 or 4 fields")
+
+    try:
+        pmap = {'partition': int(partition[0]),
+                'offset': int(partition[1]),
+                'metadata': None}
+    except ValueError:
+        raise ArgumentError("Partition tuple must be exactly 2 integers and an optional string")
+
+    if len(partition) == 3:
+        pmap['metadata'] = partition[2]
+    return pmap
+
+
+def _parse_next_topic(cmd_args):
+    topic = {'topic': cmd_args.pop(0), 'partitions': []}
+    while True:
+        try:
+            cmd_args[0].index(',')
+        except (IndexError, ValueError):
+            if len(topic['partitions']) == 0:
+                raise ArgumentError("Topic is missing partitions")
+            return topic, cmd_args
+        partition = cmd_args.pop(0).split(',')
+        topic['partitions'].append(_get_partition_map(partition))
 
 
 class OffsetCommitV0Request(BaseRequest):

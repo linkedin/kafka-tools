@@ -15,7 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest, ArgumentError
+from kafka.tools.protocol.requests import ArgumentError
+from kafka.tools.protocol.requests.offset_commit_v0 import OffsetCommitV0Request
 from kafka.tools.protocol.responses.offset_commit_v1 import OffsetCommitV1Response
 
 
@@ -49,8 +50,7 @@ def _parse_next_topic(cmd_args):
         topic['partitions'].append(_get_partition_map(partition))
 
 
-class OffsetCommitV1Request(BaseRequest):
-    api_key = 8
+class OffsetCommitV1Request(OffsetCommitV0Request):
     api_version = 1
     cmd = "OffsetCommit"
     response = OffsetCommitV1Response

@@ -137,7 +137,8 @@ class BaseRequest():  # pragma: no cover
     def encode(self, buf):
         _encode_sequence(self._request, self.schema, buf)
 
-    @abc.abstractmethod
+    # This is not an abstract method because requests that are not supported in the CLI will not override it
+    @classmethod
     def process_arguments(cls, cmd_args):
         """IMPORTANT: this is class method, override it with @classmethod!"""
         raise NotImplementedError

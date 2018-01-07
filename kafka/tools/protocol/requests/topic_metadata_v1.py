@@ -15,28 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
 from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
 
 
-class TopicMetadataV1Request(BaseRequest):
-    api_key = 3
+class TopicMetadataV1Request(TopicMetadataV0Request):
     api_version = 1
-    cmd = "TopicMetadata"
     response = MetadataV1Response
-
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} [topic_name ...]\n".format(cmd, api_version) +
-                   "Description: Fetch metadata for the specified topics. If no topics are specified, all topics are requested\n")
-
-    schema = [
-        {'name': 'topics', 'type': 'array', 'item_type': 'string'}
-    ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': None}
-        else:
-            return {'topics': cmd_args}
