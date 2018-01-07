@@ -74,10 +74,10 @@ class SimpleClusterTests(unittest.TestCase):
 
     def test_cluster_log_info(self):
         self.add_brokers(2)
-        with LogCapture() as l:
+        with LogCapture() as line:
             self.cluster.log_broker_summary()
-            l.check(('kafka-tools', 'INFO', 'Broker 1: partitions=0/0 (0.00%), size=0'),
-                    ('kafka-tools', 'INFO', 'Broker 2: partitions=0/0 (0.00%), size=0'))
+            line.check(('kafka-tools', 'INFO', 'Broker 1: partitions=0/0 (0.00%), size=0'),
+                       ('kafka-tools', 'INFO', 'Broker 2: partitions=0/0 (0.00%), size=0'))
 
     def test_cluster_output_json(self):
         self.add_topics(2)

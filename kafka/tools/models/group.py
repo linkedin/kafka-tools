@@ -42,7 +42,7 @@ class Group(BaseModel):
     def add_member(self, name, client_id=None, client_host=None, metadata=None, assignment=None):
         new_member = GroupMember(name, client_id, client_host, metadata, assignment)
         new_member.group = self
-        if (self.protocol_type == 'consumer') and (assignment is not None):
+        if (self.protocol_type == 'consumer') and (assignment is not None) and (len(assignment) > 0):
             new_member.set_assignment()
         self.members.append(new_member)
 
