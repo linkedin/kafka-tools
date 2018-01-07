@@ -144,7 +144,7 @@ setup(
     ],
     setup_requires=[
         'pytest-runner',
-        'flake8==3.4.1',
+        'flake8',
     ],
     extras_require={
         'dev': ['check-manifest'],
