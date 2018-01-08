@@ -130,6 +130,9 @@ class BaseRequest():  # pragma: no cover
     def help_string(self):
         raise NotImplementedError
 
+    # By default, requests are not used in the CLI
+    supports_cli = False
+
     def __init__(self, value):
         _evaluate_sequence(value, self.schema)
         self._request = value

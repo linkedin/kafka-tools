@@ -25,6 +25,7 @@ class ApiVersionsV0Request(BaseRequest):
     cmd = "ApiVersions"
     response = ApiVersionsV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1}\n".format(cmd, api_version) +
                    "Description: API versions supported by the broker.\n")

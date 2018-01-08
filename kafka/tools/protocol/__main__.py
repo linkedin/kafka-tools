@@ -31,6 +31,9 @@ from kafka.tools.models.broker import Broker
 def _get_request_classes():
     request_classes = {}
     for cls in get_modules(kafka.tools.protocol.requests, kafka.tools.protocol.requests.BaseRequest):
+        if not cls.supports_cli:
+            continue
+
         if cls.cmd.lower() not in request_classes:
             request_classes[cls.cmd.lower()] = {}
         request_classes[cls.cmd.lower()][cls.api_version] = cls

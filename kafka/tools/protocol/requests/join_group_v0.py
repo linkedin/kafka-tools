@@ -40,6 +40,7 @@ class JoinGroupV0Request(BaseRequest):
     cmd = "JoinGroup"
     response = JoinGroupV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} group_id session_timeout member_id protocol_type ".format(cmd, api_version) +
                    "(group_protocol_name,group_protocol_metadata ...)\n" +

@@ -25,6 +25,7 @@ class SaslHandshakeV0Request(BaseRequest):
     cmd = "SaslHandshake"
     response = SaslHandshakeV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} mechanism\n".format(cmd, api_version) +
                    "Description: Handshake for SASL with the mechanism chosen by the client\n")

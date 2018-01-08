@@ -27,6 +27,7 @@ class SyncGroupV0Request(BaseRequest):
     cmd = "SyncGroup"
     response = SyncGroupV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} group_id generation_id member_id member_assignments\n".format(cmd, api_version) +
                    "Description: Sync group information after joining. Leader provides member assignments\n")

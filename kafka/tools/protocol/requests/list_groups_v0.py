@@ -25,6 +25,7 @@ class ListGroupsV0Request(BaseRequest):
     cmd = "ListGroups"
     response = ListGroupsV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1}\n".format(cmd, api_version) +
                    "Description: List all consumer groups for this cluster\n")

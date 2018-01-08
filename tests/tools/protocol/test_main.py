@@ -10,25 +10,27 @@ from kafka.tools.protocol.__main__ import _get_request_classes, _get_request_com
 class TestKlass1:
     cmd = "TestKlass"
     api_version = 1
+    supports_cli = True
 
 
 class TestKlass2:
     cmd = "TestKlass"
     api_version = 2
+    supports_cli = False
 
 
 class TestKlassy1:
     cmd = "TestKlassy"
     api_version = 1
+    supports_cli = True
 
 
 class MainTests(unittest.TestCase):
     def setUp(self):
         self.broker = Broker('testhost', port=3945)
-        self.request_classes = {'testklass': {1: TestKlass1, 2: TestKlass2}, 'testklassy': {1: TestKlassy1}}
-        self.request_cmds = {'testklass': TestKlass2,
+        self.request_classes = {'testklass': {1: TestKlass1}, 'testklassy': {1: TestKlassy1}}
+        self.request_cmds = {'testklass': TestKlass1,
                              'testklassv1': TestKlass1,
-                             'testklassv2': TestKlass2,
                              'testklassy': TestKlassy1,
                              'testklassyv1': TestKlassy1}
 
@@ -39,7 +41,7 @@ class MainTests(unittest.TestCase):
         assert val == self.request_classes
 
     def test_get_request_commands(self):
-        val = _get_request_commands({'testklass': {1: TestKlass1, 2: TestKlass2}, 'testklassy': {1: TestKlassy1}})
+        val = _get_request_commands({'testklass': {1: TestKlass1}, 'testklassy': {1: TestKlassy1}})
         print(val)
         assert val == self.request_cmds
 

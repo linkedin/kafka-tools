@@ -54,6 +54,7 @@ class OffsetCommitV0Request(BaseRequest):
     cmd = "OffsetCommit"
     response = OffsetCommitV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} group_id (topic (partition,offset[,metadata] ...) ...)\n".format(cmd, api_version) +
                    "Description: Commit offsets for the specified consumer group\n")

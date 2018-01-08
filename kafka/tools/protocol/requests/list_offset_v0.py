@@ -52,6 +52,7 @@ class ListOffsetV0Request(BaseRequest):
     cmd = "ListOffset"
     response = ListOffsetV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} replica_id (topic (partition,timestamp,max_num_offsets ...) ...)\n".format(cmd, api_version) +
                    "             replica_id should be -1 for normal consumers\n" +

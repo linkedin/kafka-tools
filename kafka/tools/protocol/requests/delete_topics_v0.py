@@ -25,6 +25,7 @@ class DeleteTopicsV0Request(BaseRequest):
     cmd = "DeleteTopics"
     response = DeleteTopicsV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} timeout (topic_name ...)\n".format(cmd, api_version) +
                    "Description: Delete the specified topics.\n")

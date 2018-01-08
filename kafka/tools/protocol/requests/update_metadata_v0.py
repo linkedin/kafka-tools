@@ -26,6 +26,7 @@ class UpdateMetadataV0Request(BaseRequest):
     cmd = "UpdateMetadata"
     response = UpdateMetadataV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} controller_id controller_epoch ".format(cmd, api_version) +
                    "(topic,partition,controller_epoch,leader,leader_epoch,isr,zk_version,replicas ...) (broker_id,host,port ...)\n" +

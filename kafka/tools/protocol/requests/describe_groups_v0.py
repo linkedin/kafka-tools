@@ -25,6 +25,7 @@ class DescribeGroupsV0Request(BaseRequest):
     cmd = "DescribeGroups"
     response = DescribeGroupsV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} [group_id ...]\n".format(cmd, api_version) +
                    "Description: Request metadata for the specified groups, or all groups if none are provided\n")
