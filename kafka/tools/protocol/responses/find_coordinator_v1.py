@@ -18,7 +18,7 @@
 from kafka.tools.protocol.responses import BaseResponse
 
 
-class GroupCoordinatorV1Response(BaseResponse):
+class FindCoordinatorV1Response(BaseResponse):
     schema = [
         {'name': 'throttle_time_ms', 'type': 'int32'},
         {'name': 'error', 'type': 'int16'},
