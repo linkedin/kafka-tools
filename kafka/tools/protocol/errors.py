@@ -106,7 +106,53 @@ errors = {
          'long': "This is not the correct controller for this cluster."},
     42: {'short': 'INVALID_REQUEST',
          'long': "This most likely occurs because of a request being malformed by the client library or" +
-                 " the message was sent to an incompatible broker. See the broker logs for more details."}}
+                 " the message was sent to an incompatible broker. See the broker logs for more details."},
+    43: {'short': 'UNSUPPORTED_FOR_MESSAGE_FORMAT',
+         'long': "The message format version on the broker does not support the request."},
+    44: {'short': 'POLICY_VIOLATION',
+         'long': "Request parameters do not satisfy the configured policy."},
+    45: {'short': 'OUT_OF_ORDER_SEQUENCE_NUMBER',
+         'long': "The broker received an out of order sequence number"},
+    46: {'short': 'DUPLICATE_SEQUENCE_NUMBER',
+         'long': "The broker received a duplicate sequence number"},
+    47: {'short': 'INVALID_PRODUCER_EPOCH',
+         'long': "Producer attempted an operation with an old epoch. Either there is a newer producer " +
+                 "with the same transactionalId, or the producer's transaction has been expired by the broker."},
+    48: {'short': 'INVALID_TXN_STATE',
+         'long': "The producer attempted a transactional operation in an invalid state"},
+    49: {'short': 'INVALID_PRODUCER_ID_MAPPING',
+         'long': "The producer attempted to use a producer id which is not currently assigned to its transactional id"},
+    50: {'short': 'INVALID_TRANSACTION_TIMEOUT',
+         'long': "The transaction timeout is larger than the maximum value allowed by " +
+                 "the broker (as configured by max.transaction.timeout.ms)."},
+    51: {'short': 'CONCURRENT_TRANSACTIONS',
+         'long': "The producer attempted to update a transaction " +
+                 "while another concurrent operation on the same transaction was ongoing"},
+    52: {'short': 'TRANSACTION_COORDINATOR_FENCED',
+         'long': "Indicates that the transaction coordinator sending a WriteTxnMarker " +
+                 "is no longer the current coordinator for a given producer"},
+    53: {'short': 'TRANSACTIONAL_ID_AUTHORIZATION_FAILED',
+         'long': "Transactional Id authorization failed"},
+    54: {'short': 'SECURITY_DISABLED',
+         'long': "Security features are disabled."},
+    55: {'short': 'OPERATION_NOT_ATTEMPTED',
+         'long': "The broker did not attempt to execute this operation. This may happen for batched RPCs " +
+                 "where some operations in the batch failed, causing the broker to respond without trying the rest."},
+    56: {'short': 'KAFKA_STORAGE_ERROR',
+         'long': "Disk error when trying to access log file on the disk."},
+    57: {'short': 'LOG_DIR_NOT_FOUND',
+         'long': "The user-specified log directory is not found in the broker config."},
+    58: {'short': 'SASL_AUTHENTICATION_FAILED',
+         'long': "SASL Authentication failed."},
+    59: {'short': 'UNKNOWN_PRODUCER_ID',
+         'long': "This exception is raised by the broker if it could not locate the producer metadata " +
+                 "associated with the producerId in question. This could happen if, for instance, the producer's records " +
+                 "were deleted because their retention time had elapsed. Once the last records of the producerId are " +
+                 "removed, the producer's metadata is removed from the broker, and future appends by the producer will " +
+                 "return this exception."},
+    60: {'short': 'REASSIGNMENT_IN_PROGRESS',
+         'long': "A partition reassignment is in progress"},
+}
 
 
 def error_short(err_num):
