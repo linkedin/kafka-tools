@@ -17,7 +17,6 @@
 
 from kafka.tools.protocol.requests import BaseRequest
 from kafka.tools.protocol.responses.update_metadata_v0 import UpdateMetadataV0Response
-from kafka.tools.protocol.requests.leader_and_isr_v0 import _process_arguments
 
 
 class UpdateMetadataV0Request(BaseRequest):
@@ -26,12 +25,7 @@ class UpdateMetadataV0Request(BaseRequest):
     cmd = "UpdateMetadata"
     response = UpdateMetadataV0Response
 
-    supports_cli = True
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} controller_id controller_epoch ".format(cmd, api_version) +
-                   "(topic,partition,controller_epoch,leader,leader_epoch,isr,zk_version,replicas ...) (broker_id,host,port ...)\n" +
-                   "             isr and replicas are a '|' separated list of broker IDs (e.g. '2|3')\n" +
-                   "Description: Send updated metadata information to broker\n")
+    help_string = ''
 
     schema = [
         {'name': 'controller_id', 'type': 'int32'},
@@ -56,7 +50,3 @@ class UpdateMetadataV0Request(BaseRequest):
              {'name': 'port', 'type': 'int32'},
          ]},
     ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        return _process_arguments("UpdateMetadataV0", cmd_args)

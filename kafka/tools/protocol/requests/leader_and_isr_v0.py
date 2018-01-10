@@ -15,53 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests import BaseRequest, ArgumentError
+from kafka.tools.protocol.requests import BaseRequest
 from kafka.tools.protocol.responses.leader_and_isr_v0 import LeaderAndIsrV0Response
-
-
-def _get_integer_list(delimited_str):
-    return [int(x) for x in delimited_str.split("|")]
-
-
-def _parse_argument(values, arg):
-    cparts = arg.split(",")
-    if len(cparts) == 8:
-        try:
-            values['partition_states'].append({'topic': cparts[0],
-                                               'partition': int(cparts[1]),
-                                               'controller_epoch': int(cparts[2]),
-                                               'leader': int(cparts[3]),
-                                               'leader_epoch': int(cparts[4]),
-                                               'isr': _get_integer_list(cparts[5]),
-                                               'zk_version': int(cparts[6]),
-                                               'replicas': _get_integer_list(cparts[7])})
-        except ValueError:
-            raise ArgumentError("partition_states fields, except for topic, must be integers")
-    elif len(cparts) == 3:
-        try:
-            values['live_leaders'].append({'id': int(cparts[0]), 'host': cparts[1], 'port': int(cparts[2])})
-        except ValueError:
-            raise ArgumentError("live_leaders broker_id and port fields must be integers")
-    else:
-        raise ArgumentError("partition_states or live_leaders format incorrect. check help.")
-
-
-def _process_arguments(cmd_name, cmd_args):
-    if len(cmd_args) < 4:
-        raise ArgumentError("{0} requires at least 4 arguments".format(cmd_name))
-
-    try:
-        values = {'controller_id': int(cmd_args[0]),
-                  'controller_epoch': int(cmd_args[1]),
-                  'partition_states': [],
-                  'live_leaders': []}
-    except ValueError:
-        raise ArgumentError("The controller_id and controller_epoch must be integers")
-
-    for csv in cmd_args[2:]:
-        _parse_argument(values, csv)
-
-    return values
 
 
 class LeaderAndIsrV0Request(BaseRequest):
@@ -70,11 +25,7 @@ class LeaderAndIsrV0Request(BaseRequest):
     cmd = "LeaderAndIsr"
     response = LeaderAndIsrV0Response
 
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} controller_id controller_epoch ".format(cmd, api_version) +
-                   "(topic,partition,controller_epoch,leader,leader_epoch,isr,zk_version,replicas ...) (broker_id,host,port ...)\n" +
-                   "             isr and replicas are a '|' separated list of broker IDs (e.g. '2|3')\n" +
-                   "Description: Send replica information to broker\n")
+    help_string = ''
 
     schema = [
         {'name': 'controller_id', 'type': 'int32'},
@@ -99,7 +50,3 @@ class LeaderAndIsrV0Request(BaseRequest):
              {'name': 'port', 'type': 'int32'},
          ]},
     ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        return _process_arguments("LeaderAndIsrV0", cmd_args)
