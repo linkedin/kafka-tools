@@ -15,16 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.responses import BaseResponse
+from kafka.tools.protocol.responses.controlled_shutdown_v0 import ControlledShutdownV0Response
 
 
-class ControlledShutdownV1Response(BaseResponse):
-    schema = [
-        {'name': 'error', 'type': 'int16'},
-        {'name': 'partitions_remaining',
-         'type': 'array',
-         'item_type': [
-             {'name': 'topic', 'type': 'string'},
-             {'name': 'partition', 'type': 'int32'},
-         ]},
-    ]
+class ControlledShutdownV1Response(ControlledShutdownV0Response):
+    pass

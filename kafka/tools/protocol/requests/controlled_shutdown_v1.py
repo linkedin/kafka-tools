@@ -15,29 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import six
-
-from kafka.tools.protocol.requests import BaseRequest, ArgumentError
+from kafka.tools.protocol.requests.controlled_shutdown_v0 import ControlledShutdownV0Request
 from kafka.tools.protocol.responses.controlled_shutdown_v1 import ControlledShutdownV1Response
 
 
-class ControlledShutdownV1Request(BaseRequest):
-    api_key = 7
+class ControlledShutdownV1Request(ControlledShutdownV0Request):
     api_version = 1
-    cmd = "ControlledShutdown"
     response = ControlledShutdownV1Response
-
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} broker_id\n".format(cmd, api_version) +
-                   "Description: Request controlled shutdown for the specified broker ID\n")
-
-    schema = [
-        {'name': 'broker_id', 'type': 'int32'}
-    ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        if (len(cmd_args) != 1) or (not isinstance(cmd_args[0], six.integer_types)):
-            raise ArgumentError("ControlledShutdown requires exactly one argument that is a number")
-
-        return {'broker_id': cmd_args[0]}

@@ -25,6 +25,7 @@ class HeartbeatV0Request(BaseRequest):
     cmd = "Heartbeat"
     response = HeartbeatV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} group_id group_generation_id member_id\n".format(cmd, api_version) +
                    "Description: Send heartbeat for the specified member\n")

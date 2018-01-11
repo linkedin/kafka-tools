@@ -36,9 +36,10 @@ class OffsetFetchV0Request(BaseRequest):
     cmd = "OffsetFetch"
     response = OffsetFetchV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} group_id (topic(,partition ...) ...)\n".format(cmd, api_version) +
-                   "Description: Commit offsets for the specified consumer group\n" +
+                   "Description: Fetch offsets for the specified topic partitions for the consumer group\n" +
                    "Example:     {0}V{1} ExampleGroup ExampleTopic,0,1,2 ExampleTopic2,0\n".format(cmd, api_version))
 
     schema = [

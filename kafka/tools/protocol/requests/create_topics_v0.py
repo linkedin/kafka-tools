@@ -59,6 +59,7 @@ class CreateTopicsV0Request(BaseRequest):
     cmd = "CreateTopics"
     response = CreateTopicsV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} timeout (topic_name,num_partitions,replication_factor[,config=value]... )...\n".format(cmd, api_version) +
                    "             {0}V{1} timeout (topic_name,(partition_id=replica_id[|replica_id]...)...[,config=value]... )...\n".format(cmd, api_version) +

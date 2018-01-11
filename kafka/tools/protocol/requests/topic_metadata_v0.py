@@ -25,6 +25,7 @@ class TopicMetadataV0Request(BaseRequest):
     cmd = "TopicMetadata"
     response = MetadataV0Response
 
+    supports_cli = True
     help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
                    "Format:      {0}V{1} [topic_name ...]\n".format(cmd, api_version) +
                    "Description: Fetch metadata for the specified topics. If no topics are specified, all topics are requested\n")
@@ -37,6 +38,6 @@ class TopicMetadataV0Request(BaseRequest):
     def process_arguments(cls, cmd_args):
         # This looks weird, but it's correct. The list is the first item
         if len(cmd_args) == 0:
-            return {'topics': None}
+            return {'topics': []}
         else:
             return {'topics': cmd_args}
