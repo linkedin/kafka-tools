@@ -39,7 +39,6 @@ class InterfaceOffsetsTests(unittest.TestCase):
             assert values[broker_id]['topics'][0]['topic'] == 'topic1'
             assert len(values[broker_id]['topics'][0]['partitions']) == 1
             assert values[broker_id]['topics'][0]['partitions'][0]['timestamp'] == Client.OFFSET_LATEST
-            assert values[broker_id]['topics'][0]['partitions'][0]['max_num_offsets'] == 1
         assert values[1]['topics'][0]['partitions'][0]['partition'] == 0
         assert values[101]['topics'][0]['partitions'][0]['partition'] == 1
 
