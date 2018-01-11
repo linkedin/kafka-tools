@@ -16,28 +16,29 @@
 # under the License.
 
 from kafka.tools.protocol.requests import BaseRequest
-from kafka.tools.protocol.responses.metadata_v0 import MetadataV0Response
+from kafka.tools.protocol.responses.create_partitions_v0 import CreatePartitionsV0Response
 
 
-class TopicMetadataV0Request(BaseRequest):
-    api_key = 3
+class CreatePartitionsV0Request(BaseRequest):
+    api_key = 37
     api_version = 0
-    cmd = "TopicMetadata"
-    response = MetadataV0Response
+    response = CreatePartitionsV0Response
 
-    supports_cli = True
-    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
-                   "Format:      {0}V{1} [topic_name ...]\n".format(cmd, api_version) +
-                   "Description: Fetch metadata for the specified topics. If no topics are specified, all topics are requested\n")
+    cmd = "CreatePartitions"
+    help_string = ''
 
     schema = [
-        {'name': 'topics', 'type': 'array', 'item_type': 'string'}
+        {'name': 'topic_partitions',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'count', 'type': 'int32'},
+             {'name': 'replicas',
+              'type': 'array',
+              'item_type': [
+                  {'name': 'broker_id', 'type': 'array', 'item_type': 'int32'},
+              ]},
+         ]},
+        {'name': 'timeout', 'type': 'int32'},
+        {'name': 'validate_only', 'type': 'boolean'},
     ]
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': []}
-        else:
-            return {'topics': cmd_args}

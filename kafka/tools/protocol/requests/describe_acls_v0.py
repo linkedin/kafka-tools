@@ -15,18 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
-from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.responses.describe_acls_v0 import DescribeAclsV0Response
 
 
-class TopicMetadataV1Request(TopicMetadataV0Request):
-    api_version = 1
-    response = MetadataV1Response
+class DescribeAclsV0Request(BaseRequest):
+    api_key = 29
+    api_version = 0
+    response = DescribeAclsV0Response
 
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': None}
-        else:
-            return {'topics': cmd_args}
+    cmd = "DescribeAcls"
+    help_string = ''
+
+    schema = [
+        {'name': 'resource_type', 'type': 'int8'},
+        {'name': 'resource_name', 'type': 'string'},
+        {'name': 'principal', 'type': 'string'},
+        {'name': 'host', 'type': 'string'},
+        {'name': 'operation', 'type': 'int8'},
+        {'name': 'permission_type', 'type': 'int8'},
+    ]

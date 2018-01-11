@@ -15,18 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
-from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.requests.offset_commit_v2 import OffsetCommitV2Request
+from kafka.tools.protocol.responses.offset_commit_v3 import OffsetCommitV3Response
 
 
-class TopicMetadataV1Request(TopicMetadataV0Request):
-    api_version = 1
-    response = MetadataV1Response
-
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': None}
-        else:
-            return {'topics': cmd_args}
+class OffsetCommitV3Request(OffsetCommitV2Request):
+    api_version = 3
+    response = OffsetCommitV3Response

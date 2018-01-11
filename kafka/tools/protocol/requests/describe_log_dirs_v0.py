@@ -15,18 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
-from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.responses.describe_log_dirs_v0 import DescribeLogDirsV0Response
 
 
-class TopicMetadataV1Request(TopicMetadataV0Request):
-    api_version = 1
-    response = MetadataV1Response
+class DescribeLogDirsV0Request(BaseRequest):
+    api_key = 35
+    api_version = 0
+    response = DescribeLogDirsV0Response
 
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': None}
-        else:
-            return {'topics': cmd_args}
+    cmd = "DescribeLogDirs"
+    help_string = ''
+
+    schema = [
+        {'name': 'topics',
+         'type': 'array',
+         'item_type': [
+             {'name': 'topic', 'type': 'string'},
+             {'name': 'partitions', 'type': 'array', 'item_type': 'int32'},
+         ]},
+    ]

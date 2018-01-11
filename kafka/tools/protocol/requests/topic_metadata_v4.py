@@ -15,18 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
-from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.requests.topic_metadata_v3 import TopicMetadataV3Request
+from kafka.tools.protocol.responses.metadata_v4 import MetadataV4Response
 
 
-class TopicMetadataV1Request(TopicMetadataV0Request):
-    api_version = 1
-    response = MetadataV1Response
+class TopicMetadataV4Request(TopicMetadataV3Request):
+    api_version = 4
+    response = MetadataV4Response
+    cmd = "TopicMetadata"
+
+    help_string = ("Request:     {0}V{1}\n".format(cmd, api_version) +
+                   "Format:      {0}V{1} [topic_name ...]\n".format(cmd, api_version) +
+                   "Description: Fetch metadata for the specified topics. If no topics are specified, all topics\n" +
+                   "             are requested. Note that auto-creation is not supported.\n")
+
+    schema = [
+        {'name': 'topics', 'type': 'array', 'item_type': 'string'},
+        {'name': 'allow_auto_topic_creation', 'type': 'boolean'}
+    ]
 
     @classmethod
     def process_arguments(cls, cmd_args):
         # This looks weird, but it's correct. The list is the first item
         if len(cmd_args) == 0:
-            return {'topics': None}
+            return {'allow_auto_topic_creation': False, 'topics': None}
         else:
-            return {'topics': cmd_args}
+            return {'allow_auto_topic_creation': False, 'topics': cmd_args}

@@ -15,18 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from kafka.tools.protocol.requests.topic_metadata_v0 import TopicMetadataV0Request
-from kafka.tools.protocol.responses.metadata_v1 import MetadataV1Response
+from kafka.tools.protocol.requests import BaseRequest
+from kafka.tools.protocol.responses.describe_configs_v0 import DescribeConfigsV0Response
 
 
-class TopicMetadataV1Request(TopicMetadataV0Request):
-    api_version = 1
-    response = MetadataV1Response
+class DescribeConfigsV0Request(BaseRequest):
+    api_key = 32
+    api_version = 0
+    response = DescribeConfigsV0Response
 
-    @classmethod
-    def process_arguments(cls, cmd_args):
-        # This looks weird, but it's correct. The list is the first item
-        if len(cmd_args) == 0:
-            return {'topics': None}
-        else:
-            return {'topics': cmd_args}
+    cmd = "DescribeConfigs"
+    help_string = ''
+
+    schema = [
+        {'name': 'resources',
+         'type': 'array',
+         'item_type': [
+             {'name': 'resource_type', 'type': 'int8'},
+             {'name': 'resource_name', 'type': 'string'},
+             {'name': 'config_names', 'type': 'array', 'item_type': 'string'},
+         ]},
+    ]
