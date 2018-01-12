@@ -181,8 +181,8 @@ class ClientConfiguration(object):
 
     @property
     def metadata_refresh(self):
-        """How long topic and group metadata can be cached"""
-        return getattr(self, '_metadata_refresh', 60000)
+        """How long topic and group metadata can be cached, in seconds"""
+        return getattr(self, '_metadata_refresh', 60)
 
     @metadata_refresh.setter
     def metadata_refresh(self, value):
