@@ -29,8 +29,8 @@ class ListOffsetV1Response(BaseResponse):
               'item_type': [
                   {'name': 'partition', 'type': 'int32'},
                   {'name': 'error', 'type': 'int16'},
-                  {'name': 'timestamp', 'type': 'array', 'item_type': 'int64'},
-                  {'name': 'offsets', 'type': 'array', 'item_type': 'int64'},
+                  {'name': 'timestamp', 'type': 'int64'},
+                  {'name': 'offset', 'type': 'int64'},
               ]},
          ]},
     ]

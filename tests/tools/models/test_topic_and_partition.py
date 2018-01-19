@@ -1,6 +1,6 @@
 import unittest
 
-from tests.tools.client.fixtures import list_offset, list_offset_none, list_offset_error, offset_fetch, offset_fetch_error
+from tests.tools.client.fixtures import list_offset, list_offset_error, offset_fetch, offset_fetch_error
 
 from kafka.tools.exceptions import OffsetError
 from kafka.tools.models.cluster import Cluster
@@ -270,15 +270,6 @@ class TopicAndPartitionTests(unittest.TestCase):
         offsets.set_offsets_from_list(response['responses'][0]['partition_responses'])
         assert offsets.partitions[0] == 4829
         assert offsets.partitions[1] == 8904
-
-    def test_set_offsets_empty_from_list(self):
-        topic = Topic('topic1', 2)
-        offsets = TopicOffsets(topic)
-        response = list_offset_none()
-
-        offsets.set_offsets_from_list(response['responses'][0]['partition_responses'])
-        assert offsets.partitions[0] == 4829
-        assert offsets.partitions[1] == -1
 
     def test_set_offsets_from_list_error(self):
         topic = Topic('topic1', 2)

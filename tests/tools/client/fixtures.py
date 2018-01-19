@@ -1,5 +1,5 @@
 from kafka.tools.protocol.responses.list_groups_v0 import ListGroupsV0Response
-from kafka.tools.protocol.responses.list_offset_v0 import ListOffsetV0Response
+from kafka.tools.protocol.responses.list_offset_v1 import ListOffsetV1Response
 from kafka.tools.protocol.responses.offset_commit_v2 import OffsetCommitV2Response
 from kafka.tools.protocol.responses.offset_fetch_v1 import OffsetFetchV1Response
 from kafka.tools.protocol.responses.describe_groups_v0 import DescribeGroupsV0Response
@@ -130,33 +130,27 @@ def list_groups_error():
 
 
 def list_offset():
-    return ListOffsetV0Response({'responses': [{'topic': 'topic1',
+    return ListOffsetV1Response({'responses': [{'topic': 'topic1',
                                                 'partition_responses': [{'partition': 0,
                                                                          'error': 0,
-                                                                         'offsets': [4829]},
+                                                                         'offset': 4829,
+                                                                         'timestamp': 1234},
                                                                         {'partition': 1,
                                                                          'error': 0,
-                                                                         'offsets': [8904]}]}]})
-
-
-def list_offset_none():
-    return ListOffsetV0Response({'responses': [{'topic': 'topic1',
-                                                'partition_responses': [{'partition': 0,
-                                                                         'error': 0,
-                                                                         'offsets': [4829]},
-                                                                        {'partition': 1,
-                                                                         'error': 0,
-                                                                         'offsets': []}]}]})
+                                                                         'offset': 8904,
+                                                                         'timestamp': 1234}]}]})
 
 
 def list_offset_error():
-    return ListOffsetV0Response({'responses': [{'topic': 'topic1',
+    return ListOffsetV1Response({'responses': [{'topic': 'topic1',
                                                 'partition_responses': [{'partition': 0,
                                                                          'error': 6,
-                                                                         'offsets': None},
+                                                                         'offset': -1,
+                                                                         'timestamp': -1},
                                                                         {'partition': 1,
                                                                          'error': 0,
-                                                                         'offsets': [8904]}]}]})
+                                                                         'offset': 8904,
+                                                                         'timestamp': 1234}]}]})
 
 
 def offset_fetch():
