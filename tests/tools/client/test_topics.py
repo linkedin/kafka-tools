@@ -64,7 +64,7 @@ class TopicsTests(unittest.TestCase):
         self.client._send_any_broker = MagicMock()
         self.client._update_from_metadata = MagicMock()
 
-        fake_last_time = time.time() - 1000
+        fake_last_time = time.time() - 1
         self.client._last_full_metadata = fake_last_time
         self.client._maybe_update_full_metadata(cache=False)
 
@@ -74,7 +74,7 @@ class TopicsTests(unittest.TestCase):
         self.client._send_any_broker = MagicMock()
         self.client._update_from_metadata = MagicMock()
 
-        fake_last_time = time.time() - 1000
+        fake_last_time = time.time() - 1
         self.client._last_full_metadata = fake_last_time
         self.client._maybe_update_full_metadata(cache=True)
 

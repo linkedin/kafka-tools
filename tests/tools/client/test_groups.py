@@ -79,7 +79,7 @@ class GroupsTests(unittest.TestCase):
         self.client._send_all_brokers = MagicMock()
         self.client._update_groups_from_lists = MagicMock()
 
-        fake_last_time = time.time() - 1000
+        fake_last_time = time.time() - 1
         self.client._last_group_list = fake_last_time
         self.client._maybe_update_groups_list(cache=False)
 
@@ -89,7 +89,7 @@ class GroupsTests(unittest.TestCase):
         self.client._send_all_brokers = MagicMock()
         self.client._update_groups_from_lists = MagicMock()
 
-        fake_last_time = time.time() - 1000
+        fake_last_time = time.time() - 1
         self.client._last_group_list = fake_last_time
         self.client._maybe_update_groups_list(cache=True)
 
