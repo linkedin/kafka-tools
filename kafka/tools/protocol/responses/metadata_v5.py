@@ -29,8 +29,8 @@ class MetadataV5Response(MetadataV0Response):
              {'name': 'port', 'type': 'int32'},
              {'name': 'rack', 'type': 'string'},
          ]},
-        {'name': 'controller_id', 'type': 'int32'},
         {'name': 'cluster_id', 'type': 'string'},
+        {'name': 'controller_id', 'type': 'int32'},
         {'name': 'topics',
          'type': 'array',
          'item_type': [
