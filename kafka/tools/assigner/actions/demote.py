@@ -16,6 +16,7 @@
 # under the License.
 
 from kafka.tools.assigner.actions import ActionModule
+from kafka.tools.exceptions import NotEnoughReplicasException
 
 
 class ActionDemote(ActionModule):
@@ -43,7 +44,14 @@ class ActionDemote(ActionModule):
             if topics_to_consider and partition.topic.name not in topics_to_consider:
                 continue
 
-            if partition.replicas[0].id in brokers_to_demote:
+            if all(b.id in brokers_to_demote for b in partition.replicas):
+                msg = 'Topic {0} partition {1} only has replicas in the list of brokers to be demoted: {2}'.format(
+                    partition.topic.name,
+                    str(partition.num),
+                    ', '.join(str(b.id) for b in partition.replicas))
+                raise NotEnoughReplicasException(msg)
+
+            while partition.replicas[0].id in brokers_to_demote:
                 broker = partition.replicas[0]
                 partition.remove_replica(broker)
                 partition.add_replica(broker)
