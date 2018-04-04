@@ -63,7 +63,7 @@ class Topic(BaseModel):
             target_count (int): the number of partitions to have
         """
         while len(self.partitions) < target_count:
-            partition = Partition(self.name, len(self.partitions))
+            partition = Partition(self, len(self.partitions))
             self.add_partition(partition)
 
         # While Kafka doesn't support partition deletion (only topics), it's possible for a topic
