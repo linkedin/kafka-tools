@@ -26,7 +26,7 @@ from kafka.tools.models import BaseModel
 class ReplicaElection(BaseModel):
     equality_attrs = ['partitions']
 
-    def __init__(self, partitions, pause_time=300):
+    def __init__(self, partitions, pause_time=300, throttle=0):
         self.partitions = partitions
         self.pause_time = pause_time
 
