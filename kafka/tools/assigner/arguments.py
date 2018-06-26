@@ -55,6 +55,8 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('--skip-ple', help="Skip preferred replica election after finishing moves", action='store_true')
     aparser.add_argument('--ple-size', help="Max number of partitions in a single preferred leader election", required=False, default=2000, type=int)
     aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=120, type=int)
+    aparser.add_argument('--move-wait', help="Time in seconds to wait between moves", required=False, default=0, type=int)
+    aparser.add_argument('--throttle', help="Throttle in bytes/sec", required=False, default=0, type=int)
     aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
     aparser.add_argument('--output-json', help="Output JSON-formatted cluster information to stdout", default=False, action='store_true')
 

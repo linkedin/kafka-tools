@@ -124,7 +124,7 @@ def main():
     print_leadership("after", newcluster, args.leadership)
 
     move_partitions = cluster.changed_partitions(action_to_run.cluster)
-    batches = split_partitions_into_batches(move_partitions, batch_size=args.moves, use_class=Reassignment)
+    batches = split_partitions_into_batches(move_partitions, batch_size=args.moves, throttle=args.throttle, use_class=Reassignment)
     run_plugins_at_step(plugins, 'set_batches', batches)
 
     log.info("Partition moves required: {0}".format(len(move_partitions)))
@@ -134,6 +134,10 @@ def main():
     for i, batch in enumerate(batches):
         log.info("Executing partition reassignment {0}/{1}: {2}".format(i + 1, len(batches), repr(batch)))
         batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
+
+        if args.move_wait > 0:
+            log.info("Wait {0}s".format(args.move_wait))
+            time.sleep(args.move_wait)
 
     run_plugins_at_step(plugins, 'before_ple')
 
