@@ -133,14 +133,22 @@ class Cluster(BaseModel):
 
     # Iterate over all the partitions in this cluster
     # Order is alphabetical by topic, numeric by partition
-    def partitions(self, exclude_topics=[]):
-        for topic in sorted(self.topics):
-            if topic in exclude_topics:
-                log.debug("Skipping topic {0} due to exclude-topics".format(topic))
-                continue
+    def partitions(self, exclude_topics=[], only_topics=[]):
+        if len(only_topics) > 0:
+            for topic in sorted(self.topics):
+                if topic in only_topics:
+                    for partition in self.topics[topic].partitions:
+                        yield partition
 
-            for partition in self.topics[topic].partitions:
-                yield partition
+                log.debug("Skipping topic {0} because it's not in only-topics".format(topic))
+        else:
+            for topic in sorted(self.topics):
+                if topic in exclude_topics:
+                    log.debug("Skipping topic {0} due to exclude-topics".format(topic))
+                    continue
+
+                for partition in self.topics[topic].partitions:
+                    yield partition
 
     def num_brokers(self):
         return len(self.brokers)

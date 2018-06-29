@@ -48,6 +48,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
     aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=10, type=int)
     aparser.add_argument('-x', '--exclude-topics', help="Comma-separated list of topics to skip when performing actions", action=CSVAction, default=[])
+    aparser.add_argument('--only-topics', help="Comma-separated list of topics to limit actions to", action=CSVAction, default=[])
     aparser.add_argument('--sizer', help="Select module to use to get partition sizes", required=False, default='ssh', choices=sizer_map.keys())
     aparser.add_argument('-p', '--property', help="Property of the form 'key=value' to be passed to modules (i.e. sizer)", required=False, default=[],
                          action='append')
