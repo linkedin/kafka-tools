@@ -30,9 +30,10 @@ from kafka.tools.models import BaseModel
 class Reassignment(BaseModel):
     equality_attrs = ['partitions']
 
-    def __init__(self, partitions, pause_time=10):
+    def __init__(self, partitions, pause_time=10, throttle=0):
         self.partitions = partitions
         self.pause_time = pause_time
+        self.throttle = throttle
         self.status_re = re.compile('.*Reassignment of partition.*?\s+(failed|still in progress|completed successfully)')
 
     def __repr__(self):
@@ -57,10 +58,14 @@ class Reassignment(BaseModel):
             json.dump(self.dict_for_reassignment(), assignfile)
             assignfile.flush()
             FNULL = open(os.devnull, 'w')
-            proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
+
+            args = ['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                      '--zookeeper', zookeeper,
-                                     '--reassignment-json-file', assignfile.name],
-                                    stdout=FNULL, stderr=FNULL)
+                                     '--reassignment-json-file', assignfile.name]
+            if self.throttle > 0:
+                args.extend(['--throttle', str(self.throttle)])
+
+            proc = subprocess.Popen(args, stdout=FNULL, stderr=FNULL)
             proc.wait()
 
             # Wait until finished
