@@ -31,9 +31,8 @@ class ActionDemote(ActionModule):
     def _add_args(cls, parser):
         parser.add_argument(
             '-b', '--brokers', type=int, help='List of broker ids to demote', required=True, nargs='*')
-        parser.add_argument('-t', '--topics', required=False, nargs='*', help=\
-            'Optional list of topics to use. If not specified, leadership of all topics lead by the brokers to ' \
-            'demote will be changed.')
+        parser.add_argument('-t', '--topics', required=False, nargs='*',
+                            help='Optional list of topics to use. If not specified, leadership of all topics lead by the brokers to demote will be changed.')
 
     def process_cluster(self):
         # Randomize a broker list to use for new replicas once. We'll round robin it from here
