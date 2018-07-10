@@ -44,23 +44,30 @@ class Reassignment(BaseModel):
             reassignment['partitions'].append(partition.dict_for_reassignment())
         return reassignment
 
-    def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
+    def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True, throttle=None):
         for plugin in plugins:
             plugin.before_execute_batch(num)
         if not dry_run:
-            self._execute(num, total, zookeeper, tools_path)
+            self._execute(num, total, zookeeper, tools_path, throttle)
         for plugin in plugins:
             plugin.after_execute_batch(num)
 
-    def _execute(self, num, total, zookeeper, tools_path):
+    def _execute(self, num, total, zookeeper, tools_path, throttle):
         with NamedTemporaryFile(mode='w') as assignfile:
             json.dump(self.dict_for_reassignment(), assignfile)
             assignfile.flush()
             FNULL = open(os.devnull, 'w')
-            proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
-                                     '--zookeeper', zookeeper,
-                                     '--reassignment-json-file', assignfile.name],
-                                    stdout=FNULL, stderr=FNULL)
+            if throttle is not None:
+                proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
+                                         '--zookeeper', zookeeper,
+                                         '--reassignment-json-file', assignfile.name,
+                                         '--throttle', throttle],
+                                        stdout=FNULL, stderr=FNULL)
+            else:
+                proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
+                                         '--zookeeper', zookeeper,
+                                         '--reassignment-json-file', assignfile.name],
+                                        stdout=FNULL, stderr=FNULL)
             proc.wait()
 
             # Wait until finished

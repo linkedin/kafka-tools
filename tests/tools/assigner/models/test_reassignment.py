@@ -42,7 +42,12 @@ class ReassignmentTests(unittest.TestCase):
     @patch.object(Reassignment, '_execute')
     def test_reassignment_execute_real(self, mock_exec):
         self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False)
-        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools')
+        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', None)
+
+    @patch.object(Reassignment, '_execute')
+    def test_reassignment_execute_throttle(self, mock_exec):
+        self.reassignment.execute(1, 1, 'zkconnect', '/path/to/tools', plugins=[self.null_plugin], dry_run=False, throttle='1000')
+        mock_exec.assert_called_once_with(1, 1, 'zkconnect', '/path/to/tools', '1000')
 
     @patch.object(Reassignment, '_execute')
     def test_reassignment_execute_dryrun(self, mock_exec):
@@ -55,7 +60,7 @@ class ReassignmentTests(unittest.TestCase):
         mock_popen.set_default()
         mock_check.side_effect = [10, 5, 0]
 
-        self.reassignment._execute(1, 1, 'zkconnect', '/path/to/tools')
+        self.reassignment._execute(1, 1, 'zkconnect', '/path/to/tools', None)
 
         compare([call.Popen(['/path/to/tools/kafka-reassign-partitions.sh', '--execute', '--zookeeper', 'zkconnect', '--reassignment-json-file', ANY],
                             stderr=ANY, stdout=ANY),
