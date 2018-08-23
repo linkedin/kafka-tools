@@ -83,6 +83,9 @@ class SizerPrometheus(SizerModule):
         return metric or None
 
     def _get_prometheus_metrics(self, hostname, port, path):
+        # When hostname is an ipv6 addr, add brackets to separate addr from port
+        if hostname.count(':') >= 2 and hostname[0] != '[' and hostname[-1] != ']':
+            hostname = '[{}]'.format(hostname)
         url = 'http://{}:{}{}'.format(hostname, port, path)
         body = ''
         try:

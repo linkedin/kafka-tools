@@ -160,6 +160,23 @@ class SizerPrometheusTests(unittest.TestCase):
         self.assertSequenceEqual(metrics, ['404 not found'])
 
     @patch('kafka.tools.assigner.sizers.prometheus.urlopen')
+    def test_sizer_get_prometheus_metrics_ipv6(self, mock_urlopen):
+        test_paths = [
+            ('1.2.3.4', '1.2.3.4'),
+            ('username:password@example.com', 'username:password@example.com'),
+            ('::1', '[::1]'),
+            ('[2001:db8::1]', '[2001:db8::1]'),
+        ]
+        for before, after in test_paths:
+            m = Mock()
+            m.getcode.return_value = 200
+            mock_urlopen.return_value = m
+            sizer = SizerPrometheus(self.args, self.cluster)
+            sizer._get_prometheus_metrics(before, 1234, '/metrics')
+            mock_urlopen.assert_called_once_with('http://{}:1234/metrics'.format(after))
+            mock_urlopen.reset_mock()
+
+    @patch('kafka.tools.assigner.sizers.prometheus.urlopen')
     def test_sizer_get_prometheus_metrics_404(self, mock_urlopen):
         m = Mock()
         m.getcode.return_value = 404
