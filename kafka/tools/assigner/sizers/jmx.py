@@ -3,6 +3,7 @@ from kafka.tools.exceptions import UnknownBrokerException, ConfigurationExceptio
 from kafka.tools.assigner.sizers import SizerModule
 
 import jpype
+import os
 
 
 class SizerJMX(SizerModule):
@@ -21,9 +22,13 @@ class SizerJMX(SizerModule):
         if java_provider is None:
             self._java_provider = jpype
             if 'libjvm' in self.properties:
-                self._java_provider.startJVM(self.properties['libjvm'])
+                libjvm = self.properties['libjvm']
+            elif "JAVA_HOME" in os.environ:
+                libjvm = os.path.join(os.environ["JAVA_HOME"], "jre/lib/amd64/server/libjvm.so")
             else:
-                self._java_provider.startJVM("/export/apps/jdk/JDK-1_8_0_72/jre/lib/amd64/server/libjvm.so")
+                libjvm = "/export/apps/jdk/JDK-1_8_0_72/jre/lib/amd64/server/libjvm.so"
+
+            self._java_provider.startJVM(libjvm)
         else:
             self._java_provider = java_provider
 
