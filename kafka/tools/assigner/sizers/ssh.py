@@ -57,7 +57,7 @@ class SizerSSH(SizerModule):
                                         stdout=subprocess.PIPE, stderr=FNULL)
             else:
                 log.info("Getting partition sizes via SSH using key: {0} for {1}".format(key, broker.hostname))
-                proc = subprocess.Popen(['ssh','-i', key, connection_endpoint,
+                proc = subprocess.Popen(['ssh', '-i', key, connection_endpoint,
                                          'du -sk {0}/*'.format(self.properties['datadir'])],
                                         stdout=subprocess.PIPE, stderr=FNULL)
 
