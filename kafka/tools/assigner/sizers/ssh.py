@@ -36,13 +36,32 @@ class SizerSSH(SizerModule):
         # Get broker partition sizes
         FNULL = open(os.devnull, 'w')
 
+
         for broker_id, broker in self.cluster.brokers.items():
             if broker.hostname is None:
                 raise UnknownBrokerException("Cannot get sizes for broker ID {0} which has no hostname. "
                                              "Remove the broker from the cluster before balance".format(broker_id))
 
-            log.info("Getting partition sizes via SSH for {0}".format(broker.hostname))
-            proc = subprocess.Popen(['ssh', broker.hostname, 'du -sk {0}/*'.format(self.properties['datadir'])],
-                                    stdout=subprocess.PIPE, stderr=FNULL)
+            if 'sshuser' in self.properties:
+                connection_endpoint = self.properties['sshuser']+'@'+broker.hostname
+            else:
+                connection_endpoint = broker.hostname
+
+            if 'sshkey' in self.properties:
+                key = self.properties['sshkey']
+            else:
+                key = None
+
+            if key is None:
+                log.info("Getting partition sizes via SSH for {0}".format(broker.hostname))
+                proc = subprocess.Popen(['ssh', connection_endpoint, 'du -sk {0}/*'.format(self.properties['datadir'])],
+                                        stdout=subprocess.PIPE, stderr=FNULL)
+            else:
+                key = self.properties['sshkey']
+                log.info("Getting partition sizes via SSH using key: {0} for {1}".format(key, broker.hostname))
+                proc = subprocess.Popen(['ssh','-i', key, connection_endpoint,
+                                         'du -sk {0}/*'.format(self.properties['datadir'])],
+                                        stdout=subprocess.PIPE, stderr=FNULL)
+
             for line in proc.stdout:
                 self.process_df_match(self.size_re.match(line.decode()), broker_id)
