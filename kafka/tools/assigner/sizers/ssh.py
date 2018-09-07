@@ -36,7 +36,6 @@ class SizerSSH(SizerModule):
         # Get broker partition sizes
         FNULL = open(os.devnull, 'w')
 
-
         for broker_id, broker in self.cluster.brokers.items():
             if broker.hostname is None:
                 raise UnknownBrokerException("Cannot get sizes for broker ID {0} which has no hostname. "
