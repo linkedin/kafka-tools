@@ -86,12 +86,16 @@ class Reassignment(BaseModel):
         return 0
 
     def check_completion(self, zookeeper, tools_path, assign_filename):
+
+        print("sleeping for {0} seconds before check completion ", str(self.pause_time))
+        time.sleep(self.pause_time)
         FNULL = open(os.devnull, 'w')
         proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--verify',
                                  '--zookeeper', zookeeper,
                                  '--reassignment-json-file', assign_filename],
                                 stdout=subprocess.PIPE, stderr=FNULL)
         lines = proc.stdout.readlines()
+        print("lines in proc out " + str(lines))
 
         remaining_count = 0
         for line in lines:
