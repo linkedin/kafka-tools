@@ -41,7 +41,8 @@ class ReplicaElection(BaseModel):
 
     def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
         if not dry_run:
-            with NamedTemporaryFile(mode='w') as assignfile:
+            with NamedTemporaryFile(mode='w', delete=False) as assignfile:
+                # print(repr(assignfile.__dict__))
                 json.dump(self.dict_for_replica_election(), assignfile)
                 assignfile.flush()
                 FNULL = open(os.devnull, 'w')
@@ -49,3 +50,4 @@ class ReplicaElection(BaseModel):
                                  '--zookeeper', zookeeper,
                                  '--path-to-json-file', assignfile.name],
                                 stdout=FNULL, stderr=FNULL)
+

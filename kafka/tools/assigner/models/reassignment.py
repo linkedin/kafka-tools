@@ -62,9 +62,10 @@ class Reassignment(BaseModel):
                                      '--reassignment-json-file', assignfile.name],
                                     stdout=FNULL, stderr=FNULL)
             proc.wait()
-
-            # Wait until finished
-            while True:
+            retries = 0
+            max_retries = 10
+            # Wait until finished or max retries
+            while retries < max_retries:
                 remaining_partitions = self.check_completion(zookeeper, tools_path, assignfile.name)
                 if remaining_partitions == 0:
                     break
@@ -74,6 +75,7 @@ class Reassignment(BaseModel):
                                                                                                                                  remaining_partitions,
                                                                                                                                  len(self.partitions),
                                                                                                                                  self.pause_time))
+                retries += 1
                 time.sleep(self.pause_time)
 
     def process_verify_match(self, line):

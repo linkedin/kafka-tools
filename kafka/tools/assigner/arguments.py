@@ -43,7 +43,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
 
     aparser.add_argument('-v', '--version', action='version', version=str(pkg_resources.get_distribution("kafka-tools").version))
     aparser.add_argument('-z', '--zookeeper', help='Zookeeper path to the cluster (i.e. zk-eat1-kafka.corp:12913/kafka-data-deployment)', required=True)
-    aparser.add_argument('-l', '--leadership', help="Show cluster leadership balance", action='store_true')
+    aparser.add_argument('-l', '--leadership', help="Show cluster leadership balance", default=True, action='store_true')
     aparser.add_argument('-g', '--generate', help="Generate partition reassignment file", action='store_true')
     aparser.add_argument('-e', '--execute', help="Execute partition reassignment", action='store_true')
     aparser.add_argument('-m', '--moves', help="Max number of moves per step", required=False, default=1, type=int)
@@ -54,6 +54,7 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('-s', '--size', help="Show partition sizes", action='store_true')
     aparser.add_argument('--skip-ple', help="Skip preferred replica election after finishing moves", action='store_true')
     aparser.add_argument('--ple-size', help="Max number of partitions in a single preferred leader election", required=False, default=2000, type=int)
+    aparser.add_argument('--pause', help="Time in seconds to pause between any two actions ", required=False, default=10, type=int)
     aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=120, type=int)
     aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
     aparser.add_argument('--output-json', help="Output JSON-formatted cluster information to stdout", default=False, action='store_true')

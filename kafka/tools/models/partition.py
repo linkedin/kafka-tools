@@ -15,22 +15,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
+
 from __future__ import division
 
 from kafka.tools.exceptions import ReplicaNotFoundException
 from kafka.tools.models import BaseModel
 
+import time
+
 
 class Partition(BaseModel):
     equality_attrs = ['topic', 'num']
 
-    def __init__(self, topic, num):
+    def __init__(self, topic, num, pause_time=10):
         self.topic = topic
         self.num = num
         self.leader = None
         self.replicas = []
         self.size = 0
         self.scaled_size = 0
+        self.pause_time = pause_time
 
     # Shallow copy - do not copy replica list (zero length)
     def copy(self):
@@ -110,6 +114,8 @@ class Partition(BaseModel):
         self.remove_replica(remove_broker)
         self.add_replica(add_broker, position)
 
+        time.sleep(self.pause_time)
+
     # Given two brokers that appear in the replica list, swap their positions (making sure to adjust the broker objects as well)
     # If either replica is not in the list, throw an exception
     def swap_replica_positions(self, broker1, broker2):
@@ -130,6 +136,10 @@ class Partition(BaseModel):
         # Last, swap the replica positons on this partition object
         self.replicas[p1] = broker2
         self.replicas[p2] = broker1
+
+        time.sleep(self.pause_time)
+
+
 
     # Helper function to add a partition to a broker
     # This should never be called - please use the add_replica method
