@@ -40,6 +40,7 @@ class ActionSetRF(ActionModule):
 
     def process_cluster(self):
         # Randomize a broker list to use for new replicas once. We'll round robin it from here
+        # Note - this can be modified to achieve more replicas in AWS specific brokers in our case, can change this to accept args
         idlist = list(self.cluster.brokers.keys())
         random.shuffle(idlist)
         brokers = deque(idlist)
