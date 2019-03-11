@@ -142,6 +142,7 @@ class Cluster(BaseModel):
             for partition in self.topics[topic].partitions:
                 yield partition
 
+    # NOTE - need to change this method to accept source brokers also and return partitions where only source brokers are leaders
     def partitions_for(self, include_topics=[]):
         partitions = []
         for topic in include_topics:

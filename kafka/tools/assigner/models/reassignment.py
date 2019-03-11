@@ -63,7 +63,7 @@ class Reassignment(BaseModel):
                                     stdout=FNULL, stderr=FNULL)
             proc.wait()
             retries = 0
-            max_retries = 10
+            max_retries = 100
             # Wait until finished or max retries
             while retries < max_retries:
                 remaining_partitions = self.check_completion(zookeeper, tools_path, assignfile.name)

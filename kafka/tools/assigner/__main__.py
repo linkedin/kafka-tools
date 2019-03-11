@@ -57,7 +57,6 @@ def check_and_get_sizes(action_cls, args, cluster, sizer_map):
 
 def run_preferred_replica_elections(batches, args, tools_path, plugins, dry_run):
     for i, batch in enumerate(batches):
-        print(" inside run_preferred_replica_elections")
         # Sleep between PLEs
         if i > 0 and not dry_run:
             log.info("Waiting {0} seconds for replica election to complete".format(args.ple_wait))
