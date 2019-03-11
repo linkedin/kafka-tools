@@ -29,9 +29,9 @@ class ActionClone(ActionModule):
         super(ActionClone, self).__init__(args, cluster)
 
         self.check_brokers()
-        # TODO Navneet - check how this was working in case of single target broker also
-        # if args.to_broker not in self.cluster.brokers:
-        #     raise ConfigurationException("Target broker is not in the brokers list for this cluster")
+        for to_broker in args.to_brokers:
+            if self.cluster.brokers[to_broker] is None:
+                raise ConfigurationException("Target broker is not in the brokers list for this cluster")
 
         self.topics = args.topics
         input_topics_not_present = []
@@ -48,13 +48,17 @@ class ActionClone(ActionModule):
 
     @classmethod
     def _add_args(cls, parser):
-        # in our case, we need to specify all LW brokers as we want to migrate leadership to AWS brokers,
-        # the processing is constrained by topics specified in args however
+
+        # we want to do partition leadership migration for specified topics only
+        parser.add_argument('-s', '--topics', help="List of topics's partition leaders to be migrated", required=True,
+                            type=str, nargs='*')
+
+        # for our requirement, we need to retire all LW brokers as we want to migrate leadership to AWS brokers,
+        # we can specify LW brokers here, no heavy duty processing as it'sconstrained by topics specified in args anyway
         parser.add_argument('-b', '--brokers', help="List of source brokers where leadership needs to be migrated from", required=True,
                             type=int, nargs='*')
-        # we want to do partition leadership migration for specified topics only
-        parser.add_argument('-s', '--topics', help="List of topics's partition leaders to be migrated", required=True, type=str, nargs='*')
-        # this is where cloning will happen, in our case this is expected to be broker in AWS
+
+        # this is the target brokers where cloning will happen, for our requirement, this is expected to be brokers in AWS
         parser.add_argument('-t', '--to_brokers', help="Broker ID to copy partitions to", required=True, type=int, nargs='*')
 
     def process_cluster(self):
@@ -65,10 +69,8 @@ class ActionClone(ActionModule):
         for partition in self.cluster.partitions_for(self.topics):
             if len(from_brokers & set([replica.id for replica in partition.replicas])) > 0:
                 to_broker = to_brokers.popleft()
-                print(" to_broker is " + str(to_broker))
                 to_brokers.append(to_broker)
                 targeted_broker = self.cluster.brokers[to_broker]
-                print(" targeted_broker is " + str(targeted_broker) + repr(targeted_broker))
                 if targeted_broker in partition.replicas:
                     log.warn("Targeted broker (ID {0}) is already in the replica list for {1}:{2}"
                              .format(targeted_broker.id, partition.topic.name, partition.num))
