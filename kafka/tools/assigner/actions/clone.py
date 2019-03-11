@@ -23,7 +23,7 @@ from kafka.tools.exceptions import ConfigurationException
 
 class ActionClone(ActionModule):
     name = "clone"
-    helpstr = "Copy partitions for specified topics from some brokers (list) to a new broker (single) and increasing RF"
+    helpstr = "Copy partitions for specified topics from some brokers (list) to some other brokers (list) and increasing RF/changing leadership when possible"
 
     def __init__(self, args, cluster):
         super(ActionClone, self).__init__(args, cluster)
@@ -54,7 +54,7 @@ class ActionClone(ActionModule):
                             type=str, nargs='*')
 
         # for our requirement, we need to retire all LW brokers as we want to migrate leadership to AWS brokers,
-        # we can specify LW brokers here, no heavy duty processing as it'sconstrained by topics specified in args anyway
+        # we can specify LW brokers here, no heavy duty processing as it's constrained by topics specified in args anyway
         parser.add_argument('-b', '--brokers', help="List of source brokers where leadership needs to be migrated from", required=True,
                             type=int, nargs='*')
 
@@ -68,6 +68,7 @@ class ActionClone(ActionModule):
         print(" target broker set is " + str(to_brokers))
         for partition in self.cluster.partitions_for(self.topics):
             if len(from_brokers & set([replica.id for replica in partition.replicas])) > 0:
+                # use round-robin method to get target broker to clone/migrate leadership
                 to_broker = to_brokers.popleft()
                 to_brokers.append(to_broker)
                 targeted_broker = self.cluster.brokers[to_broker]

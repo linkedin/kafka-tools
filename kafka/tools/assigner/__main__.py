@@ -96,6 +96,7 @@ def is_dry_run(args):
 
 
 def main():
+
     # Start by loading all the modules
     action_map = get_module_map(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule)
     sizer_map = get_module_map(kafka.tools.assigner.sizers, kafka.tools.assigner.sizers.SizerModule)
@@ -107,6 +108,8 @@ def main():
 
     tools_path = get_tools_path(args.tools_path)
     check_java_home()
+
+    time.sleep(args.pause)
 
     cluster = Cluster.create_from_zookeeper(args.zookeeper, getattr(args, 'default_retention', 1))
     run_plugins_at_step(plugins, 'set_cluster', cluster)
