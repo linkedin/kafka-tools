@@ -28,7 +28,7 @@ def show_help(request_classes, request_cmds, cmd_args):
                                             ", ".join([request_classes[request][ver].cmd + "V{0}".format(ver)
                                                        for ver in sorted(request_classes[request].keys())])))
         print("\nFor more information on a request, type \"help <request>\"")
-    elif cmd_args[0] in request_cmds:
-        print(request_cmds[cmd_args[0]].help_string)
+    elif cmd_args[0].lower() in request_cmds:
+        print(request_cmds[cmd_args[0].lower()].help_string)
     else:
         print("{0} is not a valid request".format(cmd_args[0]))
