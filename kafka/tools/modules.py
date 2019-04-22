@@ -31,7 +31,7 @@ def check_class(klass, base_class):
     base_classes = inspect.getmro(klass)
     if len(base_classes) == 1:
         return None
-    if base_classes[1] == base_class:
+    if base_class in base_classes:
         return klass
 
 
