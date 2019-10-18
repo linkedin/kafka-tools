@@ -133,7 +133,7 @@ def main():
 
     for i, batch in enumerate(batches):
         log.info("Executing partition reassignment {0}/{1}: {2}".format(i + 1, len(batches), repr(batch)))
-        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
+        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, args.throttle, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'before_ple')
 

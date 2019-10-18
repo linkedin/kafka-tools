@@ -46,6 +46,7 @@ class ActionBalance(ActionModule):
         parser.add_argument('-t', '--types', help="Balance types to perform. Multiple may be specified and they will be run in order", required=True,
                             choices=[klass.name for klass in balance_actions], nargs='*')
         parser.add_argument('--default-retention', help="Default cluster retention, in ms", required=False, type=int, default=345600000)
+        parser.add_argument('--throttle', help="Bytes/s to be throttled at during partition rebalance", required=False, type=int, default=-1)
 
     def process_cluster(self):
         for bmodule in self.modules:
