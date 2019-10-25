@@ -80,6 +80,7 @@ class MainTests(unittest.TestCase):
                                                          ple_size=2,
                                                          ple_wait=120,
                                                          sizer='ssh',
+                                                         throttle='100000000',
                                                          leadership=True,
                                                          output_json=True)
         assert main() == 0
