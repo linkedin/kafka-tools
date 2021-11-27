@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 import argparse
 import pkg_resources
 
@@ -34,6 +35,12 @@ class CSVAction(argparse.Action):
                 val_array = old_array
         setattr(namespace, self.dest, val_array)
 
+
+def file_path_checker(path):
+    """Check is given file path exist or not"""
+    if not os.path.isfile(path):
+        raise FileNotFoundError("File path: {} not exists or its not file".format(path))
+    return path
 
 # action_map is a map of names to ActionModule children - the top level actions that can be called
 # sizer_map is a map of names to SizerModule children - the modules to get partition sizes
@@ -57,6 +64,8 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('--ple-wait', help="Time in seconds to wait between preferred leader elections", required=False, default=120, type=int)
     aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
     aparser.add_argument('--output-json', help="Output JSON-formatted cluster information to stdout", default=False, action='store_true')
+    aparser.add_argument('--throttle', help="The movement of partitions between brokers will be throttled to this value (bytes/sec)", default=25000000, type=int)
+    aparser.add_argument('--save-plan-path', help="Save the generated plan at given path", required=False, type=str)
 
     # Call action module arg setup
     subparsers = aparser.add_subparsers(help='Select manipulation module to use')

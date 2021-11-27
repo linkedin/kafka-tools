@@ -59,7 +59,8 @@ class Reassignment(BaseModel):
             FNULL = open(os.devnull, 'w')
             proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                      '--zookeeper', zookeeper,
-                                     '--reassignment-json-file', assignfile.name],
+                                     '--reassignment-json-file', assignfile.name,
+                                     '--throttle', str(throttle)],
                                     stdout=FNULL, stderr=FNULL)
             proc.wait()
 

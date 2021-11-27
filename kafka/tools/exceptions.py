@@ -91,3 +91,6 @@ class OffsetError(ClientError):
 
 class ConfigurationError(ClientError):
     errstr = "There was an error configuring the client"
+
+class InvalidPlanFormatException(KafkaToolsException):
+    errstr = "There was an error while parsing plan for given file path. Expecting plan should be list of dict"

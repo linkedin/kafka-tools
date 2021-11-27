@@ -94,6 +94,18 @@ def is_dry_run(args):
         return True
     return False
 
+def save_plan(args, move_partitions):
+    if not args.existing_plan_path:
+        return
+
+    folder, filename = args.save_plan_path.rsplit("/", 1)
+    if os.path.isdir(folder) and (not os.path.isdir(args.save_plan_path)):
+        plans_as_json_list = [p.dict_for_reassignment() for p in move_partitions]
+        with open(args.save_plan_path, "w") as f:
+            f.write(json.dumps(plans_as_json_list, indent=4))
+            log.info("Saved plan at location={}".format(args.save_plan_path))
+    else:
+        raise FileExistsError("Given file path={} is a directory not File".format(args.save_plan_path))
 
 def main():
     # Start by loading all the modules
@@ -124,6 +136,7 @@ def main():
     print_leadership("after", newcluster, args.leadership)
 
     move_partitions = cluster.changed_partitions(action_to_run.cluster)
+    save_plan(args, move_partitions)
     batches = split_partitions_into_batches(move_partitions, batch_size=args.moves, use_class=Reassignment)
     run_plugins_at_step(plugins, 'set_batches', batches)
 
