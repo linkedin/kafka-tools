@@ -2,7 +2,7 @@ import json
 from kafka.tools.assigner.actions import ActionModule
 from kafka.tools.assigner.arguments import file_path_checker
 from kafka.tools.models.partition import Partition
-from kafka.tools.exceptions import InvalidPlanFormatException
+from kafka.tools.exceptions import InvalidPlanFormatException, UnknownBrokerException
 
 
 class ActionExecutePlan(ActionModule):
@@ -23,15 +23,27 @@ class ActionExecutePlan(ActionModule):
         )
 
     def __check_plan_format(self, plan):
-        """
-        Expecting plan will of type list of dict
-        """
+        """Expecting plan will of type list of dict"""
         if not (isinstance(plan, list) and len(plan) > 0 and isinstance(plan[0], dict)):
             raise InvalidPlanFormatException()
+
+        # Check all broker id in plan must be present in cluster
+        brokers_in_plan, brokers_in_cluster = set(), set(self.cluster.brokers.keys())
+        
+        for partition_plan in plan:
+            brokers_in_plan.update(partition_plan["replicas"])
+
+        missing = list(brokers_in_plan - brokers_in_cluster)
+        if missing:
+            raise UnknownBrokerException(
+                "Broker ids = {} in plan not present in cluster".format(str(missing))
+            )
 
     def process_cluster(self):
         plan = json.load(open(self.args.plan_file_path))
         self.__check_plan_format(plan)
+
+        # check broker exist in cluster or not in plan
 
         topic_track = {}
 

@@ -73,14 +73,14 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
 
                 for p in broker_partition[bid]:
                     bright = broker_count[right]
-                    while right > 0 and bright[1] >= count:
+                    if bright[1] >= count:
                         right -= 1
 
                     if left >= right or adjusted_count == 0:
                         break
 
                     replicas = [b.id for b in p.replicas]
-                    if bright[0] not in replicas:
+                    if bid in replicas and bright[0] not in replicas:
                         index = replicas.index(bid)
                         p.swap_replicas(p.replicas[index], self.cluster.brokers[bright[0]])
                         adjusted_count -= 1
@@ -132,14 +132,14 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
 
                 for p in broker_partition[bid]:
                     bright = broker_count[right]
-                    while right > 0 and bright[1] >= count:
+                    if bright[1] >= count:
                         right -= 1
 
                     if left >= right or adjusted_count == 0:
                         break
 
                     replicas = [b.id for b in p.replicas]
-                    if not(bright[0] not in replicas and replicas.index(bid) == 0):
+                    if not(bid in replicas and bright[0] not in replicas and replicas.index(bid) == 0):
                         continue
 
                     # Swaping leader from left side broker and non leader from right side broker
@@ -150,7 +150,7 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
 
                     for p2 in broker_partition[bright[0]]:
                         replicas = [b.id for b in p2.replicas]
-                        if replicas.index(bright[0]) != 0 and bid not in replicas:
+                        if bright[0] in replicas and replicas.index(bright[0]) != 0 and bid not in replicas:
                             index2 = replicas.index(bright[0])
                             p2.swap_replicas(p2.replicas[index2], self.cluster.brokers[bid])
                             break
@@ -218,7 +218,7 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
                     after_leader[_id]["leader"] + after_leader[_id]["follower"]
                 )
             ])
-        log.info("\n" + table.get_string())
+        log.info("\n" + table.get_string(sortby="rack_id"))
 
 
     def __create_count_map(self, partitions):
@@ -233,13 +233,4 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
                     count_map[broker_id]["leader"] += 1
                 else:
                     count_map[broker_id]["follower"] += 1
-        return dict(sorted(count_map.items(), key= lambda x: x[0]))
-
-
-
-
-
-# broker_id__rack_id=3__2 old(leader=4    follower=1) rplan(leader=4  follower=3) new(leader=4    follower=3)
-
-
-# 
+        return count_map
