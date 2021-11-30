@@ -44,15 +44,15 @@ class Reassignment(BaseModel):
             reassignment['partitions'].append(partition.dict_for_reassignment())
         return reassignment
 
-    def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
+    def execute(self, num, total, zookeeper, tools_path, throttle, plugins=[], dry_run=True):
         for plugin in plugins:
             plugin.before_execute_batch(num)
         if not dry_run:
-            self._execute(num, total, zookeeper, tools_path)
+            self._execute(num, total, zookeeper, tools_path, throttle)
         for plugin in plugins:
             plugin.after_execute_batch(num)
 
-    def _execute(self, num, total, zookeeper, tools_path):
+    def _execute(self, num, total, zookeeper, tools_path, throttle):
         with NamedTemporaryFile(mode='w') as assignfile:
             json.dump(self.dict_for_reassignment(), assignfile)
             assignfile.flush()

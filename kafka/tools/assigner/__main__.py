@@ -95,7 +95,7 @@ def is_dry_run(args):
     return False
 
 def save_plan(args, move_partitions):
-    if not args.existing_plan_path:
+    if not args.save_plan_path:
         return
 
     folder, filename = args.save_plan_path.rsplit("/", 1)
@@ -115,6 +115,15 @@ def main():
 
     # Set up and parse all CLI arguments
     args = set_up_arguments(action_map, sizer_map, plugins)
+    cluster = Cluster.create_from_zookeeper(args.zookeeper, getattr(args, 'default_retention', 1))
+
+    # if include_topics list is empty it means we have to include all topics.
+    # if include_topics is non-empty then except include topics all will be in exclude_topics list
+    if args.include_topics and len(args.include_topics) > 0:
+        for topic in cluster.topics.keys():
+            if topic not in args.include_topics:
+                args.exclude_topics.append(topic)
+
     run_plugins_at_step(plugins, 'set_arguments', args)
 
     tools_path = get_tools_path(args.tools_path)
@@ -146,7 +155,7 @@ def main():
 
     for i, batch in enumerate(batches):
         log.info("Executing partition reassignment {0}/{1}: {2}".format(i + 1, len(batches), repr(batch)))
-        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, plugins, dry_run)
+        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, args.throttle, plugins, dry_run)
 
     run_plugins_at_step(plugins, 'before_ple')
 

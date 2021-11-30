@@ -74,6 +74,8 @@ class MainTests(unittest.TestCase):
                                                          moves=10,
                                                          execute=False,
                                                          exclude_topics=[],
+                                                         include_topics=[],
+                                                         existing_plan_path="/tmp/qwerty",
                                                          generate=False,
                                                          size=False,
                                                          skip_ple=False,
@@ -81,6 +83,8 @@ class MainTests(unittest.TestCase):
                                                          ple_wait=120,
                                                          sizer='ssh',
                                                          leadership=True,
+                                                         save_plan_path="/tmp/save_plan_path",
+                                                         throttle=2500000,
                                                          output_json=True)
         assert main() == 0
 
@@ -116,7 +120,7 @@ class MainTests(unittest.TestCase):
     @patch.object(ReplicaElection, 'execute')
     def test_ple(self, mock_execute, mock_sleep):
         cluster = set_up_cluster()
-        args = argparse.Namespace(ple_wait=0, zookeeper='zkconnect', tools_path='/path/to/tools')
+        args = argparse.Namespace(ple_wait=0, zookeeper='zkconnect', tools_path='/path/to/tools', throttle=2500000)
         batches = [ReplicaElection(cluster.brokers[1].partitions, args.ple_wait),
                    ReplicaElection(cluster.brokers[2].partitions, args.ple_wait)]
         run_preferred_replica_elections(batches, args, args.tools_path, [], False)
