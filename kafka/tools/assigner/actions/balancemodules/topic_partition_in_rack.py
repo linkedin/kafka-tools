@@ -14,13 +14,7 @@ class ActionBalanceTopicPartitionInRack(ActionBalanceModule):
 
     def __calculate_max_possible_count(self, broker_count):
         total_count = sum(map(lambda x: x[1], broker_count))
-        count = total_count * 1.0 / len(broker_count)
-
-        if (total_count % len(broker_count)) == 0:
-            count = int(count)
-        else:
-            count = int(math.floor(count)) + 1
-        return count
+        return int(math.ceil(total_count * 1.0 / len(broker_count)))
 
     def _unskew_topic_partition_in_rack(self, topic, partitions):
         """
