@@ -3,7 +3,7 @@ import unittest
 
 from mock import call, patch
 
-from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections, run_plugins_at_step, is_dry_run
+from kafka.tools.assigner.__main__ import main, get_plugins_list, check_and_get_sizes, run_preferred_replica_elections, run_plugins_at_step, is_dry_run, get_throttle_limit
 from kafka.tools.exceptions import ProgrammingException
 from kafka.tools.assigner.actions.balance import ActionBalance
 from kafka.tools.models.broker import Broker
@@ -12,6 +12,7 @@ from kafka.tools.models.topic import Topic
 from kafka.tools.assigner.models.replica_election import ReplicaElection
 from kafka.tools.assigner.plugins import PluginModule
 from kafka.tools.assigner.sizers.ssh import SizerSSH
+from tempfile import NamedTemporaryFile
 
 
 def set_up_cluster():
@@ -85,6 +86,7 @@ class MainTests(unittest.TestCase):
                                                          leadership=True,
                                                          save_plan_path="/tmp/save_plan_path",
                                                          throttle=2500000,
+                                                         throttle_limit_file_path=None,
                                                          output_json=True)
         assert main() == 0
 
@@ -128,3 +130,14 @@ class MainTests(unittest.TestCase):
         mock_sleep.assert_called_once_with(0)
         mock_execute.assert_has_calls([call(1, 2, 'zkconnect', '/path/to/tools', [], False),
                                        call(2, 2, 'zkconnect', '/path/to/tools', [], False)])
+
+    def test_throttle_limit(self):
+        args = argparse.Namespace(throttle_limit_file_path=None, throttle=30000)
+        assert get_throttle_limit(args) == 30000
+
+        with NamedTemporaryFile(mode='w') as f:
+            f.write("25000")
+            f.flush()
+
+            args = argparse.Namespace(throttle_limit_file_path=f.name, throttle=30000)
+            assert get_throttle_limit(args) == 25000

@@ -39,7 +39,7 @@ class CSVAction(argparse.Action):
 def file_path_checker(path):
     """Check is given file path exist or not"""
     if not os.path.isfile(path):
-        raise FileNotFoundError("File path: {} not exists or its not file".format(path))
+        raise IOError("File path: {} not exists or its not file".format(path))
     return path
 
 # action_map is a map of names to ActionModule children - the top level actions that can be called
@@ -67,6 +67,10 @@ def set_up_arguments(action_map, sizer_map, plugins):
     aparser.add_argument('--tools-path', help="Path to Kafka admin utilities, overriding PATH env var", required=False)
     aparser.add_argument('--output-json', help="Output JSON-formatted cluster information to stdout", default=False, action='store_true')
     aparser.add_argument('--throttle', help="The movement of partitions between brokers will be throttled to this value (bytes/sec)", default=25000000, type=int)
+    aparser.add_argument('--throttle-limit-file-path',
+        help="Similar to throttle argument but here taking input from file. If throttle & throttle-limit-file-path is given then throttle-limit-file-path will take precedence",
+        required=False, type=file_path_checker
+    )
     aparser.add_argument('--save-plan-path', help="Save the generated plan at given path", required=False, type=str)
 
     # Call action module arg setup

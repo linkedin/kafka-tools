@@ -107,6 +107,16 @@ def save_plan(args, move_partitions):
     else:
         raise FileExistsError("Given file path={} is a directory not File".format(args.save_plan_path))
 
+def get_throttle_limit(args):
+    throttle = args.throttle
+    if args.throttle_limit_file_path:
+        with open(args.throttle_limit_file_path) as f:
+            try:
+                throttle = int(f.read())
+            except Exception as e:
+                log.error("Error while getting throttle limit from file {}".format(e))
+    return throttle
+
 def main():
     # Start by loading all the modules
     action_map = get_module_map(kafka.tools.assigner.actions, kafka.tools.assigner.actions.ActionModule)
@@ -155,7 +165,7 @@ def main():
 
     for i, batch in enumerate(batches):
         log.info("Executing partition reassignment {0}/{1}: {2}".format(i + 1, len(batches), repr(batch)))
-        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, args.throttle, plugins, dry_run)
+        batch.execute(i + 1, len(batches), args.zookeeper, tools_path, get_throttle_limit(args), plugins, dry_run)
 
     run_plugins_at_step(plugins, 'before_ple')
 
