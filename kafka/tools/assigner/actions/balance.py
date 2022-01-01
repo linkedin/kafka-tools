@@ -27,7 +27,20 @@ class ActionBalance(ActionModule):
     needs_sizes = True
 
     def __init__(self, args, cluster):
-        if "rackaware" in args.types and args.types[len(args.types)-1] != "rackaware":
+
+
+        if "topic_partition_in_rack" in args.types:
+            if args.types[len(args.types)-1] != "topic_partition_in_rack":
+                raise BalanceException(
+                    "In order to work properly, topic_partition_in_rack must always be the last module specified"
+                )
+
+            elif "rackaware" in args.types and args.types[len(args.types)-2] != "rackaware":
+                raise BalanceException(
+                    "In order to work properly, if you specify topic_partition_in_rack and " +
+                    "rackaware both module then rackaware must always be in 2nd last & topic_partition_in_rack always be last")
+        
+        elif "rackaware" in args.types and args.types[len(args.types)-1] != "rackaware":
             raise BalanceException("In order to work properly, rackaware must always be the last module specified")
 
         super(ActionBalance, self).__init__(args, cluster)
