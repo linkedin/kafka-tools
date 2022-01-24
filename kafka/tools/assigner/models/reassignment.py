@@ -44,22 +44,23 @@ class Reassignment(BaseModel):
             reassignment['partitions'].append(partition.dict_for_reassignment())
         return reassignment
 
-    def execute(self, num, total, zookeeper, tools_path, plugins=[], dry_run=True):
+    def execute(self, num, total, zookeeper, tools_path, throttle, plugins=[], dry_run=True):
         for plugin in plugins:
             plugin.before_execute_batch(num)
         if not dry_run:
-            self._execute(num, total, zookeeper, tools_path)
+            self._execute(num, total, zookeeper, tools_path, throttle)
         for plugin in plugins:
             plugin.after_execute_batch(num)
 
-    def _execute(self, num, total, zookeeper, tools_path):
+    def _execute(self, num, total, zookeeper, tools_path, throttle):
         with NamedTemporaryFile(mode='w') as assignfile:
             json.dump(self.dict_for_reassignment(), assignfile)
             assignfile.flush()
             FNULL = open(os.devnull, 'w')
             proc = subprocess.Popen(['{0}/kafka-reassign-partitions.sh'.format(tools_path), '--execute',
                                      '--zookeeper', zookeeper,
-                                     '--reassignment-json-file', assignfile.name],
+                                     '--reassignment-json-file', assignfile.name,
+                                     '--throttle', str(throttle)],
                                     stdout=FNULL, stderr=FNULL)
             proc.wait()
 

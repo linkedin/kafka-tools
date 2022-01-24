@@ -16,6 +16,7 @@ install_requires = [
     'JPype1',
     'kazoo',
     'pex',
+    'prettytable'
 ]
 
 
@@ -105,7 +106,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1.9',
+    version='0.1.10',
 
     author='Todd Palino',
     author_email='tpalino@linkedin.com',
@@ -141,6 +142,7 @@ setup(
         'pytest',
         'testfixtures',
         'timeout-decorator',
+        'prettytable'
     ],
     setup_requires=[
         'pytest-runner',
